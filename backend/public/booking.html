@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Jadwal — Sorehari</title>
+    <link rel="icon" type="image/png" href="/image/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F9F8F6;
+        }
+        .serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-900 flex flex-col justify-between">
+    <!-- Header -->
+    <header class="border-b border-slate-200/80 bg-[#F9F8F6]/80 backdrop-blur sticky top-0 z-30">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <a href="/" class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600 hover:text-slate-950 transition">← KEMBALI</a>
+            <h1 class="serif-title text-xl font-semibold text-slate-900">Sorehari</h1>
+            <a href="/portfolio.html" class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 hover:text-slate-950 transition">PORTFOLIO</a>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-6 py-12 md:py-20 w-full">
+        <!-- Hero Title -->
+        <div class="text-center mb-12">
+            <h2 class="serif-title text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Booking Acara Anda</h2>
+            <p class="mt-3 text-slate-600 text-sm md:text-base">Kunci tanggal bahagia Anda bersama Sorehari. Silakan isi form pendaftaran di bawah ini.</p>
+        </div>
+
+        <!-- Notification Banner -->
+        <div id="alert-banner" class="hidden rounded-xl p-4 mb-6 text-sm border"></div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-3xl shadow-xl shadow-slate-100/50 border border-slate-200/60 p-8 md:p-10">
+            <form id="booking-form" class="space-y-8" onsubmit="submitBooking(event)">
+                <!-- Client Details -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">1. Informasi Klien</h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="client_name" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Nama Klien / Pengantin</label>
+                            <input type="text" id="client_name" name="client_name" required placeholder="Contoh: Rian & Nisa" oninput="validateForm()"
+                                class="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition">
+                        </div>
+                        <div>
+                            <label for="client_phone" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">No. WhatsApp Aktif</label>
+                            <input type="tel" id="client_phone" name="client_phone" required placeholder="Contoh: 08123456789" oninput="validateForm()"
+                                class="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Details & Overbook Protection -->
+                <div class="space-y-4 pt-4 border-t border-slate-100">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">2. Jadwal & Layanan</h3>
+                    
+                    <!-- Row 1: Tanggal & Lokasi -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="event_date" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Tanggal Acara</label>
+                            <input type="date" id="event_date" name="event_date" required onchange="checkDateAvailability(this.value)"
+                                class="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition">
+                            <span id="date-status" class="mt-1.5 block text-xs font-medium"></span>
+                        </div>
+                        <div>
+                            <label for="location" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Lokasi (Nama Kota/Daerah)</label>
+                            <input type="text" id="location" name="location" required placeholder="Contoh: Makassar, Gedung Manunggal" oninput="validateForm()"
+                                class="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition">
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: Paket (Centered) -->
+                    <div class="flex justify-center mt-6">
+                        <div class="w-full md:w-2/3 lg:w-1/2">
+                            <label for="package_id" class="block text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Pilihan Paket</label>
+                            <select id="package_id" name="package_id" required onchange="updatePriceDetails(this.value)"
+                                class="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition text-center text-slate-700 font-medium appearance-none">
+                                <option value="" disabled selected>-- Pilih Paket Layanan --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Additional Services (Add-ons) -->
+                    <div id="addons-section" class="hidden mt-6 space-y-3">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Layanan Tambahan (Add-ons)</label>
+                        <div id="addons-list" class="grid gap-3 sm:grid-cols-2">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Special Requests (Catatan Khusus) -->
+                    <div id="special-requests-section" class="hidden mt-6 space-y-2">
+                        <label for="special_requests" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Catatan Khusus / Permintaan Spesial (Opsional)</label>
+                        <textarea id="special_requests" placeholder="Contoh: Minta FG Perempuan, Request pose tertentu, dll." rows="2"
+                            class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition"></textarea>
+                    </div>
+
+                    <!-- Dynamic Price Display -->
+                    <div id="price-card" class="hidden bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-4 space-y-2">
+                        <div id="sessions-container" class="mb-4 hidden">
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Cakupan Sesi Acara</p>
+                            <div id="sessions-val" class="flex flex-wrap gap-2 text-sm"></div>
+                        </div>
+                        <div id="desc-container" class="mb-4 pb-4 border-b border-slate-200 hidden">
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Deskripsi / Fasilitas Paket</p>
+                            <p id="desc-val" class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed"></p>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Harga Paket Dasar:</span>
+                            <span id="base-price-val" class="font-semibold text-slate-800">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Kebutuhan Fotografer (FG):</span>
+                            <span id="fg-val" class="font-medium text-slate-700">0 Kru</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Kebutuhan Videografer (VG):</span>
+                            <span id="vg-val" class="font-medium text-slate-700">0 Kru</span>
+                        </div>
+                        <div id="addons-cost-row" class="hidden flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Layanan Tambahan (Add-ons):</span>
+                            <span id="addons-price-val" class="font-semibold text-emerald-600">+Rp 0</span>
+                        </div>
+                        <div class="border-t border-slate-200 my-2 pt-2 flex justify-between items-center text-base">
+                            <span class="font-bold text-slate-900">Harga Paket (Deal):</span>
+                            <span id="total-price-val" class="font-extrabold text-slate-950">Rp 0</span>
+                        </div>
+
+                        <!-- Potongan Harga -->
+                        <div id="discount-container" class="hidden border-t border-slate-200 pt-3 space-y-2">
+                            <label for="discount_amount" class="block text-xs font-semibold text-amber-700 uppercase tracking-wider">Potongan Harga (Opsional)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">Rp</span>
+                                <input type="number" id="discount_amount" name="discount_amount" min="0" value="0" placeholder="0"
+                                    oninput="recalcFinalTotal()"
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-400 transition font-medium text-slate-800">
+                            </div>
+                            <p class="text-[11px] text-slate-500" id="discount-help-text">Masukkan nilai diskon jika ada kesepakatan khusus. Admin akan mengkonfirmasi potongan ini.</p>
+                        </div>
+
+                        <!-- Final Total setelah diskon -->
+                        <div id="final-total-container" class="bg-slate-900 rounded-xl px-4 py-3 flex justify-between items-center mt-1">
+                            <span class="font-bold text-white text-sm">Total Setelah Diskon:</span>
+                            <span id="final-total-val" class="font-extrabold text-emerald-400 text-base">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Receipt Upload -->
+                <div class="space-y-4 pt-4 border-t border-slate-100">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">3. Pembayaran Uang Muka (DP)</h3>
+                    <div class="bg-[#Fdfcf7] border border-amber-100 rounded-2xl p-5 text-sm space-y-3">
+                        <p class="font-semibold text-amber-900">🏦 Informasi Transfer Bank</p>
+                        <div class="text-xs space-y-1 text-slate-600">
+                            <p>Nama Bank: <span class="font-semibold text-slate-950">Bank BCA</span></p>
+                            <p>Nomor Rekening: <span class="font-semibold text-slate-950">3420-1111-99</span></p>
+                            <p>Atas Nama: <span class="font-semibold text-slate-950">Sorehari Photography</span></p>
+                            <p>Nominal DP Minimal: <span class="font-semibold text-amber-900">Rp 2.000.000</span> (Atau sesuai kesepakatan)</p>
+                        </div>
+                    </div>
+
+                    <!-- Nominal DP Input -->
+                    <div class="space-y-1">
+                        <label for="dp_amount" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Nominal DP yang Ditransfer</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">Rp</span>
+                            <input type="number" id="dp_amount" name="dp_amount" min="0" required placeholder="Contoh: 2000000"
+                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-slate-50 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 transition font-medium text-slate-800">
+                        </div>
+                        <p class="text-[11px] text-slate-500">Masukkan nominal sesuai jumlah yang Anda transfer sebagai DP.</p>
+                    </div>
+
+                    <div>
+                        <label for="receipt" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Unggah Bukti Transfer DP</label>
+                        <div class="mt-2 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-xl px-6 py-6 hover:bg-slate-50 transition cursor-pointer relative">
+                            <input type="file" id="receipt" name="receipt" accept="image/*,application/pdf" onchange="showFileFeedback(this)"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div class="text-center space-y-1">
+                                <svg class="mx-auto h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                </svg>
+                                <p id="upload-feedback" class="text-xs text-slate-500 font-medium">Klik atau tarik file bukti transfer ke sini (Maks 10MB)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submit-btn" disabled
+                    class="w-full py-4 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-bold tracking-wider text-sm transition focus:outline-none uppercase">
+                    Kirim Permohonan Booking
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200/80 bg-[#F9F8F6] py-8 text-center text-xs text-slate-500">
+        <p>© 2026 Sorehari. All rights reserved. Built with ❤️ for memorable moments.</p>
+    </footer>
+
+    <script>
+        const API_URL = '/api';
+        let packagesList = [];
+        let addonsList = [];
+        let dateAvailable = false;
+
+        // Load packages on page load
+        async function fetchPackages() {
+            try {
+                const res = await fetch(`${API_URL}/packages`);
+                packagesList = await res.json();
+                
+                const select = document.getElementById('package_id');
+                packagesList.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.innerText = `${p.package_name} — Rp ${p.price.toLocaleString('id-ID')}`;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error fetching packages:', err);
+                showAlert('Gagal memuat daftar paket layanan. Silakan hubungi admin.', 'error');
+            }
+        }
+
+        // Fetch additional services (add-ons) on page load
+        async function fetchAddons() {
+            try {
+                const res = await fetch(`${API_URL}/additional-services`);
+                addonsList = await res.json();
+                
+                const container = document.getElementById('addons-list');
+                container.innerHTML = '';
+                
+                if (addonsList.length > 0) {
+                    addonsList.forEach(addon => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer';
+                        div.innerHTML = `
+                            <input type="checkbox" id="addon-${addon.id}" value="${addon.id}" data-price="${addon.price}" onchange="recalcFinalTotal()"
+                                class="addon-cb mt-1 rounded text-slate-900 focus:ring-slate-900 border-slate-300">
+                            <label for="addon-${addon.id}" class="text-xs font-semibold text-slate-800 cursor-pointer select-none w-full">
+                                <div class="flex justify-between">
+                                    <span>${addon.name}</span>
+                                    <span class="text-emerald-600 font-bold">+Rp ${addon.price.toLocaleString('id-ID')}</span>
+                                </div>
+                                ${addon.description ? `<p class="text-[10px] text-slate-500 font-normal mt-0.5">${addon.description}</p>` : ''}
+                            </label>
+                        `;
+                        // Trigger checkbox when clicking container
+                        div.addEventListener('click', (e) => {
+                            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                                const cb = div.querySelector('input');
+                                cb.checked = !cb.checked;
+                                recalcFinalTotal();
+                            }
+                        });
+                        container.appendChild(div);
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching additional services:', err);
+            }
+        }
+
+        // Show file feedback
+        function showFileFeedback(input) {
+            const feedback = document.getElementById('upload-feedback');
+            if (input.files && input.files[0]) {
+                feedback.innerText = `File Terpilih: ${input.files[0].name} (${(input.files[0].size / 1024 / 1024).toFixed(2)} MB)`;
+                feedback.className = 'text-xs text-emerald-600 font-semibold';
+            } else {
+                feedback.innerText = 'Klik atau tarik file bukti transfer ke sini (Maks 10MB)';
+                feedback.className = 'text-xs text-slate-500 font-medium';
+            }
+        }
+
+        // Check date availability
+        async function checkDateAvailability(dateStr) {
+            const statusLabel = document.getElementById('date-status');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (!dateStr) {
+                statusLabel.innerText = '';
+                dateAvailable = false;
+                validateForm();
+                return;
+            }
+
+            // Set loading
+            statusLabel.innerText = 'Memeriksa ketersediaan kuota...';
+            statusLabel.className = 'mt-1.5 block text-xs font-medium text-slate-500';
+
+            try {
+                const res = await fetch(`${API_URL}/available-slots?date=${dateStr}`);
+                const data = await res.json();
+
+                if (data.available) {
+                    statusLabel.innerText = `✓ Kuota Tersedia (Terisi ${data.count}/${data.limit} slot)`;
+                    statusLabel.className = 'mt-1.5 block text-xs font-semibold text-emerald-600';
+                    dateAvailable = true;
+                } else {
+                    if (data.blocked) {
+                        statusLabel.innerText = `✗ Studio Tutup/Libur (${data.reason}). Silakan pilih tanggal lain.`;
+                    } else {
+                        statusLabel.innerText = `✗ Kuota Penuh (Penuh ${data.count}/${data.limit} slot). Silakan pilih tanggal lain.`;
+                    }
+                    statusLabel.className = 'mt-1.5 block text-xs font-semibold text-red-600';
+                    dateAvailable = false;
+                    document.getElementById('event_date').value = '';
+                }
+            } catch (err) {
+                console.error('Error checking slot:', err);
+                statusLabel.innerText = '⚠️ Gagal mendeteksi kuota harian.';
+                statusLabel.className = 'mt-1.5 block text-xs font-semibold text-amber-600';
+                dateAvailable = true; // allow submission if server offline or temporary check error
+            }
+
+            validateForm();
+        }
+
+        // Update package price card
+        function updatePriceDetails(packageId) {
+            const p = packagesList.find(pack => pack.id == packageId);
+            const card = document.getElementById('price-card');
+            
+            if (p) {
+                if (p.description) {
+                    let descHtml = '';
+                    try {
+                        const serviceItems = JSON.parse(p.description);
+                        if (Array.isArray(serviceItems) && serviceItems.length > 0) {
+                            descHtml = `<ul class="list-disc list-inside space-y-1 text-slate-700 text-xs">` +
+                                serviceItems.map(item => `<li>${item.name} (${item.qty}x)</li>`).join('') +
+                                `</ul>`;
+                        } else {
+                            descHtml = p.description;
+                        }
+                    } catch (e) {
+                        descHtml = p.description;
+                    }
+                    document.getElementById('desc-val').innerHTML = descHtml;
+                    document.getElementById('desc-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('desc-container').classList.add('hidden');
+                }
+
+                // Show sessions
+                if (p.session_names && p.session_names.length > 0) {
+                    const sessionBadges = p.session_names.map(sName => 
+                        `<span class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md font-semibold">${sName}</span>`
+                    ).join('');
+                    document.getElementById('sessions-val').innerHTML = sessionBadges;
+                    document.getElementById('sessions-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('sessions-container').classList.add('hidden');
+                }
+                
+                document.getElementById('base-price-val').innerText = `Rp ${p.price.toLocaleString('id-ID')}`;
+                document.getElementById('fg-val').innerText = `${p.required_fg} Fotografer`;
+                document.getElementById('vg-val').innerText = `${p.required_vg} Videografer`;
+
+                // Show special requests section
+                document.getElementById('special-requests-section').classList.remove('hidden');
+                
+                // Show/hide addons section if there are addons
+                if (addonsList.length > 0) {
+                    document.getElementById('addons-section').classList.remove('hidden');
+                }
+
+                // Show/hide discount container based on is_negotiable
+                const discountContainer = document.getElementById('discount-container');
+                const discountInput = document.getElementById('discount_amount');
+                const finalTotalContainer = document.getElementById('final-total-container');
+                if (p.is_negotiable) {
+                    discountContainer.classList.remove('hidden');
+                    if (finalTotalContainer) finalTotalContainer.classList.remove('hidden');
+                    
+                    let modalCost = 0;
+                    try {
+                        const serviceItems = JSON.parse(p.description || '[]');
+                        if (Array.isArray(serviceItems)) {
+                            modalCost = serviceItems.reduce((sum, s) => sum + ((s.price || 0) * (s.qty || 1)), 0);
+                        }
+                    } catch (e) {
+                        modalCost = 0;
+                    }
+                    const maxDiscount = Math.max(0, p.price - (modalCost + (p.operational_cost || 0)));
+                    document.getElementById('discount-help-text').innerText = `Masukkan nilai diskon jika ada kesepakatan khusus. Maksimal diskon yang diperbolehkan adalah Rp ${maxDiscount.toLocaleString('id-ID')}.`;
+                } else {
+                    discountContainer.classList.add('hidden');
+                    if (finalTotalContainer) finalTotalContainer.classList.add('hidden');
+                    discountInput.value = 0;
+                }
+                
+                card.classList.remove('hidden');
+                recalcFinalTotal();
+            } else {
+                card.classList.add('hidden');
+                document.getElementById('special-requests-section').classList.add('hidden');
+                document.getElementById('addons-section').classList.add('hidden');
+            }
+            validateForm();
+        }
+
+        // Recalculate final total after discount and add-ons
+        function recalcFinalTotal() {
+            const packageId = document.getElementById('package_id').value;
+            const p = packagesList.find(pack => pack.id == packageId);
+            if (!p) return;
+
+            // Calculate addons sum
+            let addonsTotal = 0;
+            const checkedAddons = document.querySelectorAll('.addon-cb:checked');
+            checkedAddons.forEach(cb => {
+                addonsTotal += parseFloat(cb.dataset.price) || 0;
+            });
+
+            if (addonsTotal > 0) {
+                document.getElementById('addons-price-val').innerText = `+Rp ${addonsTotal.toLocaleString('id-ID')}`;
+                document.getElementById('addons-cost-row').classList.remove('hidden');
+            } else {
+                document.getElementById('addons-cost-row').classList.add('hidden');
+            }
+
+            const basePrice = p.price;
+            const totalDealPrice = basePrice + addonsTotal;
+            document.getElementById('total-price-val').innerText = `Rp ${totalDealPrice.toLocaleString('id-ID')}`;
+
+            // Calculate discount validity
+            const discountInput = document.getElementById('discount_amount');
+            const discount = Math.max(0, parseFloat(discountInput.value) || 0);
+
+            // Profit margin validation
+            let modalCost = 0;
+            try {
+                const serviceItems = JSON.parse(p.description || '[]');
+                if (Array.isArray(serviceItems)) {
+                    modalCost = serviceItems.reduce((sum, s) => sum + ((s.price || 0) * (s.qty || 1)), 0);
+                }
+            } catch (e) {
+                modalCost = 0;
+            }
+
+            const operationalCost = p.operational_cost || 0;
+            const maxDiscount = Math.max(0, p.price - (modalCost + operationalCost));
+
+            if (p.is_negotiable) {
+                if (discount > maxDiscount) {
+                    discountInput.setCustomValidity(`Diskon tidak boleh melebihi margin profit (Maksimal Rp ${maxDiscount.toLocaleString('id-ID')})`);
+                } else {
+                    discountInput.setCustomValidity('');
+                }
+            } else {
+                discountInput.setCustomValidity('');
+            }
+
+            const final = Math.max(0, totalDealPrice - discount);
+            document.getElementById('final-total-val').innerText = `Rp ${final.toLocaleString('id-ID')}`;
+            
+            validateForm();
+        }
+
+        // Validate form fields to enable submit button
+        function validateForm() {
+            const name = document.getElementById('client_name').value.trim();
+            const phone = document.getElementById('client_phone').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const date = document.getElementById('event_date').value;
+            const packageId = document.getElementById('package_id').value;
+            const dpAmount = parseFloat(document.getElementById('dp_amount').value) || 0;
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (name && phone && location && date && packageId && dpAmount > 0 && dateAvailable) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Alert helper
+        function showAlert(msg, type = 'success') {
+            const banner = document.getElementById('alert-banner');
+            banner.innerText = msg;
+            if (type === 'success') {
+                banner.className = 'rounded-xl p-4 mb-6 text-sm border bg-emerald-50 border-emerald-200 text-emerald-800';
+            } else {
+                banner.className = 'rounded-xl p-4 mb-6 text-sm border bg-red-50 border-red-200 text-red-800';
+            }
+            banner.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Submit Booking Request
+        async function submitBooking(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'MENGIRIM PERMOHONAN...';
+
+            const form = document.getElementById('booking-form');
+            const packageId = document.getElementById('package_id').value;
+            const p = packagesList.find(pack => pack.id == packageId);
+
+            // Calculate addons sum
+            let addonsTotal = 0;
+            const checkedAddons = [];
+            document.querySelectorAll('.addon-cb:checked').forEach(cb => {
+                const price = parseFloat(cb.dataset.price) || 0;
+                addonsTotal += price;
+                checkedAddons.push({
+                    id: parseInt(cb.value),
+                    quantity: 1
+                });
+            });
+
+            const formData = new FormData();
+            formData.append('client_name', document.getElementById('client_name').value.trim());
+            formData.append('client_phone', document.getElementById('client_phone').value.trim());
+            formData.append('location', document.getElementById('location').value.trim());
+            formData.append('event_date', document.getElementById('event_date').value);
+            formData.append('package_id', packageId);
+            const discountVal = Math.max(0, parseFloat(document.getElementById('discount_amount').value) || 0);
+            formData.append('total_deal_price', p ? (p.price + addonsTotal) : 0);
+            formData.append('discount_amount', discountVal);
+            formData.append('dp_amount', parseFloat(document.getElementById('dp_amount').value) || 0);
+            formData.append('additional_services_json', JSON.stringify(checkedAddons));
+            formData.append('special_requests', document.getElementById('special_requests').value.trim());
+            
+            const fileInput = document.getElementById('receipt');
+            if (fileInput.files[0]) {
+                formData.append('receipt', fileInput.files[0]);
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/bookings`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Terjadi kesalahan saat menyimpan booking.');
+                }
+
+                // Hide the form card and show success screen
+                const formCard = document.querySelector('#booking-form').closest('.bg-white');
+                formCard.innerHTML = `
+                    <div class="text-center py-12 px-6 space-y-6">
+                        <div class="mx-auto w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
+                            <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="serif-title text-2xl font-bold text-slate-900">Booking Berhasil Terkirim! 🎉</h3>
+                            <p class="mt-2 text-sm text-slate-600 max-w-md mx-auto">Permohonan booking Anda sudah masuk ke sistem kami. Silakan tunggu verifikasi DP oleh admin. Kami akan menghubungi Anda melalui WhatsApp.</p>
+                        </div>
+                        <div class="pt-4">
+                            <button onclick="resetBookingForm()" 
+                                class="inline-flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold tracking-wider text-sm transition focus:outline-none uppercase shadow-lg shadow-slate-900/20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Booking Lagi
+                            </button>
+                        </div>
+                    </div>
+                `;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (err) {
+                showAlert(err.message, 'error');
+                submitBtn.innerText = 'Kirim Permohonan Booking';
+                validateForm();
+            }
+        }
+
+        // Reload page to reset the booking form cleanly
+        function resetBookingForm() {
+            window.location.reload();
+        }
+
+        // Input listeners
+        document.getElementById('client_name').addEventListener('input', validateForm);
+        document.getElementById('client_phone').addEventListener('input', validateForm);
+        document.getElementById('dp_amount').addEventListener('input', validateForm);
+
+        // Run on load
+        async function initPage() {
+            await fetchPackages();
+            await fetchAddons();
+        }
+        initPage();
+    </script>
+</body>
+</html>

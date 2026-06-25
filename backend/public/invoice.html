@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Resmi - SOREHARI</title>
+    <link rel="icon" type="image/png" href="/image/favicon.png">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-100: #f1f5f9;
+            --slate-50: #f8fafc;
+            --emerald-600: #059669;
+            --emerald-50: #ecfdf5;
+            --indigo-600: #4f46e5;
+            --amber-50: #fffbeb;
+            --amber-600: #d97706;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f3f4f6;
+            color: var(--slate-800);
+            line-height: 1.5;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #white;
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            width: 100%;
+            padding: 48px;
+            position: relative;
+        }
+
+        .serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Action Buttons Area */
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 12px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: none;
+        }
+
+        .btn-print {
+            background-color: var(--slate-900);
+            color: #ffffff;
+        }
+
+        .btn-print:hover {
+            background-color: var(--slate-800);
+        }
+
+        .btn-wa {
+            background-color: #25d366;
+            color: #ffffff;
+        }
+
+        .btn-wa:hover {
+            background-color: #20ba5a;
+        }
+
+        /* Invoice Sheet Layout */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--slate-900);
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+        }
+
+        .invoice-brand h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--slate-900);
+            letter-spacing: -0.02em;
+        }
+
+        .invoice-brand p {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        .invoice-brand-address {
+            font-size: 11px;
+            color: var(--slate-400);
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: var(--slate-100);
+            color: var(--slate-800);
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .invoice-num {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--slate-900);
+            margin-top: 8px;
+        }
+
+        .invoice-date {
+            font-size: 11px;
+            color: var(--slate-400);
+            margin-top: 4px;
+        }
+
+        /* Info Grid */
+        .invoice-info-grid {
+            display: grid;
+            grid-cols: 2;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            font-size: 12px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--slate-100);
+            margin-bottom: 30px;
+        }
+
+        .info-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--slate-400);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .info-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--slate-900);
+            margin-bottom: 4px;
+        }
+
+        .info-val {
+            color: var(--slate-600);
+            line-height: 1.5;
+        }
+
+        /* Items Table */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .invoice-table th {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--slate-300);
+        }
+
+        .invoice-table td {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--slate-100);
+        }
+
+        .item-category-badge {
+            font-size: 9px;
+            font-weight: 700;
+            background-color: var(--slate-100);
+            color: var(--slate-500);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            text-transform: uppercase;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Summary Area */
+        .invoice-summary-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .invoice-summary {
+            width: 280px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            color: var(--slate-500);
+        }
+
+        .summary-row-bold {
+            font-weight: 700;
+            color: var(--slate-900);
+        }
+
+        .summary-total {
+            border-top: 1px solid var(--slate-200);
+            padding-top: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .balance-value-sisa {
+            color: var(--indigo-600);
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .balance-value-lunas {
+            color: var(--emerald-600);
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        /* Special Requests Callout */
+        .special-requests-box {
+            background-color: var(--amber-50);
+            border-left: 4px solid var(--amber-600);
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--slate-700);
+            margin-bottom: 30px;
+        }
+
+        .special-requests-title {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--amber-600);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .special-requests-val {
+            font-style: italic;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            border-top: 1px solid var(--slate-100);
+            padding-top: 24px;
+            text-align: center;
+            font-size: 10px;
+            color: var(--slate-400);
+        }
+
+        .invoice-footer-greeting {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--slate-500);
+            margin-bottom: 4px;
+        }
+
+        /* Loading indicator */
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 0;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--slate-100);
+            border-top-color: var(--slate-900);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Print Media Styles */
+        @media print {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Actions (Hidden on Print) -->
+        <div class="actions-bar no-print">
+            <button onclick="window.print()" class="btn-action btn-print">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    style="height: 16px; width: 16px; fill: none; stroke: currentColor; stroke-width: 2;"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Cetak ke PDF
+            </button>
+            <button id="wa-share-btn" onclick="shareWa()" class="btn-action btn-wa">
+                <svg xmlns="http://www.w3.org/2000/svg" style="height: 16px; width: 16px; fill: currentColor;"
+                    viewBox="0 0 448 512">
+                    <path
+                        d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L32 503l139.7-36.7c32.3 17.7 68.7 27 106.1 27 122.4 0 222.1-99.6 222.1-222 0-59.3-23-115.1-65-117.1zM223.9 444c-33.1 0-65.7-8.9-94.2-25.7l-6.7-4-83.3 21.8 22.2-81.2-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+                </svg>
+                Bagikan via WA
+            </button>
+        </div>
+
+        <!-- Dynamic Content Wrapper -->
+        <div id="invoice-content">
+            <div class="loading-screen">
+                <div class="spinner"></div>
+                <p style="font-size: 13px; font-weight: 600; color: var(--slate-500);">Memuat invoice...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let invoiceData = null;
+
+        // Get booking_id from URL query string
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = urlParams.get('booking_id');
+
+        async function loadInvoice() {
+            if (!bookingId) {
+                document.getElementById('invoice-content').innerHTML = `
+                    <div style="text-align: center; padding: 40px 0;">
+                        <p style="color: #ef4444; font-weight: 700;">ID Booking tidak valid.</p>
+                        <p style="font-size: 12px; color: var(--slate-500); margin-top: 4px;">Harap periksa kembali link invoice Anda.</p>
+                    </div>
+                `;
+                document.getElementById('wa-share-btn').style.display = 'none';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/public/bookings/${bookingId}/invoice`);
+                const result = await res.json();
+                if (!res.ok || !result.success) throw new Error(result.error || 'Gagal memuat detail invoice');
+
+                invoiceData = result.data;
+                renderInvoice(invoiceData);
+            } catch (err) {
+                document.getElementById('invoice-content').innerHTML = `
+                    <div style="text-align: center; padding: 40px 0;">
+                        <p style="color: #ef4444; font-weight: 700;">Error: ${err.message}</p>
+                        <p style="font-size: 12px; color: var(--slate-500); margin-top: 4px;">Terjadi kesalahan saat memproses data invoice.</p>
+                    </div>
+                `;
+                document.getElementById('wa-share-btn').style.display = 'none';
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('id-ID', options);
+        }
+
+        function renderInvoice(b) {
+            const dateClean = b.event_date.replace(/-/g, '');
+            const invoiceNum = `INV-${dateClean}-${b.id}`;
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1;
+            let dd = today.getDate();
+            if (dd < 10) dd = '0' + dd;
+            if (mm < 10) mm = '0' + mm;
+            const tglInvoice = `${dd}-${mm}-${yyyy}`;
+
+            const totalDeal = b.total_deal_price || 0;
+            const dpPaid = b.dp_paid_amount || 0;
+            const finalPaid = b.final_paid_amount || 0;
+            const sisa = b.payment_status === 'Lunas' ? 0 : Math.max(0, totalDeal - dpPaid - finalPaid);
+
+            // Generate additional items rows
+            let additionalRowsHtml = '';
+            if (b.additional_services && b.additional_services.length > 0) {
+                b.additional_services.forEach(ads => {
+                    const qty = ads.quantity || 1;
+                    const price = ads.price || 0;
+                    const sub = qty * price;
+                    additionalRowsHtml += `
+                        <tr>
+                            <td>${ads.name} <span class="item-category-badge">${ads.category}</span></td>
+                            <td class="text-right">Rp ${price.toLocaleString('id-ID')}</td>
+                            <td class="text-center">${qty}</td>
+                            <td class="text-right summary-row-bold">Rp ${sub.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Set up pelunasan row visibility
+            const pelunasanRowHtml = (finalPaid > 0 || b.payment_status === 'Lunas')
+                ? `
+                    <div class="summary-row">
+                        <span>Pelunasan Masuk</span>
+                        <span class="summary-row-bold">- Rp ${finalPaid.toLocaleString('id-ID')}</span>
+                    </div>
+                ` : '';
+
+            // Sisa/Status markup
+            let sisaMarkup = '';
+            if (b.payment_status === 'Lunas') {
+                sisaMarkup = `
+                    <span class="summary-row-bold">Status Pembayaran</span>
+                    <span class="balance-value-lunas">LUNAS ✓</span>
+                `;
+            } else {
+                sisaMarkup = `
+                    <span class="summary-row-bold">Sisa Pelunasan</span>
+                    <span class="balance-value-sisa">Rp ${sisa.toLocaleString('id-ID')}</span>
+                `;
+            }
+
+            // Special requests markup
+            const specReqHtml = b.special_requests
+                ? `
+                    <div class="special-requests-box">
+                        <p class="special-requests-title">Catatan Khusus (Special Request):</p>
+                        <p class="special-requests-val">${b.special_requests}</p>
+                    </div>
+                ` : '';
+
+            const contentHtml = `
+                <div class="invoice-header">
+                    <div class="invoice-brand">
+                        <h2 class="serif-title">SOREHARI</h2>
+                        <p>Wedding Photography</p>
+                        <p class="invoice-brand-address">Jl. Sorehari No. 12, Bandung<br>Telp: +62 812-3456-7890 | @sorehari.photography</p>
+                    </div>
+                    <div class="invoice-meta">
+                        <span class="invoice-badge">INVOICE</span>
+                        <p class="invoice-num">${invoiceNum}</p>
+                        <p class="invoice-date">Tanggal: ${tglInvoice}</p>
+                    </div>
+                </div>
+
+                <div class="invoice-info-grid">
+                    <div>
+                        <p class="info-label">Kepada (Client):</p>
+                        <p class="info-name">${b.client_name}</p>
+                        <p class="info-val">${b.client_phone ? 'Phone: ' + b.client_phone : 'Phone: -'}</p>
+                    </div>
+                    <div>
+                        <p class="info-label">Detail Acara:</p>
+                        <p class="info-name">${formatDate(b.event_date)}</p>
+                        <p class="info-val">Lokasi: ${b.location || '-'}</p>
+                    </div>
+                </div>
+
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Item / Layanan</th>
+                            <th class="text-right">Harga</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="summary-row-bold">${b.package_name}</td>
+                            <td class="text-right">Rp ${(b.base_price || 0).toLocaleString('id-ID')}</td>
+                            <td class="text-center">1</td>
+                            <td class="text-right summary-row-bold">Rp ${(b.base_price || 0).toLocaleString('id-ID')}</td>
+                        </tr>
+                        ${additionalRowsHtml}
+                    </tbody>
+                </table>
+
+                <div class="invoice-summary-wrapper">
+                    <div class="invoice-summary">
+                        <div class="summary-row">
+                            <span>Total Harga Deal</span>
+                            <span class="summary-row-bold">Rp ${totalDeal.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>DP Masuk</span>
+                            <span class="summary-row-bold">- Rp ${dpPaid.toLocaleString('id-ID')}</span>
+                        </div>
+                        ${pelunasanRowHtml}
+                        <div class="summary-total summary-row">
+                            ${sisaMarkup}
+                        </div>
+                    </div>
+                </div>
+
+                ${specReqHtml}
+
+                <div class="invoice-footer">
+                    <p class="invoice-footer-greeting">Terima kasih atas kepercayaan Anda!</p>
+                    <p>Pembayaran sah jika telah dikonfirmasi dan diverifikasi oleh pihak Sorehari.</p>
+                </div>
+            `;
+
+            document.getElementById('invoice-content').innerHTML = contentHtml;
+        }
+
+        function shareWa() {
+            if (!invoiceData) return;
+            const dateClean = invoiceData.event_date.replace(/-/g, '');
+            const invoiceNum = `INV-${dateClean}-${invoiceData.id}`;
+            const sisa = invoiceData.payment_status === 'Lunas' ? 0 : Math.max(0, invoiceData.total_deal_price - (invoiceData.dp_paid_amount || 0) - (invoiceData.final_paid_amount || 0));
+
+            let message = `Halo *${invoiceData.client_name}*,\n\n`;
+            message += `Berikut adalah invoice resmi layanan dokumentasi *SOREHARI* untuk acara Anda:\n\n`;
+            message += `*No. Invoice:* ${invoiceNum}\n`;
+            message += `*Tanggal Acara:* ${formatDate(invoiceData.event_date)}\n`;
+            message += `*Total Deal:* Rp ${invoiceData.total_deal_price.toLocaleString('id-ID')}\n`;
+
+            if (invoiceData.payment_status === 'Lunas') {
+                message += `*Status:* *LUNAS ✓*\n\n`;
+            } else {
+                message += `*Sisa Pelunasan:* Rp ${sisa.toLocaleString('id-ID')}\n\n`;
+            }
+
+            message += `Anda dapat melihat invoice lengkap dan menyimpannya sebagai PDF melalui tautan resmi berikut:\n`;
+            message += `${window.location.origin}/invoice.html?booking_id=${invoiceData.id}\n\n`;
+            message += `Terima kasih! 🙏`;
+
+            const phoneClean = invoiceData.client_phone ? invoiceData.client_phone.replace(/[^0-9]/g, '') : '';
+            const waUrl = `https://api.whatsapp.com/send?phone=${phoneClean}&text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        // Run
+        loadInvoice();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,230 @@
+body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F0F2EE;
+        }
+
+        .serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* ── Tab Nav Redesign ── */
+        .tab-sidebar {
+            position: sticky;
+            top: 80px;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        .tab-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .tab-sidebar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .nav-tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #64748b;
+            transition: all 0.18s ease;
+            text-align: left;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-tab-btn:hover {
+            background: #fff;
+            color: #0f172a;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-tab-btn.active {
+            background: #0f172a;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-tab-btn .tab-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .nav-tab-group-label {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            padding: 16px 14px 4px;
+        }
+
+        .nav-tab-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 8px 0;
+        }
+
+        /* ── Dashboard Cards ── */
+        .dash-card {
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            padding: 24px;
+            transition: box-shadow 0.2s;
+        }
+
+        .dash-card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+        }
+
+        .dash-kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .dash-kpi-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .dash-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .dash-activity-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .dash-activity-row:last-child {
+            border-bottom: none;
+        }
+
+        /* ── Sidebar Layout ── */
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-sidebar {
+                position: static;
+                height: auto;
+            }
+
+            .tab-sidebar nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 12px;
+                justify-content: center;
+            }
+
+            .tab-sidebar nav>div.border-b {
+                display: none;
+            }
+
+            .nav-tab-group-label,
+            .nav-tab-divider {
+                display: none;
+            }
+
+            .nav-tab-btn {
+                width: auto;
+                padding: 8px 14px;
+                font-size: 11px;
+                flex: 0 1 auto;
+                justify-content: center;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+            }
+
+            .nav-tab-btn .tab-icon {
+                display: none;
+            }
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            header,
+            .flex-grow,
+            footer,
+            .no-print,
+            #invoice-modal,
+            #walog-modal,
+            #freelancer-modal,
+            #disb-pay-modal,
+            #disb-receipt-modal,
+            #disb-add-modal,
+            #booking-crew-modal,
+            #cancel-booking-modal {
+                display: none !important;
+            }
+
+            #client-invoice-modal {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white !important;
+                box-shadow: none !important;
+                z-index: 9999 !important;
+            }
+
+            #client-invoice-printable {
+                display: block !important;
+                visibility: visible !important;
+            }
+
+            #client-invoice-printable * {
+                visibility: visible !important;
+            }
+        }
