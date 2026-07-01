@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bookings — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .receipt-img { max-width:100%; border-radius:12px; border:1px solid var(--border); margin-top:8px; }
+    .confirm-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .confirm-grid .item { background:var(--surface2); border-radius:12px; padding:14px; }
+    .confirm-grid .item .label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+    .confirm-grid .item .val { font-weight:700; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>📋 Bookings</h1>
+      <div class="btn-group">
+        <div class="search-bar"><input type="text" placeholder="Cari..." id="search" oninput="window.load()"></div>
+        <select id="filter-status" onchange="window.load()" style="padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+          <option value="pending_verification" selected>Menunggu Verifikasi</option><option value="">Semua Status</option>
+          <option value="proposal_sent">Proposal Dikirim</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="in_progress">Persiapan</option><option value="event_day">Hari H</option>
+          <option value="completed">Selesai</option><option value="cancelled">Batal</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Client</th><th>Tanggal</th><th>Paket</th><th>Venue</th><th>Pendapatan</th><th>Biaya</th><th>Profit</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="bookings-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Detail -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal" style="max-width:640px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 id="detail-title">Detail Booking</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-detail')">✕</button>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal Verifikasi DP -->
+  <div class="modal-overlay" id="modal-verify-dp">
+    <div class="modal" style="max-width:520px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:18px">📸 Verifikasi DP & Buat Client</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-verify-dp')">✕</button>
+      </div>
+      <div id="verify-dp-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi DP (legacy) -->
+  <div class="modal-overlay" id="modal-confirm-dp">
+    <div class="modal" style="max-width:520px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:18px">📸 Konfirmasi DP</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-confirm-dp')">✕</button>
+      </div>
+      <div id="confirm-dp-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal Update Status -->
+  <div class="modal-overlay" id="modal-status">
+    <div class="modal" style="max-width:380px">
+      <h2>Update Status</h2>
+      <div class="form-group"><label>Status</label>
+        <select id="b-status">
+          <option value="proposal_sent">Proposal Dikirim</option>
+          <option value="pending_verification">Menunggu Verifikasi</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="in_progress">Persiapan</option><option value="event_day">Hari H</option>
+          <option value="completed">Selesai</option><option value="archived">Arsip</option>
+          <option value="cancelled">Batal</option>
+        </select>
+      </div>
+      <input type="hidden" id="b-id">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-status')">Batal</button>
+        <button class="btn btn-primary" onclick="window.updateBookingStatus()">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Pembayaran -->
+  <div class="modal-overlay" id="modal-payment">
+    <div class="modal" style="max-width:400px">
+      <h2>Tambah Pembayaran</h2>
+      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="p-amount"></div>
+      <div class="form-group"><label>Tanggal</label><input type="date" id="p-date"></div>
+      <div class="form-group"><label>Metode</label>
+        <select id="p-method"><option value="transfer">Transfer</option><option value="cash">Cash</option><option value="ewallet">E-Wallet</option></select>
+      </div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="p-notes"></div>
+      <input type="hidden" id="p-booking-id">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-payment')">Batal</button>
+        <button class="btn btn-primary" onclick="window.savePayment()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Biaya -->
+  <div class="modal-overlay" id="modal-expense">
+    <div class="modal" style="max-width:400px">
+      <h2>Tambah Biaya</h2>
+      <div class="form-group"><label>Kategori</label>
+        <select id="e-category"><option value="freelance">Freelance</option><option value="transport">Transport</option><option value="printing">Cetak</option><option value="equipment">Sewa Alat</option><option value="other">Lainnya</option></select>
+      </div>
+      <div class="form-group"><label>Deskripsi</label><input type="text" id="e-desc"></div>
+      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="e-amount"></div>
+      <div class="form-group" id="e-freelancer-wrap"><label>Freelance (opsional)</label>
+        <select id="e-freelancer"><option value="">-- Pilih --</option></select>
+      </div>
+      <input type="hidden" id="e-booking-id">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-expense')">Batal</button>
+        <button class="btn btn-primary" onclick="window.saveExpense()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  
+  <script>
+    let allFreelancers = [];
+    let templates = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+    renderSidebar('bookings');
+
+    (async () => {
+      allFreelancers = await API.get('/api/freelancers?active=1');
+      templates = await API.get('/api/templates');
+      load();
+    })();
+    });
+
+    async function load() {
+    const status = document.getElementById('filter-status').value;
+    const search = document.getElementById('search').value;
+    let url = '/api/bookings?';
+    if (status) url += `status=${status}&`;
+    if (search) url += `search=${search}`;
+    const bookings = await API.get(url);
+    document.getElementById('bookings-table').innerHTML = bookings.length
+    ? bookings.map(b => `<tr>
+    <td><strong>${b.client_name}</strong></td><td>${formatDate(b.event_date)}</td>
+    <td>${b.package_name || '-'}</td><td>${b.venue || '-'}</td>
+    <td>${formatIDR(b.total_income)}</td><td style="color:var(--red)">${formatIDR(b.total_expense)}</td>
+    <td style="color:var(--green)">${formatIDR(b.profit)}</td><td>${statusBadge(b.status)}</td>
+    <td><div class="btn-group">
+    <button class="btn btn-sm btn-secondary" onclick="window.viewDetail(${b.booking_id})">Detail</button>
+    ${b.status === 'pending_verification' ? `<button class="btn btn-sm btn-primary" onclick="window.openVerifyDP(${b.booking_id})" style="background:var(--green);color:#fff">✓ Verifikasi DP</button>` : ''}
+    <button class="btn btn-sm btn-secondary" onclick="window.openStatusModal(${b.booking_id},'${b.status}')">Status</button>
+    </div></td>
+    </tr>`).join('')
+    : '<tr><td colspan="9" style="text-align:center;color:var(--text2);padding:30px">Belum ada booking</td></tr>';
+    }
+    function viewDetail(id) {
+    window.location.href = `/admin/booking-detail?id=${id}`;
+    }
+    async function openVerifyDP(id) {
+    const b = await API.get(`/api/bookings/${id}`);
+    const payments = await API.get(`/api/bookings/${id}/payments`);
+    const dp = payments.find(p => p.type === 'dp');
+    const receiptUrl = dp?.reference ? `/api/uploads/receipts/${dp.reference}` : null;
+
+    document.getElementById('verify-dp-content').innerHTML = `
+    <div class="confirm-grid">
+    <div class="item"><div class="label">Client</div><div class="val">${b.client_name || b.event_name}</div></div>
+    <div class="item"><div class="label">Paket</div><div class="val">${b.package_name || '-'}</div></div>
+    <div class="item"><div class="label">Harga Paket</div><div class="val">${formatIDR(b.package_price)}</div></div>
+    <div class="item"><div class="label">DP Dibayar</div><div class="val">${dp ? formatIDR(dp.amount) : '-'}</div></div>
+    </div>
+    ${b.notes ? `<div style="background:var(--surface2);border-radius:12px;padding:14px;margin-top:12px"><div class="label" style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Catatan Client</div><p style="font-size:13px">${b.notes}</p></div>` : ''}
+    ${receiptUrl ? `<div style="margin-top:12px"><label class="label" style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Bukti Transfer</label><img src="${receiptUrl}" class="receipt-img" onclick="window.open(this.src)" style="cursor:pointer"></div>` : '<p style="margin-top:12px;font-size:12px;color:var(--text2)">Belum ada upload bukti</p>'}
+    <div style="margin-top:16px;display:flex;gap:8px">
+    <button class="btn btn-primary" onclick="window.verifyDP(${id})" style="flex:1;background:var(--green);color:#fff">✅ Verifikasi & Buat Client</button>
+    <button class="btn btn-secondary" onclick="closeModal('modal-verify-dp')">Tutup</button>
+    </div>
+    `;
+    openModal('modal-verify-dp');
+    }
+    async function verifyDP(id) {
+    const booking = await API.get(`/api/bookings/${id}`);
+    await API.post(`/api/bookings/${id}/verify-dp`, {});
+    closeModal('modal-verify-dp');
+
+    // Send WA to client - fetch updated booking with client info
+    const updated = await API.get(`/api/bookings/${id}`);
+    if (updated.client_phone) {
+    let tpl = templates.wa_dp_verified || `Halo Kak {{client_name}}! 👋
+
+DP untuk booking {{client_name}} & {{partner_name}} telah **DIVERIFIKASI** ✅
+
+📅 Tanggal Acara: {{event_date}}
+📍 Venue: {{venue}}
+🎨 Paket: {{package_name}}
+
+Booking status sekarang: **Confirmed**
+
+Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`;
+    tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+      if (!updated[key]) return '';
+      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => updated[k] !== undefined ? String(updated[k]) : m2);
+    });
+    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => updated[k] !== undefined ? String(updated[k]) : m));
+    window.open(`https://wa.me/${updated.client_phone.replace(/^0/, '62')}?text=${msg}`, '_blank');
+    }
+
+    load();
+    }
+    async function openConfirmDP(id) {
+    const b = await API.get(`/api/bookings/${id}`);
+    const payments = await API.get(`/api/bookings/${id}/payments`);
+    const dp = payments.find(p => p.type === 'dp');
+    const receiptUrl = dp?.reference ? `/api/uploads/receipts/${dp.reference}` : null;
+
+    document.getElementById('confirm-dp-content').innerHTML = `
+    <div class="confirm-grid">
+    <div class="item"><div class="label">Client</div><div class="val">${b.client_name}</div></div>
+    <div class="item"><div class="label">Paket</div><div class="val">${b.package_name || '-'}</div></div>
+    <div class="item"><div class="label">Harga Paket</div><div class="val">${formatIDR(b.package_price)}</div></div>
+    <div class="item"><div class="label">DP Dibayar</div><div class="val">${dp ? formatIDR(dp.amount) : '-'}</div></div>
+    </div>
+    ${b.notes ? `<div style="background:var(--surface2);border-radius:12px;padding:14px;margin-top:12px"><div class="label" style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Catatan Client</div><p style="font-size:13px">${b.notes}</p></div>` : ''}
+    ${receiptUrl ? `<div style="margin-top:12px"><label class="label" style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Bukti Transfer</label><img src="${receiptUrl}" class="receipt-img" onclick="window.open(this.src)" style="cursor:pointer"></div>` : '<p style="margin-top:12px;font-size:12px;color:var(--text2)">Belum ada upload bukti</p>'}
+    <div style="margin-top:16px;display:flex;gap:8px">
+    <button class="btn btn-primary" onclick="window.confirmDP(${id})" style="flex:1">✅ Konfirmasi DP</button>
+    <button class="btn btn-secondary" onclick="closeModal('modal-confirm-dp')">Tutup</button>
+    </div>
+    `;
+    openModal('modal-confirm-dp');
+    }
+    async function confirmDP(id) {
+    const booking = await API.get(`/api/bookings/${id}`);
+    await API.put(`/api/bookings/${id}/status`, { status: 'confirmed' });
+    closeModal('modal-confirm-dp');
+    
+    // Send WA to client
+    if (booking.client_phone) {
+    let tpl = templates.wa_dp_confirmed || `Halo Kak {{client_name}}! 👋
+
+DP untuk booking {{client_name}} & {{partner_name}} telah **DIKONFIRMASI** ✅
+
+📅 Tanggal Acara: {{event_date}}
+📍 Venue: {{venue}}
+🎨 Paket: {{package_name}}
+
+Booking status sekarang: **Confirmed**
+
+Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`;
+    tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+      if (!booking[key]) return '';
+      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => booking[k] !== undefined ? String(booking[k]) : m2);
+    });
+    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => booking[k] !== undefined ? String(booking[k]) : m));
+    window.open(`https://wa.me/${booking.client_phone.replace(/^0/, '62')}?text=${msg}`, '_blank');
+    }
+    
+    load();
+    }
+    function openStatusModal(id, status) {
+    document.getElementById('b-id').value = id;
+    document.getElementById('b-status').value = status;
+    openModal('modal-status');
+    }
+    async function updateBookingStatus() {
+    await API.put(`/api/bookings/${document.getElementById('b-id').value}/status`, {
+    status: document.getElementById('b-status').value,
+    });
+    closeModal('modal-status');
+    load();
+    }
+    function openPaymentModal(bookingId) {
+    document.getElementById('p-booking-id').value = bookingId;
+    document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('p-amount').value = '';
+    document.getElementById('p-notes').value = '';
+    openModal('modal-payment');
+    }
+    async function savePayment() {
+    const id = document.getElementById('p-booking-id').value;
+    await API.post(`/api/bookings/${id}/payments`, {
+    amount: parseInt(document.getElementById('p-amount').value),
+    payment_date: document.getElementById('p-date').value,
+    payment_method: document.getElementById('p-method').value,
+    notes: document.getElementById('p-notes').value,
+    });
+    closeModal('modal-payment');
+    viewDetail(id);
+    load();
+    }
+    function openExpenseModal(bookingId) {
+    document.getElementById('e-booking-id').value = bookingId;
+    document.getElementById('e-desc').value = '';
+    document.getElementById('e-amount').value = '';
+    const sel = document.getElementById('e-freelancer');
+    sel.innerHTML = '<option value="">-- Pilih Freelance --</option>' + allFreelancers.map(f => `<option value="${f.id}">${f.name} (${f.skill || '-'}) — ${formatIDR(f.rate_default)}</option>`).join('');
+    openModal('modal-expense');
+    }
+    async function saveExpense() {
+    const id = document.getElementById('e-booking-id').value;
+    const fid = document.getElementById('e-freelancer').value;
+    await API.post(`/api/bookings/${id}/expenses`, {
+    category: document.getElementById('e-category').value,
+    description: document.getElementById('e-desc').value,
+    amount: parseInt(document.getElementById('e-amount').value),
+    freelancer_id: fid ? parseInt(fid) : null,
+    });
+    closeModal('modal-expense');
+    viewDetail(id);
+    load();
+    }
+
+  </script>
+</body>
+</html>

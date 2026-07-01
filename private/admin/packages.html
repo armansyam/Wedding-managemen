@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Paket — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .packages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .package-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
+      display: flex; flex-direction: column; gap: 10px; position: relative;
+    }
+    .package-card h3 { font-size: 18px; color: var(--accent); }
+    .package-card .price { font-size: 24px; font-weight: 700; }
+    .package-card .modal-section { font-size: 12px; color: var(--text2); border-top: 1px solid var(--border); padding-top: 10px; }
+    .package-card .modal-row { display: flex; justify-content: space-between; padding: 2px 0; }
+    .package-card .modal-row.total { font-weight: 700; color: var(--green); border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
+    .package-card .modal-row.negative { color: var(--red); }
+    .package-card .margin { font-size: 14px; font-weight: 600; }
+    .pkg-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; margin: 2px; }
+    .pkg-tag.sesi { border-color: var(--accent); color: var(--accent); }
+    .pkg-tag.produk { border-color: var(--green); color: var(--green); }
+    .package-card .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+    .estimate-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+    .estimate-panel h3 { margin: 0 0 10px 0; font-size: 14px; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+    .checkbox-grid label { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    .checkbox-grid label:hover { background: var(--surface2); }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>🏷️ Paket</h1>
+      <button class="btn btn-primary" onclick="window.openAddModal()">+ Tambah Paket</button>
+    </div>
+    <div class="packages-grid" id="packages-grid"></div>
+  </div>
+
+  <!-- Modal Add/Edit Paket -->
+  <div class="modal-overlay" id="modal-pkg">
+    <div class="modal" style="max-width:600px">
+      <h2 id="modal-pkg-title">Tambah Paket</h2>
+      <input type="hidden" id="pkg-id">
+      <div class="form-row">
+        <div class="form-group"><label>Nama Paket *</label><input type="text" id="pkg-name" placeholder="Silver, Gold, Platinum..."></div>
+        <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="pkg-price" value="0"></div>
+      </div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="pkg-desc" rows="2" placeholder="Apa saja yang didapat..."></textarea></div>
+
+      <!-- Sessions -->
+      <div class="form-group">
+        <label>🎭 Sesi Acara yang Di-include</label>
+        <div class="checkbox-grid" id="pkg-sessions"></div>
+      </div>
+
+      <!-- Products -->
+      <div class="form-group">
+        <label>📦 Produk/Modal (Fisik & Digital)</label>
+        <div id="pkg-products-area"></div>
+      </div>
+
+      <!-- Live Estimate Panel -->
+      <div class="estimate-panel" id="estimate-panel">
+        <h3>📊 Estimasi Modal Paket</h3>
+        <div id="estimate-detail"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-pkg')">Batal</button>
+        <button class="btn btn-primary" onclick="window.savePkg()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  
+  <script>
+    let allSessions = [];
+    let allProducts = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+    renderSidebar('packages');
+
+    (async () => {
+      [allSessions, allProducts] = await Promise.all([
+        API.get('/api/sessions?active=1'),
+        API.get('/api/products')
+      ]);
+      load();
+    })();
+    });
+
+    async function load() {
+    const list = await API.get('/api/packages');
+    document.getElementById('packages-grid').innerHTML = list.length
+    ? list.map(p => `<div class="package-card" style="${!p.is_active ? 'opacity:.5' : ''}">
+    <h3>${p.name}</h3>
+    <div class="price">${formatIDR(p.price)}</div>
+    <div style="font-size:13px;color:var(--text2)">${p.description || '-'}</div>
+    <div style="margin-top:6px">
+    ${p.sessions.map(s => `<span class="pkg-tag sesi">🎭 ${s.name}</span>`).join('')}
+    ${p.products.map(pr => `<span class="pkg-tag produk">📦 ${pr.name} ×${pr.quantity}</span>`).join('')}
+    </div>
+    <div class="modal-section">
+    <div class="modal-row"><span>📦 Modal Produk</span><span>${formatIDR(p.modal_produk)}</span></div>
+    <div class="modal-row"><span>👥 Modal Jasa (AVG × 2 crew)</span><span>${formatIDR(p.modal_jasa)}</span></div>
+    <div class="modal-row total"><span>Total Modal</span><span>${formatIDR(p.total_modal)}</span></div>
+    <div class="modal-row"><span>Harga Jual</span><span>${formatIDR(p.price)}</span></div>
+    <div class="modal-row ${p.margin < 0 ? 'negative' : ''}"><span>Margin</span><span class="margin">${formatIDR(p.margin)}</span></div>
+    </div>
+    <div class="actions">
+    <button class="btn btn-sm btn-secondary" onclick="window.editPkg(${p.id})">Edit</button>
+    ${p.is_active ? `<button class="btn btn-sm btn-danger" onclick="window.deactivatePkg(${p.id})">Nonaktif</button>` : ''}
+    </div>
+    </div>`).join('')
+    : '<p style="color:var(--text2);text-align:center;padding:40px;grid-column:1/-1">Belum ada paket</p>';
+    }
+    function openAddModal() {
+    document.getElementById('modal-pkg-title').textContent = 'Tambah Paket';
+    document.getElementById('pkg-id').value = '';
+    document.getElementById('pkg-name').value = '';
+    document.getElementById('pkg-price').value = '0';
+    document.getElementById('pkg-desc').value = '';
+    renderSessionCheckboxes([]);
+    renderProductCheckboxes([]);
+    updateEstimate();
+    openModal('modal-pkg');
+    }
+    async function editPkg(id) {
+    const pkg = await API.get(`/api/packages/${id}`);
+    document.getElementById('modal-pkg-title').textContent = 'Edit Paket';
+    document.getElementById('pkg-id').value = pkg.id;
+    document.getElementById('pkg-name').value = pkg.name;
+    document.getElementById('pkg-price').value = pkg.price;
+    document.getElementById('pkg-desc').value = pkg.description || '';
+    renderSessionCheckboxes(pkg.sessions);
+    renderProductCheckboxes(pkg.products);
+    updateEstimate();
+    openModal('modal-pkg');
+    }
+    function renderSessionCheckboxes(selected) {
+    const sel = new Set(selected);
+    document.getElementById('pkg-sessions').innerHTML = allSessions.map(s =>
+    `<label><input type="checkbox" class="pkg-session" value="${s.id}" ${sel.has(s.id) ? 'checked' : ''} onchange="window.updateEstimate()"> 🎭 ${s.name}</label>`
+    ).join('');
+    }
+    function renderProductCheckboxes(selected) {
+    const sel = {};
+    for (const p of selected) sel[p.product_id || p.id] = p.quantity || 1;
+    document.getElementById('pkg-products-area').innerHTML = allProducts.map(p =>
+    `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0">
+    <input type="checkbox" class="pkg-product" value="${p.id}" ${sel[p.id] ? 'checked' : ''} onchange="window.updateEstimate()">
+    ${p.category === 'fisik' ? '📦' : '💻'} ${p.name} (${formatIDR(p.unit_cost)}/${p.unit})
+    <input type="number" class="pkg-product-qty" data-id="${p.id}" value="${sel[p.id] || 1}" min="1" style="width:50px;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px" onchange="window.updateEstimate()">
+    </label>`
+    ).join('');
+    }
+    function updateEstimate() {
+    const checkedSessions = [...document.querySelectorAll('.pkg-session:checked')].map(c => parseInt(c.value));
+    const checkedProducts = [...document.querySelectorAll('.pkg-product:checked')].map(c => {
+    const qty = document.querySelector(`.pkg-product-qty[data-id="${c.value}"]`);
+    return { product_id: parseInt(c.value), quantity: parseInt(qty.value) || 1 };
+    });
+
+    // Modal produk
+    let modalProduk = 0;
+    for (const cp of checkedProducts) {
+    const prod = allProducts.find(p => p.id === cp.product_id);
+    if (prod) modalProduk += prod.unit_cost * cp.quantity;
+    }
+
+    // Modal jasa (AVG fee × 2 crew)
+    let modalJasa = 0;
+    const detailSesi = [];
+    // We'll calculate on save via API, but show estimate client-side too
+    for (const sid of checkedSessions) {
+    // placeholder: will be calculated server-side
+    detailSesi.push({ session_id: sid, name: allSessions.find(s => s.id === sid)?.name || '?' });
+    }
+
+    const price = parseInt(document.getElementById('pkg-price').value) || 0;
+
+    document.getElementById('estimate-detail').innerHTML = `
+    <div class="modal-row"><span>📦 Modal Produk</span><span>${formatIDR(modalProduk)}</span></div>
+    <div class="modal-row"><span>🎭 Sesi dipilih: ${checkedSessions.length}</span><span>${detailSesi.map(d => d.name).join(', ') || '-'}</span></div>
+    <div class="modal-row" style="color:var(--text2);font-size:11px"><span>Modal Jasa</span><span>Dihitung server (AVG fee × 2 crew)</span></div>
+    <div class="modal-row"><span>Harga Jual</span><span>${formatIDR(price)}</span></div>
+    <div class="modal-row" style="color:var(--text2);font-size:11px"><span>Modal jasa & margin</span><span>akan akurat setelah disimpan</span></div>
+    `;
+    }
+    async function savePkg() {
+    const session_ids = [...document.querySelectorAll('.pkg-session:checked')].map(c => parseInt(c.value));
+    const product_ids = [...document.querySelectorAll('.pkg-product:checked')].map(c => {
+    const qty = document.querySelector(`.pkg-product-qty[data-id="${c.value}"]`);
+    return { product_id: parseInt(c.value), quantity: parseInt(qty.value) || 1 };
+    });
+
+    const data = {
+    name: document.getElementById('pkg-name').value,
+    description: document.getElementById('pkg-desc').value,
+    price: parseInt(document.getElementById('pkg-price').value) || 0,
+    session_ids,
+    product_ids,
+    };
+    if (!data.name) return alert('Nama paket wajib diisi');
+
+    const id = document.getElementById('pkg-id').value;
+    if (id) {
+    await API.put(`/api/packages/${id}`, data);
+    } else {
+    await API.post('/api/packages', data);
+    }
+    closeModal('modal-pkg');
+    load();
+    }
+    async function deactivatePkg(id) {
+    if (!confirm('Nonaktifkan paket ini?')) return;
+    await API.del(`/api/packages/${id}`);
+    load();
+    }
+
+  </script>
+</body>
+</html>

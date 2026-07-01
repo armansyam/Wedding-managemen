@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kalender — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>📅 Kalender</h1>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="window.prevMonth()">◀</button>
+        <span id="month-label" style="display:flex;align-items:center;font-size:16px;font-weight:600;min-width:200px;justify-content:center"></span>
+        <button class="btn btn-secondary" onclick="window.nextMonth()">▶</button>
+      </div>
+    </div>
+    <div class="calendar-grid" id="calendar"></div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  
+  <script>
+    let currentDate = new Date();
+    let events = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+    renderSidebar('calendar');
+
+    load();
+    });
+
+    async function load() {
+    const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}`;
+    events = await API.get(`/api/bookings/calendar/events?month=${month}`);
+    render();
+    }
+    function render() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    document.getElementById('month-label').textContent = currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    let html = days.map(d => `<div class="calendar-header">${d}</div>`).join('');
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day empty"></div>';
+
+    for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+    const dayEvents = events.filter(e => e.event_date === dateStr);
+
+    html += `<div class="calendar-day ${isToday ? 'today' : ''}">
+    <div class="day-num">${d}</div>
+    ${dayEvents.map(e => `<div class="calendar-event ${e.status}" title="${e.client_name} — ${e.event_name || ''}">${e.client_name}</div>`).join('')}
+    </div>`;
+    }
+
+    document.getElementById('calendar').innerHTML = html;
+    }
+    function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); load(); }
+    function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); load(); }
+
+  </script>
+</body>
+</html>

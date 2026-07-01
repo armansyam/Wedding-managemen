@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Arsip — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>🗄️ Arsip</h1>
+      <div class="btn-group">
+        <div class="search-bar"><input type="text" placeholder="Cari nama, invoice, no HP..." id="search" oninput="loadArchive()"></div>
+      </div>
+    </div>
+
+    <div class="tab-bar" style="display:flex;gap:4px;margin-bottom:16px">
+      <button class="btn btn-sm btn-secondary" onclick="switchTab('bookings')" id="tab-bookings" style="font-size:12px">📋 Booking Selesai</button>
+      <button class="btn btn-sm btn-secondary" onclick="switchTab('leads')" id="tab-leads" style="font-size:12px">📥 Leads Hilang</button>
+    </div>
+
+    <!-- BOOKINGS TABLE -->
+    <div id="section-bookings" style="display:none">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>INVOICE</th><th>CLIENT</th><th>PASANGAN</th><th>PAKET</th><th>TANGGAL</th><th>VENUE</th><th>HARGA</th><th>DIBAYAR</th><th>STATUS</th></tr></thead>
+          <tbody id="bookings-table"></tbody>
+        </table>
+      </div>
+      <p style="text-align:center;color:var(--text2);padding:20px;font-size:13px" id="bookings-empty" class="hidden">Tidak ada booking di arsip</p>
+    </div>
+
+    <!-- LEADS TABLE -->
+    <div id="section-leads" style="display:none">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>NAMA</th><th>PASANGAN</th><th>TELEPON</th><th>TANGGAL ACARA</th><th>LOKASI</th><th>PAKET</th><th>HILANG</th></tr></thead>
+          <tbody id="leads-table"></tbody>
+        </table>
+      </div>
+      <p style="text-align:center;color:var(--text2);padding:20px;font-size:13px" id="leads-empty" class="hidden">Tidak ada leads hilang</p>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  <script>
+    let archiveData = { lost_leads: [], archived_bookings: [] };
+    let currentTab = 'bookings';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSidebar('archive');
+      switchTab('bookings');
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('section-leads').style.display = tab === 'leads' ? '' : 'none';
+      document.getElementById('section-bookings').style.display = tab === 'bookings' ? '' : 'none';
+      document.querySelectorAll('.tab-bar .btn').forEach(b => b.style.borderColor = 'var(--border)');
+      const active = document.getElementById('tab-' + tab);
+      if (active) active.style.borderColor = 'var(--accent)';
+      loadArchive();
+    }
+
+    async function loadArchive() {
+      archiveData = await API.get('/api/archive');
+      const q = (document.getElementById('search').value || '').toLowerCase();
+
+      // Bookings
+      let bookings = archiveData.archived_bookings;
+      if (q) bookings = bookings.filter(b => {
+        const invoice = `INV-${new Date(b.created_at).getFullYear()}-${String(b.id).padStart(3,'0')}`.toLowerCase();
+        return (b.client_name||'').toLowerCase().includes(q)
+          || (b.partner_name||'').toLowerCase().includes(q)
+          || (b.phone||'').includes(q)
+          || invoice.includes(q);
+      });
+      document.getElementById('bookings-table').innerHTML = bookings.length
+        ? bookings.map(b => {
+          const isCancelled = b.status === 'cancelled';
+          const badge = isCancelled
+            ? '<span style="color:var(--red)">Batal</span>'
+            : '<span style="color:var(--green)">Selesai</span>';
+          const invoice = `INV-${new Date(b.created_at).getFullYear()}-${String(b.id).padStart(3,'0')}`;
+          return `<tr>
+            <td style="white-space:nowrap">${invoice}</td>
+            <td><strong>${b.client_name || '-'}</strong></td>
+            <td>${b.partner_name || '-'}</td>
+            <td>${b.package_name || '-'}</td>
+            <td>${b.event_date ? formatDate(b.event_date) : '-'}</td>
+            <td>${b.venue || '-'}</td>
+            <td>${formatIDR(b.package_price)}</td>
+            <td>${formatIDR(b.total_paid || 0)}</td>
+            <td>${badge}</td>
+          </tr>`;
+        }).join('')
+        : '';
+      document.getElementById('bookings-empty').classList.toggle('hidden', bookings.length > 0);
+
+      // Leads
+      let leads = archiveData.lost_leads;
+      if (q) leads = leads.filter(l =>
+        (l.name||'').toLowerCase().includes(q)
+        || (l.partner_name||'').toLowerCase().includes(q)
+        || (l.phone||'').includes(q)
+      );
+      document.getElementById('leads-table').innerHTML = leads.length
+        ? leads.map(l => `<tr>
+            <td><strong>${l.name}</strong></td>
+            <td>${l.partner_name || '-'}</td>
+            <td>${l.phone || '-'}</td>
+            <td>${l.wedding_date ? formatDate(l.wedding_date) : '-'}</td>
+            <td>${l.venue || '-'}</td>
+            <td>${l.package_interest || '-'}</td>
+            <td>${l.updated_at ? formatDate(l.updated_at) : '-'}</td>
+          </tr>`).join('')
+        : '';
+      document.getElementById('leads-empty').classList.toggle('hidden', leads.length > 0);
+    }
+  </script>
+</body>
+</html>

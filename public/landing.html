@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorehari — Story and Rewinded Moments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F9F8F6;
+        }
+
+        .serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-[#F9F8F6] text-slate-900">
+    <header class="sticky top-0 z-30 bg-[#F9F8F6] border-b border-slate-200/80">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10">
+            <a href="#" class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600">Story and Rewinded
+                Moments</a>
+            <nav
+                class="hidden md:flex items-center gap-10 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">
+                <a href="/"
+                    class="border-b-2 border-transparent hover:border-slate-900 hover:text-slate-900 transition">Home</a>
+                <a href="#about" class="text-slate-500 hover:text-slate-900 transition">About</a>
+                <a href="/portfolio.html" class="text-slate-500 hover:text-slate-900 transition">Portfolio</a>
+                <a href="#contact" class="text-slate-500 hover:text-slate-900 transition">Contact</a>
+            </nav>
+            <!-- Language Switcher -->
+            <div class="relative ml-6 md:ml-10">
+                <button id="lang-toggle"
+                    class="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                    aria-label="Switch language">
+                    <span class="uppercase tracking-wider">EN</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div id="lang-dropdown"
+                    class="absolute right-0 mt-1.5 min-w-[100px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg opacity-0 invisible translate-y-1 transition-all duration-200 z-50">
+                    <button data-lang="en"
+                        class="w-full px-3 py-1.5 text-left text-xs font-medium text-slate-900 hover:bg-slate-50 transition">English</button>
+                    <button data-lang="id"
+                        class="w-full px-3 py-1.5 text-left text-xs font-medium text-slate-600 hover:bg-slate-50 transition">Indonesia</button>
+                </div>
+            </div>
+            <button id="nav-toggle"
+                class="md:hidden rounded-full border border-slate-300 px-3 py-2 text-slate-700 transition hover:bg-slate-100"
+                aria-controls="mobile-menu" aria-expanded="false">
+                Menu
+            </button>
+        </div>
+        <div id="mobile-menu" class="hidden border-t border-slate-200 bg-[#F9F8F6]">
+            <div
+                class="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">
+                <a href="/" class="block rounded-lg px-4 py-2 hover:bg-slate-100">Home</a>
+                <a href="#about" class="block rounded-lg px-4 py-2 hover:bg-slate-100">About</a>
+                <a href="/portfolio.html" class="block rounded-lg px-4 py-2 hover:bg-slate-100">Portfolio</a>
+                <a href="#contact" class="block rounded-lg px-4 py-2 hover:bg-slate-100">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="home" class="mx-auto flex max-w-7xl flex-col px-6 py-10 md:px-10 md:py-16">
+        <section class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div class="space-y-8">
+                <div
+                    class="inline-flex items-center rounded-full bg-slate-900/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-600 shadow-sm ring-1 ring-slate-900/5">
+                    new journey
+                </div>
+                <div class="space-y-6">
+                    <h1
+                        class="serif-title text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
+                        Sorehari</h1>
+                    <p class="max-w-2xl text-base leading-8 text-slate-700 sm:text-lg" data-i18n="hero_subtitle">Story
+                        and Rewinded Moments —
+                        a collection of memories with an elegant touch, photography, and soothing narratives.</p>
+                </div>
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <a href="/portfolio.html"
+                        class="inline-flex w-full items-center justify-center rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+                        data-i18n="hero_portfolio">View Portfolio</a>
+                    <a href="#contact"
+                        class="inline-flex w-full items-center justify-center rounded-full border border-slate-900/10 bg-white px-8 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 sm:w-auto"
+                        data-i18n="hero_contact">Contact Us</a>
+                </div>
+            </div>
+
+            <div class="grid gap-6 sm:grid-cols-2 sm:grid-rows-[auto_auto]" id="portfolio">
+                <div
+                    class="relative overflow-hidden rounded-[2rem] bg-white shadow-[0_35px_70px_-40px_rgba(15,23,42,0.5)]">
+                    <picture>
+                        <source srcset="/image/optimized/img1-1200.jpg 1200w, /image/optimized/img1-768.jpg 768w"
+                            sizes="(max-width: 768px) 100vw, 540px">
+                        <img src="/image/optimized/img1-1200.jpg" alt="Pasangan di pantai foto elegan"
+                            class="h-full w-full object-cover" loading="lazy">
+                    </picture>
+                </div>
+                <div class="grid gap-6">
+                    <div class="relative overflow-hidden rounded-[1.75rem] bg-white shadow-lg aspect-square">
+                        <picture>
+                            <source srcset="/image/optimized/img2-1200.jpg 1200w, /image/optimized/img2-768.jpg 768w"
+                                sizes="(max-width: 768px) 100vw, 260px">
+                            <img src="/image/optimized/img2-1200.jpg" alt="Foto momen pasangan di pantai"
+                                class="h-full w-full object-cover" loading="lazy">
+                        </picture>
+                    </div>
+                    <div class="relative overflow-hidden rounded-[1.75rem] bg-white shadow-lg aspect-square">
+                        <picture>
+                            <source srcset="/image/optimized/img3-1200.jpg 1200w, /image/optimized/img3-768.jpg 768w"
+                                sizes="(max-width: 768px) 100vw, 260px">
+                            <img src="/image/optimized/img3-1200.jpg" alt="Detail romantis dalam bingkai foto"
+                                class="h-full w-full object-cover" loading="lazy">
+                        </picture>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="mt-20 space-y-8">
+            <!-- About Section -->
+            <div
+                class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-16 flex flex-col items-center text-center">
+                <h2 class="serif-title text-3xl font-semibold text-slate-900 sm:text-4xl" data-i18n="about_heading">
+                    About Sorehari</h2>
+                <div class="mt-6 w-12 border-b-2 border-slate-300"></div>
+                <p class="mt-8 max-w-2xl text-base leading-8 text-slate-600" data-i18n="about_desc">Sorehari was born
+                    from our love for
+                    memories and stories. We are a team of professional photographers dedicated to capturing precious
+                    moments
+                    in your life — from the thrilling preparations to the most beautiful details at the end of the
+                    event.
+                    Let us frame your moments with a timeless aesthetic touch.</p>
+            </div>
+
+            <!-- Services Section -->
+            <div class="grid gap-6 sm:grid-cols-3">
+                <div
+                    class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-10 flex flex-col justify-between">
+                    <div>
+                        <h3 class="serif-title text-2xl font-semibold text-slate-900">Engagement</h3>
+                        <p class="mt-4 text-sm leading-6 text-slate-600" data-i18n="engagement_desc">The first step
+                            towards eternity. Capture
+                            the warm atmosphere of family gatherings in classic snapshots.</p>
+                    </div>
+
+                </div>
+
+                <div
+                    class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-10 flex flex-col justify-between">
+                    <div>
+                        <h3 class="serif-title text-2xl font-semibold text-slate-900">Pre-Wedding</h3>
+                        <p class="mt-4 text-sm leading-6 text-slate-600" data-i18n="prewedding_desc">Immortalize your
+                            romance and intimate moments before
+                            the happy day in a <span class="italic">timeless</span> and aesthetic concept.</p>
+                    </div>
+
+                </div>
+
+                <div
+                    class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-10 flex flex-col justify-between">
+                    <div>
+                        <h3 class="serif-title text-2xl font-semibold text-slate-900">Wedding Day</h3>
+                        <p class="mt-4 text-sm leading-6 text-slate-600" data-i18n="weddingday_desc">Full documentation
+                            of the most memorable day. Every
+                            laugh, happy tear, and beautiful detail will not be missed.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Full Package Box -->
+            <div
+                class="rounded-[2rem] bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-8 shadow-xl sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <div class="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-white opacity-5 blur-3xl"></div>
+                <div class="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white opacity-5 blur-3xl"></div>
+                <div class="text-center sm:text-left relative z-10">
+                    <h3 class="serif-title text-2xl font-semibold text-white sm:text-3xl">Full Package</h3>
+                    <p class="mt-3 text-sm leading-6 text-slate-300 max-w-xl" data-i18n="fullpackage_desc">A complete
+                        package from <span class="text-white font-semibold">Engagement</span> to <span
+                            class="text-white font-semibold">Wedding Day</span>. One team, one complete story — we
+                        accompany every step of your love journey from beginning to end.</p>
+                </div>
+
+            </div>
+
+
+
+            <!-- Why Choose Us -->
+            <div
+                class="rounded-[2rem] bg-[#1a1a1a] p-8 shadow-xl sm:p-16 flex flex-col items-center text-center relative overflow-hidden">
+                <div class="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-slate-700 opacity-20 blur-3xl"></div>
+                <div class="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-slate-700 opacity-20 blur-3xl"></div>
+
+                <h3 class="serif-title text-3xl font-semibold text-white sm:text-4xl" data-i18n="philosophy_heading">Our
+                    Philosophy</h3>
+                <p class="mt-8 max-w-3xl text-base leading-8 text-slate-300 relative z-10" data-i18n="philosophy_desc">
+                    At Sorehari, we believe
+                    that everyone has their own unique story. Our task is not merely pressing the camera shutter button,
+                    but <span class="italic text-white">capturing honest emotions</span> and <span
+                        class="italic text-white">unrepeatable moments</span>, then weaving them into an
+                    everlasting memory that you can replay anytime.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact" class="border-t border-slate-200/80 bg-[#F9F8F6] px-6 py-12 md:px-10">
+        <div class="mx-auto max-w-7xl space-y-8">
+            <!-- Contact Section -->
+            <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Sorehari</p>
+                    <p class="mt-2 text-sm text-slate-600">Story and Rewinded Moments</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Contact</p>
+                    <div class="mt-2 space-y-2 text-sm">
+                        <p><a href="mailto:hello@sorehari.com"
+                                class="text-slate-600 hover:text-slate-900 transition">hello@sorehari.com</a></p>
+                        <p><a href="https://wa.me/6285399098599" target="_blank"
+                                class="text-slate-600 hover:text-slate-900 transition flex items-center gap-2">WA
+                                Zulham</a></p>
+                        <p><a href="https://wa.me/6282333333420" target="_blank"
+                                class="text-slate-600 hover:text-slate-900 transition flex items-center gap-2">WA
+                                Ammang</a></p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Pages</p>
+                    <ul class="mt-2 space-y-1 text-sm">
+                        <li><a href="/" class="text-slate-600 hover:text-slate-900 transition">Home</a></li>
+                        <li><a href="/portfolio.html"
+                                class="text-slate-600 hover:text-slate-900 transition">Portfolio</a></li>
+                        <li><a href="#about" class="text-slate-600 hover:text-slate-900 transition">About</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Resources</p>
+                    <ul class="mt-2 space-y-1 text-sm">
+                        <li><a href="/login" class="text-slate-600 hover:text-slate-900 transition">Admin
+                                Dashboard</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="border-t border-slate-200/80 pt-8 text-center text-sm text-slate-600">
+                <p>© 2026 Sorehari. All rights reserved. Built with ❤️ for memorable moments.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const navToggle = document.getElementById('nav-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        navToggle?.addEventListener('click', () => {
+            const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navToggle.setAttribute('aria-expanded', String(!expanded));
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when link clicked
+        mobileMenu?.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                navToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href === '#') return;
+
+                e.preventDefault();
+                const element = document.querySelector(href);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Language Switcher
+        const langToggle = document.getElementById('lang-toggle');
+        const langDropdown = document.getElementById('lang-dropdown');
+        const langLabel = langToggle?.querySelector('span');
+
+        const translations = {
+            en: {
+                hero_subtitle: 'Story and Rewinded Moments — a collection of memories with an elegant touch, photography, and soothing narratives.',
+                hero_portfolio: 'View Portfolio',
+                hero_contact: 'Contact Us',
+                about_heading: 'About Sorehari',
+                about_desc: 'Sorehari was born from our love for memories and stories. We are a team of professional photographers dedicated to capturing precious moments in your life — from the thrilling preparations to the most beautiful details at the end of the event. Let us frame your moments with a timeless aesthetic touch.',
+                engagement_desc: 'The first step towards eternity. Capture the warm atmosphere of family gatherings in classic snapshots.',
+                prewedding_desc: 'Immortalize your romance and intimate moments before the happy day in a timeless and aesthetic concept.',
+                weddingday_desc: 'Full documentation of the most memorable day. Every laugh, happy tear, and beautiful detail will not be missed.',
+                fullpackage_desc: 'A complete package from Engagement to Wedding Day. One team, one complete story — we accompany every step of your love journey from beginning to end.',
+                philosophy_heading: 'Our Philosophy',
+                philosophy_desc: 'At Sorehari, we believe that everyone has their own unique story. Our task is not merely pressing the camera shutter button, but capturing honest emotions and unrepeatable moments, then weaving them into an everlasting memory that you can replay anytime.'
+            },
+            id: {
+                hero_subtitle: 'Story and Rewinded Moments — sajian kenangan dengan sentuhan elegan, foto, dan narasi yang menenangkan.',
+                hero_portfolio: 'Lihat Portofolio',
+                hero_contact: 'Hubungi Kami',
+                about_heading: 'Tentang Sorehari',
+                about_desc: 'Sorehari lahir dari kecintaan kami pada memori dan cerita. Kami adalah tim fotografer profesional yang berdedikasi untuk merekam detik-detik berharga dalam hidup Anda—dari persiapan yang mendebarkan hingga detail terindah di akhir acara. Biarkan kami membingkai momen Anda dengan sentuhan estetis yang tak lekang oleh waktu.',
+                engagement_desc: 'Langkah pertama menuju keabadian. Tangkap nuansa hangat pertemuan keluarga dalam jepretan klasik.',
+                prewedding_desc: 'Abadikan romansa dan momen intim Anda sebelum hari bahagia dalam konsep yang timeless dan estetis.',
+                weddingday_desc: 'Dokumentasi penuh hari paling berkesan. Setiap tawa, tangis bahagia, dan detail terindah tak akan terlewatkan.',
+                fullpackage_desc: 'Paket lengkap dari Engagement hingga Wedding Day. Satu tim, satu cerita utuh — kami menemani setiap langkah perjalanan cinta Anda dari awal hingga akhir.',
+                philosophy_heading: 'Filosofi Kami',
+                philosophy_desc: 'Kami di Sorehari percaya bahwa setiap orang memiliki cerita uniknya masing-masing. Tugas kami bukanlah sekadar menekan tombol rana kamera, melainkan menangkap emosi jujur dan momen yang tak terulang, lalu merangkainya menjadi sebuah kenangan abadi yang bisa Anda putar kembali kapan saja.'
+            }
+        };
+
+        let currentLang = localStorage.getItem('sorehari-lang') || 'en';
+
+        function applyLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('sorehari-lang', lang);
+            document.documentElement.lang = lang;
+            if (langLabel) langLabel.textContent = lang.toUpperCase();
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang]?.[key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+
+            // Update dropdown active state
+            langDropdown?.querySelectorAll('button').forEach(btn => {
+                btn.classList.toggle('text-slate-900', btn.dataset.lang === lang);
+                btn.classList.toggle('font-semibold', btn.dataset.lang === lang);
+                btn.classList.toggle('text-slate-500', btn.dataset.lang !== lang);
+                btn.classList.toggle('font-medium', btn.dataset.lang !== lang);
+            });
+        }
+
+        // Toggle dropdown
+        langToggle?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            langDropdown?.classList.toggle('opacity-0');
+            langDropdown?.classList.toggle('invisible');
+            langDropdown?.classList.toggle('translate-y-1');
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', () => {
+            langDropdown?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+        });
+
+        // Language selection
+        langDropdown?.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyLang(btn.dataset.lang);
+                langDropdown?.classList.add('opacity-0', 'invisible', 'translate-y-1');
+            });
+        });
+
+        // Apply saved language on load
+        applyLang(currentLang);
+    </script>
+</body>
+
+</html>

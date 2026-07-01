@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sesi Acara — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>📅 Master Sesi Acara</h1>
+      <button class="btn btn-primary" onclick="openModal('modal-add')">+ Tambah Sesi</button>
+    </div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Sesi acara wedding (Mappettuada, Mappacci, Akad, Resepsi, dll). Freelance fee diatur per sesi.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Nama Sesi</th><th>Deskripsi</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="sessions-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-add">
+    <div class="modal" style="max-width:420px">
+      <h2>Tambah Sesi</h2>
+      <div class="form-group"><label>Nama Sesi *</label><input type="text" id="f-name" placeholder="Mappettuada, Lamaran, Siraman..."></div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="f-desc" rows="2"></textarea></div>
+      <div class="form-group"><label>Urutan</label><input type="number" id="f-order" value="0"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add')">Batal</button>
+        <button class="btn btn-primary" onclick="window.save()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit">
+    <div class="modal" style="max-width:420px">
+      <h2>Edit Sesi</h2>
+      <input type="hidden" id="e-id">
+      <div class="form-group"><label>Nama Sesi</label><input type="text" id="e-name"></div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="e-desc" rows="2"></textarea></div>
+      <div class="form-group"><label>Urutan</label><input type="number" id="e-order"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-edit')">Batal</button>
+        <button class="btn btn-primary" onclick="window.update()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+    renderSidebar('sessions');
+    load();
+    });
+
+    async function load() {
+    const list = await API.get('/api/sessions');
+    document.getElementById('sessions-table').innerHTML = list.map(s => `<tr>
+    <td>${s.default_order}</td>
+    <td><strong>${s.name}</strong></td><td>${s.description || '-'}</td>
+    <td>${s.is_active ? '<span class="badge badge-confirmed">Aktif</span>' : '<span class="badge badge-cancelled">Nonaktif</span>'}</td>
+    <td><div class="btn-group">
+    <button class="btn btn-sm btn-secondary" onclick="window.editSession(${s.id},'${s.name.replace(/'/g,"\\'")}','${(s.description||'').replace(/'/g,"\\'")}',${s.default_order})">Edit</button>
+    ${s.is_active ? `<button class="btn btn-sm btn-danger" onclick="window.deactivate(${s.id})">Nonaktif</button>` : ''}
+    </div></td>
+    </tr>`).join('');
+    }
+    async function save() {
+    const data = { name: document.getElementById('f-name').value, description: document.getElementById('f-desc').value, default_order: parseInt(document.getElementById('f-order').value) || 0 };
+    if (!data.name) return alert('Nama wajib diisi');
+    await API.post('/api/sessions', data);
+    closeModal('modal-add');
+    load();
+    }
+    function editSession(id, name, desc, order) {
+    document.getElementById('e-id').value = id;
+    document.getElementById('e-name').value = name;
+    document.getElementById('e-desc').value = desc;
+    document.getElementById('e-order').value = order;
+    openModal('modal-edit');
+    }
+    async function update() {
+    await API.put(`/api/sessions/${document.getElementById('e-id').value}`, {
+    name: document.getElementById('e-name').value,
+    description: document.getElementById('e-desc').value,
+    default_order: parseInt(document.getElementById('e-order').value) || 0,
+    });
+    closeModal('modal-edit');
+    load();
+    }
+    async function deactivate(id) {
+    if (!confirm('Nonaktifkan sesi ini?')) return;
+    await API.del(`/api/sessions/${id}`);
+    load();
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Clients — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .client-card {
+      background: var(--surface2); border-radius: 16px; padding: 20px; border: 1px solid var(--border);
+      transition: all 0.2s; cursor: default;
+    }
+    .client-card:hover { border-color: var(--accent); }
+    .client-name { font-weight: 700; font-size: 15px; }
+    .client-partner { font-size: 13px; color: var(--text2); }
+    .client-meta { font-size: 12px; color: var(--text2); margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .client-meta span { display: flex; align-items: center; gap: 4px; }
+    .client-finance { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .client-finance .item { background: var(--surface); border-radius: 10px; padding: 10px 12px; }
+    .client-finance .item .label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .client-finance .item .val { font-size: 14px; font-weight: 700; margin-top: 2px; }
+    .progress-bar { height: 4px; background: var(--border); border-radius: 4px; margin-top: 12px; overflow: hidden; }
+    .progress-bar .fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    .client-actions { display: flex; gap: 6px; margin-top: 12px; }
+    .client-actions .btn { font-size: 11px; padding: 6px 12px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .detail-row:last-child { border: none; }
+    .detail-row .label { color: var(--text2); }
+    .detail-row .val { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>👥 Clients</h1>
+      <div class="btn-group">
+        <div class="search-bar"><input type="text" placeholder="Cari nama/phone..." id="search" oninput="window.loadClients && window.loadClients()"></div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px" id="stats-row"></div>
+
+    <!-- Client cards -->
+    <div id="clients-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px"></div>
+  </div>
+
+  <!-- Modal Detail -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal" style="max-width:500px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 id="detail-title" style="font-size:18px">Detail Client</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-detail')">✕</button>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Pelunasan -->
+  <div class="modal-overlay" id="modal-pelunasan">
+    <div class="modal" style="max-width:400px">
+      <h2 style="font-size:18px">💰 Konfirmasi Pelunasan</h2>
+      <p style="font-size:12px;color:var(--text2);margin:8px 0 16px" id="pelunasan-info"></p>
+      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="pul-amount"></div>
+      <div class="form-group"><label>Tanggal</label><input type="date" id="pul-date"></div>
+      <div class="form-group"><label>Metode</label>
+        <select id="pul-method"><option value="transfer">Transfer</option><option value="cash">Cash</option><option value="ewallet">E-Wallet</option></select>
+      </div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="pul-notes"></div>
+      <input type="hidden" id="pul-booking-id">
+      <input type="hidden" id="pul-remaining">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-pelunasan')">Batal</button>
+        <button class="btn btn-primary" onclick="savePelunasan()">Konfirmasi</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSidebar('clients');
+      window.loadClients();
+    });
+
+    window.loadClients = async function() {
+        const search = document.getElementById('search').value;
+        let clients = await API.get('/api/clients/confirmed');
+
+        if (search) {
+          const q = search.toLowerCase();
+          clients = clients.filter(c => c.name.toLowerCase().includes(q) || (c.phone||'').includes(q));
+        }
+
+        // Stats
+        const totalRevenue = clients.reduce((s, c) => s + (c.total_paid || 0), 0);
+        const totalProfit = clients.reduce((s, c) => s + (c.profit || 0), 0);
+        const pendingPelunasan = clients.filter(c => (c.total_paid || 0) < (c.package_price || 0)).length;
+
+        document.getElementById('stats-row').innerHTML = `
+          <div class="client-card" style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Total Client</div>
+            <div style="font-size:24px;font-weight:800;margin-top:4px">${clients.length}</div>
+          </div>
+          <div class="client-card" style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Total Pendapatan</div>
+            <div style="font-size:18px;font-weight:800;color:var(--green);margin-top:4px">${formatIDR(totalRevenue)}</div>
+          </div>
+          <div class="client-card" style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Total Profit</div>
+            <div style="font-size:18px;font-weight:800;color:var(--green);margin-top:4px">${formatIDR(totalProfit)}</div>
+          </div>
+          <div class="client-card" style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Menunggu Pelunasan</div>
+            <div style="font-size:18px;font-weight:800;color:var(--accent);margin-top:4px">${pendingPelunasan}</div>
+          </div>`;
+
+        const cardsHtml = clients.map(c => {
+          const paid = c.total_paid || 0;
+          const price = c.package_price || 0;
+          const remaining = price - paid;
+          const pct = price > 0 ? Math.round((paid/price)*100) : 0;
+          const isLunas = c.booking_status === 'completed';
+
+          const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+          const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} di ${c.venue || '-'} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
+          const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
+
+          const statusColors = { confirmed:'var(--blue)', in_progress:'var(--accent,#C9A96E)', event_day:'var(--green)', completed:'var(--green)' };
+          const statusLabels = { confirmed:'Confirmed', in_progress:'Persiapan', event_day:'Hari H', completed:'Selesai', archived:'Arsip', cancelled:'Batal' };
+          const badgeColor = statusColors[c.booking_status] || 'var(--text2)';
+          const badgeLabel = statusLabels[c.booking_status] || c.booking_status;
+
+          return `<div class="client-card" ${isLunas ? 'style="border:2px solid var(--green);position:relative"' : ''}>
+            ${isLunas ? '<div style="position:absolute;top:-1px;right:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:0 0 6px 6px;letter-spacing:1px">✅ LUNAS</div>' : ''}
+            <div style="display:flex;justify-content:space-between;align-items:start">
+              <div>
+                <div class="client-name">${c.name}</div>
+                <div class="client-partner">${c.partner_name ? '♡ ' + c.partner_name : ''}</div>
+              </div>
+              <span class="badge" style="background:${badgeColor};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${badgeLabel}</span>
+            </div>
+            <div class="client-meta">
+              <span>📅 ${formatDate(c.event_date)}</span>
+              <span>📍 ${c.venue || '-'}</span>
+              <span>🏷️ ${c.package_name || '-'}</span>
+            </div>
+            <div class="client-finance">
+              <div class="item"><div class="label">Harga Paket</div><div class="val">${formatIDR(price)}</div></div>
+              <div class="item"><div class="label">Dibayar</div><div class="val" style="color:var(--green)">${formatIDR(paid)}</div></div>
+              <div class="item"><div class="label">Sisa</div><div class="val" style="color:${isLunas ? 'var(--green)' : 'var(--red)'}">${formatIDR(Math.max(0,remaining))}</div></div>
+            </div>
+            <div class="progress-bar">
+              <div class="fill" style="width:${pct}%;background:${isLunas ? 'var(--green)' : 'var(--blue)'}"></div>
+            </div>
+            <div class="client-actions">
+              <button class="btn btn-sm btn-secondary" onclick="viewDetail(${c.booking_id})">Detail</button>
+              ${!isLunas ? `<a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center">💬 Tagih</a>` : ''}
+              ${!isLunas ? `<button class="btn btn-sm btn-primary" onclick="openPelunasan(${c.booking_id},'${c.name}',${remaining})">💰 Pelunasan</button>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+
+        document.getElementById('clients-list').innerHTML = cardsHtml || '<div style="text-align:center;color:var(--text2);padding:40px;grid-column:1/-1">Belum ada client aktif</div>';
+    };
+
+    function viewDetail(id) {
+      window.location.href = `/admin/booking-detail?id=${id}`;
+    }
+
+    function openPelunasan(bookingId, name, remaining) {
+      document.getElementById('pul-booking-id').value = bookingId;
+      document.getElementById('pul-remaining').value = remaining;
+      document.getElementById('pul-amount').value = remaining;
+      document.getElementById('pul-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('pul-notes').value = '';
+      document.getElementById('pelunasan-info').textContent = `${name} — Sisa pelunasan: ${formatIDR(remaining)}`;
+      openModal('modal-pelunasan');
+    }
+
+    async function savePelunasan() {
+      const id = document.getElementById('pul-booking-id').value;
+      await API.post(`/api/bookings/${id}/payments`, {
+        type: 'pelunasan',
+        amount: parseInt(document.getElementById('pul-amount').value),
+        payment_date: document.getElementById('pul-date').value,
+        payment_method: document.getElementById('pul-method').value,
+        notes: document.getElementById('pul-notes').value || 'Pelunasan',
+      });
+      closeModal('modal-pelunasan');
+      window.loadClients();
+    }
+  </script>
+</body>
+</html>

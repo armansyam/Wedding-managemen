@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>📊 Dashboard</h1>
+      <div style="color:var(--text2);font-size:13px" id="current-month"></div>
+    </div>
+
+    <div class="stats-grid" id="stats"></div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+      <!-- Upcoming Events -->
+      <div class="table-wrap">
+        <div class="table-header"><h3>📅 Event Mendatang</h3></div>
+        <table><thead><tr><th>Client</th><th>Tanggal</th><th>Venue</th><th>Status</th></tr></thead>
+        <tbody id="upcoming-table"></tbody></table>
+      </div>
+
+      <!-- Recent Leads -->
+      <div class="table-wrap">
+        <div class="table-header"><h3>📥 Inquiry Terbaru</h3></div>
+        <table><thead><tr><th>Nama</th><th>Status</th></tr></thead>
+        <tbody id="recent-leads"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Pending Payments -->
+    <div class="table-wrap" style="margin-top:20px">
+      <div class="table-header"><h3>💰 Pembayaran Pending</h3></div>
+      <table><thead><tr><th>Client</th><th>Tanggal Acara</th><th>Total</th><th>Sudah Bayar</th><th>Sisa</th></tr></thead>
+      <tbody id="pending-table"></tbody></table>
+    </div>
+  </div>
+  <script src="/admin/js/app.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Check session first
+      fetch('/api/check-session')
+        .then(r => { if (!r.ok) window.location.href = '/login'; })
+        .catch(() => window.location.href = '/login');
+
+      renderSidebar('dashboard');
+      load();
+      });
+
+    async function load() {
+      const statsEl = document.getElementById('stats');
+      const upcomingEl = document.getElementById('upcoming-table');
+      const recentLeadsEl = document.getElementById('recent-leads');
+      const pendingEl = document.getElementById('pending-table');
+
+      try {
+        const d = await API.get('/api/dashboard/summary');
+        const now = new Date();
+        document.getElementById('current-month').textContent = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+        const m = d?.thisMonth || {};
+        const upcoming = Array.isArray(d?.upcoming) ? d.upcoming : [];
+        const recentLeads = Array.isArray(d?.recentLeads) ? d.recentLeads : [];
+        const pendingPayments = Array.isArray(d?.pendingPayments) ? d.pendingPayments : [];
+
+        statsEl.innerHTML = `
+        <div class="stat-card accent"><div class="label">Pemasukan Bulan Ini</div><div class="value">${formatIDR(m.total_income || 0)}</div></div>
+        <div class="stat-card green"><div class="label">Profit</div><div class="value">${formatIDR(m.total_profit || 0)}</div></div>
+        <div class="stat-card yellow"><div class="label">Pending Bayar</div><div class="value">${pendingPayments.length} client</div></div>
+        <div class="stat-card blue"><div class="label">Upcoming</div><div class="value">${upcoming.length} event</div></div>
+        `;
+
+        upcomingEl.innerHTML = upcoming.length
+        ? upcoming.map(e => `<tr><td>${e.client_name || '-'}</td><td>${formatDate(e.event_date)}</td><td>${e.venue || '-'}</td><td>${statusBadge(e.status || 'new')}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text2);text-align:center;padding:20px">Tidak ada event mendatang</td></tr>';
+
+        recentLeadsEl.innerHTML = recentLeads.length
+        ? recentLeads.map(l => `<tr><td>${l.name || '-'}</td><td>${statusBadge(l.status || 'new')}</td></tr>`).join('')
+        : '<tr><td colspan="2" style="color:var(--text2);text-align:center;padding:20px">Belum ada inquiry</td></tr>';
+
+        pendingEl.innerHTML = pendingPayments.length
+        ? pendingPayments.map(p => `<tr><td>${p.client_name || '-'}</td><td>${formatDate(p.event_date)}</td><td>${formatIDR(p.total_income || 0)}</td><td>${formatIDR(p.total_paid || 0)}</td><td style="color:var(--yellow)">${formatIDR(p.remaining_payment || 0)}</td></tr>`).join('')
+        : '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:20px">Semua pembayaran lunas ✅</td></tr>';
+      } catch (err) {
+        console.error('dashboard load failed', err);
+        statsEl.innerHTML = '<div class="stat-card" style="grid-column:1/-1"><div class="label">Error</div><div class="value">Dashboard gagal load</div></div>';
+        upcomingEl.innerHTML = '<tr><td colspan="4" style="color:var(--red);text-align:center;padding:20px">Gagal ambil data</td></tr>';
+        recentLeadsEl.innerHTML = '<tr><td colspan="2" style="color:var(--red);text-align:center;padding:20px">Gagal ambil data</td></tr>';
+        pendingEl.innerHTML = '<tr><td colspan="5" style="color:var(--red);text-align:center;padding:20px">Gagal ambil data</td></tr>';
+      }
+    }
+
+  </script>
+</body>
+</html>

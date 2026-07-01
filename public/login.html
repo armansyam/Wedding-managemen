@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sorehari Admin</title>
+    <link rel="icon" type="image/png" href="/image/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F9F8F6;
+        }
+
+        .serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-8 py-8 text-center">
+                <h1 class="serif-title text-3xl font-bold text-white">Sorehari</h1>
+                <p class="text-slate-300 text-sm mt-2">Admin Dashboard</p>
+            </div>
+
+            <!-- Form -->
+            <form id="loginForm" class="p-8 space-y-6" method="POST" action="/login" onsubmit="handleLogin(event)">
+                <div id="errorMsg" style="display: none;"
+                    class="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm"></div>
+
+                <!-- Username -->
+                <div class="space-y-2">
+                    <label for="username" class="block text-sm font-semibold text-slate-900">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Masukkan username"
+                        class="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 transition"
+                        required autofocus>
+                </div>
+
+                <!-- Password -->
+                <div class="space-y-2">
+                    <label for="password" class="block text-sm font-semibold text-slate-900">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Masukkan password"
+                        class="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 transition"
+                        required>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn"
+                    class="w-full rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-800 active:scale-95 flex items-center justify-center gap-2">
+                    <span id="submitText">Login</span>
+                    <span id="submitSpinner" style="display: none;">
+                        <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </span>
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="bg-slate-50 px-8 py-4 text-center border-t border-slate-200">
+                <p class="text-xs text-slate-600">
+                    Hubungi administrator untuk reset password
+                </p>
+                <a href="/" class="text-xs text-slate-900 font-semibold hover:underline mt-2 inline-block">
+                    ← Kembali ke Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div
+            class="mt-6 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 text-center text-white text-sm border border-white/20">
+            <p class="opacity-80">Platform portfolio Sorehari</p>
+            <p class="text-xs opacity-60 mt-1">Kelola clients & upload foto dengan aman</p>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            const errorMsg = document.getElementById('errorMsg');
+
+            // Disable button & show spinner
+            submitBtn.disabled = true;
+            submitText.style.display = 'none';
+            submitSpinner.style.display = 'inline';
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Login berhasil - redirect ke admin
+                    window.location.href = '/admin';
+                } else {
+                    // Login gagal
+                    errorMsg.textContent = data.error || data.message || 'Username atau password salah';
+                    errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitText.style.display = 'inline';
+                    submitSpinner.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                errorMsg.textContent = 'Terjadi kesalahan jaringan: ' + err.message;
+                errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitText.style.display = 'inline';
+                submitSpinner.style.display = 'none';
+            }
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', async () => {
+            // Show error from URL query (server-side redirect fallback)
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorParam = urlParams.get('error');
+            if (errorParam) {
+                const errorMsg = document.getElementById('errorMsg');
+                errorMsg.textContent = errorParam;
+                errorMsg.style.display = 'block';
+            }
+            try {
+                const res = await fetch('/api/check-session', {
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    window.location.href = '/admin';
+                }
+            } catch (err) {
+                console.log('Not logged in');
+            }
+        });
+    </script>
+</body>
+
+</html>

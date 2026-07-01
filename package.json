@@ -1,0 +1,21 @@
+{
+  "name": "wedding-management",
+  "version": "1.0.0",
+  "description": "Sorehari Wedding Vendor Management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "migrate": "node db/migrate.js",
+    "seed": "node db/seed.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "helmet": "^8.0.0",
+    "pdfkit": "^0.19.1"
+  }
+}

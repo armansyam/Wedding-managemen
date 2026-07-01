@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Leads — Vendor Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .wa-result { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-top:12px; }
+    .wa-result h3 { font-size:14px; margin:0 0 8px 0; }
+    .wa-result .link { display:flex; align-items:center; gap:8px; margin-top:8px; }
+    .wa-result .link a { background:var(--green); color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; font-weight:600; font-size:13px; }
+    .wa-result .link a:hover { opacity:0.85; }
+    .wa-result .link .wa-welcome { background:#25D366; }
+    .wa-preview { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:12px; color:var(--text2); white-space:pre-wrap; max-height:200px; overflow-y:auto; margin-top:8px; }
+    .dp-badge { background:var(--yellow); color:var(--bg); padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700; display:inline-block; margin-top:6px; }
+
+    /* Lead preview */
+    .lead-preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; margin-top:12px; }
+    .lead-preview-grid .item { font-size:13px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .lead-preview-grid .item .label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
+    .lead-preview-grid .item .val { font-weight:600; color:var(--text); }
+    .lead-message-box { background:var(--surface2); border-radius:12px; padding:14px; margin-top:12px; font-size:13px; line-height:1.6; color:var(--text); white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>📥 Leads / Inquiry</h1>
+      <div class="btn-group">
+        <div class="search-bar"><input type="text" placeholder="Cari nama/phone..." id="search" oninput="window.load()"></div>
+        <select id="filter-status" onchange="window.load()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+          <option value="">Semua Status</option>
+          <option value="new">Baru</option>
+          <option value="contacted">Dihubungi</option>
+          <option value="interested">Tertarik</option>
+          <option value="proposal_sent">Proposal Dikirim</option>
+          <option value="booked">Booking</option>
+          <option value="lost">Hilang</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('modal-add')">+ Inquiry Baru</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nama</th><th>Pasangan</th><th>Telepon</th><th>Tanggal Acara</th><th>Status</th><th>WA</th><th>Aksi</th></tr></thead>
+        <tbody id="leads-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Detail Lead (Preview) -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal" style="max-width:500px">
+      <h2>📋 Detail Inquiry</h2>
+      <div id="detail-content"></div>
+      <div id="detail-actions" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"></div>
+      <div style="margin-top:16px;text-align:right">
+        <button class="btn btn-secondary" onclick="closeModal('modal-detail')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Lead -->
+  <div class="modal-overlay" id="modal-add">
+    <div class="modal">
+      <h2>Inquiry Baru</h2>
+      <div class="form-row">
+        <div class="form-group"><label>Nama</label><input type="text" id="f-name"></div>
+        <div class="form-group"><label>Pasangan</label><input type="text" id="f-partner"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Telepon / WA</label><input type="text" id="f-phone" placeholder="08xxx"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="f-email"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tanggal Acara</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label>Venue</label><input type="text" id="f-venue"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Paket Diminati</label><input type="text" id="f-package" placeholder="Silver / Gold / Platinum"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="f-status"><option value="new">Baru</option><option value="contacted">Dihubungi</option><option value="interested">Tertarik</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Pesan</label><textarea id="f-message" rows="3"></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-add')">Batal</button>
+        <button class="btn btn-primary" onclick="window.saveLead()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Update Status -->
+  <div class="modal-overlay" id="modal-status">
+    <div class="modal">
+      <h2>Update Status</h2>
+      <div class="form-group"><label>Status</label>
+        <select id="s-status">
+          <option value="new">Baru</option><option value="contacted">Dihubungi</option>
+          <option value="interested">Tertarik</option><option value="proposal_sent">Proposal Dikirim</option>
+          <option value="booked">Booking</option><option value="lost">Hilang</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Catatan</label><textarea id="s-notes" rows="3"></textarea></div>
+      <input type="hidden" id="s-id">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-status')">Batal</button>
+        <button class="btn btn-primary" onclick="window.updateStatus()">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Convert to Booking -->
+  <div class="modal-overlay" id="modal-convert">
+    <div class="modal" style="max-width:480px">
+      <h2>🔄 Convert ke Booking</h2>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Lead ini akan menjadi client + booking baru.</p>
+      <input type="hidden" id="c-id">
+      <div class="form-group"><label>Tanggal Acara *</label><input type="date" id="c-date" required></div>
+      <div class="form-group"><label>Venue</label><input type="text" id="c-venue" placeholder="Lokasi acara"></div>
+      <div class="form-group"><label>Catatan (opsional)</label><input type="text" id="c-notes" placeholder="Catatan booking..."></div>
+      <div style="background:var(--surface2);padding:12px 16px;border-radius:12px;font-size:12px;color:var(--text2);line-height:1.6">
+        📲 Booking token akan dibuat. Client terima link booking via WA untuk pilih paket sendiri.
+      </div>
+      <div id="convert-result" style="display:none"></div>
+      <div class="modal-actions" id="convert-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-convert')">Batal</button>
+        <button class="btn btn-primary" onclick="window.convertLead()" id="btn-convert">Convert & Buat Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  
+  <script>
+    let templates = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+    renderSidebar('leads');
+    (async () => {
+      templates = await API.get('/api/templates');
+      load();
+    })();
+    });
+
+    async function load() {
+    const status = document.getElementById('filter-status').value;
+    const search = document.getElementById('search').value;
+    let url = '/api/leads?';
+    if (status) url += `status=${status}&`;
+    if (search) url += `search=${search}`;
+    const leads = await API.get(url);
+    const filtered = leads.filter(l => l.status !== 'booked' && l.status !== 'lost');
+    document.getElementById('leads-table').innerHTML = filtered.length
+    ? filtered.map(l => {
+    const phone = (l.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+    const waMsg = (() => {
+      let tpl = templates.wa_welcome || `Halo Kak {{name}}! 👋
+
+Terima kasih sudah menghubungi *Sorehari Photography* ✨
+
+Senang sekali bisa membantu merencanakan momen spesial Kak {{name}}{{#partner}} dan {{partner_name}}{{/partner}} 🙏
+
+Saya Ammang, owner Sorehari. Boleh kita diskusi lebih lanjut tentang kebutuhan foto/video untuk acara Kakak? Apa yang Kakak butuhkan dan budget yang dianggarkan?
+
+Mohon infonya ya, Kak! 😊📸`;
+      // {{#partner}}...{{/partner}} block
+      tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+        if (!l[key]) return '';
+        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => l[k] !== undefined ? String(l[k]) : m2);
+      });
+      return encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => l[k] !== undefined ? String(l[k]) : m));
+    })();
+    const waLink = phone ? `https://wa.me/${phone}?text=${waMsg}` : '#';
+    return `<tr>
+    <td><strong>${l.name}</strong></td><td>${l.partner_name || '-'}</td><td>${l.phone}</td>
+    <td>${l.wedding_date ? formatDate(l.wedding_date) : '-'}</td>
+    <td>${statusBadge(l.status)}</td>
+    <td><a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;border:none;text-decoration:none;white-space:nowrap">💬 Wa</a></td>
+    <td><div class="btn-group">
+    <button class="btn btn-sm btn-secondary" onclick="window.viewDetail(${l.id})">Detail</button>
+    <button class="btn btn-sm btn-secondary" onclick="window.editStatus(${l.id},'${l.status}','${(l.notes||'').replace(/'/g,"\\'")}')">Status</button>
+    <button class="btn btn-sm btn-primary" onclick="window.openConvert(${l.id},'${l.name}','${l.wedding_date||''}','${l.venue||''}')">Convert</button>
+    </div></td>
+    </tr>`}).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:30px">Belum ada inquiry</td></tr>';
+    }
+    async function viewDetail(id) {
+    const l = await API.get(`/api/leads/${id}`);
+    const needs = l.message ? l.message.split('\n').filter(x => x.includes('Kebutuhan:')).map(x => x.replace('Kebutuhan:','').trim()).join(', ') : '-';
+    const pureMsg = l.message ? l.message.split('\n').filter(x => !x.includes('Kebutuhan:')).join('\n').trim() : '';
+
+    document.getElementById('detail-content').innerHTML = `
+    <div class="lead-preview-grid">
+    <div class="item"><div class="label">Nama</div><div class="val">${l.name}</div></div>
+    <div class="item"><div class="label">Pasangan</div><div class="val">${l.partner_name || '-'}</div></div>
+    <div class="item"><div class="label">Telepon</div><div class="val">${l.phone}</div></div>
+    <div class="item"><div class="label">Email</div><div class="val">${l.email || '-'}</div></div>
+    <div class="item"><div class="label">Tanggal Acara</div><div class="val">${l.wedding_date ? formatDate(l.wedding_date) : '-'}</div></div>
+    <div class="item"><div class="label">Venue</div><div class="val">${l.venue || '-'}</div></div>
+    <div class="item"><div class="label">Acara</div><div class="val">${l.package_interest || '-'}</div></div>
+    <div class="item"><div class="label">Sumber</div><div class="val">${l.source || '-'}</div></div>
+    <div class="item"><div class="label">Status</div><div class="val">${statusBadge(l.status)}</div></div>
+    <div class="item"><div class="label">Dibuat</div><div class="val">${l.created_at || '-'}</div></div>
+    </div>
+    ${pureMsg ? `<div class="lead-message-box">${pureMsg}</div>` : ''}
+    `;
+
+    // WA welcome button
+    const phone = l.phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+    let welcomeTpl = templates.wa_welcome || `Halo Kak {{name}}! 👋
+
+    Terima kasih sudah menghubungi *Sorehari Photography* ✨
+
+    Senang sekali bisa membantu merencanakan momen spesial Kak {{name}}{{#partner}} dan {{partner_name}}{{/partner}} 🙏
+
+    Saya Ammang, owner Sorehari. Boleh kita diskusi lebih lanjut tentang kebutuhan foto/video untuk acara Kakak? Apa yang Kakak butuhkan dan budget yang dianggarkan?
+
+    Mohon infonya ya, Kak! 😊📸`;
+    // {{#partner}}...{{/partner}} block
+    welcomeTpl = welcomeTpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+      if (!l[key]) return '';
+      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => l[k] !== undefined ? String(l[k]) : m2);
+    });
+    const welcomeMsg = welcomeTpl.replace(/\{\{(\w+)\}\}/g, (m, k) => l[k] !== undefined ? String(l[k]) : m);
+    const waWelcome = `https://wa.me/${phone}?text=${encodeURIComponent(welcomeMsg)}`;
+
+    document.getElementById('detail-actions').innerHTML = `
+    <a href="${waWelcome}" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25D366;color:#fff;border:none">💬 WA Welcome</a>
+    `;
+
+    openModal('modal-detail');
+    }
+    async function saveLead() {
+    const data = {
+    name: document.getElementById('f-name').value,
+    partner_name: document.getElementById('f-partner').value,
+    phone: document.getElementById('f-phone').value,
+    email: document.getElementById('f-email').value,
+    wedding_date: document.getElementById('f-date').value,
+    venue: document.getElementById('f-venue').value,
+    package_interest: document.getElementById('f-package').value,
+    status: document.getElementById('f-status').value,
+    message: document.getElementById('f-message').value,
+    };
+    if (!data.name || !data.phone) return alert('Nama & Telepon wajib diisi');
+    await API.post('/api/leads', data);
+    closeModal('modal-add');
+    load();
+    }
+    function editStatus(id, status, notes) {
+    document.getElementById('s-id').value = id;
+    document.getElementById('s-status').value = status;
+    document.getElementById('s-notes').value = notes;
+    openModal('modal-status');
+    }
+    async function updateStatus() {
+    await API.put(`/api/leads/${document.getElementById('s-id').value}`, {
+    status: document.getElementById('s-status').value,
+    notes: document.getElementById('s-notes').value,
+    });
+    closeModal('modal-status');
+    load();
+    }
+    function openConvert(id, name, date, venue) {
+    document.getElementById('c-id').value = id;
+    document.getElementById('c-date').value = date;
+    document.getElementById('c-venue').value = venue;
+    document.getElementById('c-notes').value = '';
+    document.getElementById('convert-result').style.display = 'none';
+    document.getElementById('convert-actions').style.display = 'flex';
+    document.getElementById('btn-convert').disabled = false;
+    openModal('modal-convert');
+    }
+    async function convertLead() {
+    const data = {
+    event_date: document.getElementById('c-date').value,
+    venue: document.getElementById('c-venue').value,
+    notes: document.getElementById('c-notes').value,
+    };
+    if (!data.event_date) return alert('Tanggal acara wajib diisi');
+
+    document.getElementById('btn-convert').disabled = true;
+    const result = await API.post(`/api/leads/${document.getElementById('c-id').value}/convert`, data);
+
+    if (result.wa_link) {
+    document.getElementById('convert-result').style.display = 'block';
+    document.getElementById('convert-result').innerHTML = `
+    <div class="wa-result">
+    <h3>✅ Booking berhasil dibuat!</h3>
+    <p style="font-size:12px;color:var(--text2)">Booking #${result.booking_id}</p>
+    <div class="link">
+    <a href="${result.wa_link}" target="_blank" rel="noopener">📱 Kirim Booking Link ke Client</a>
+    </div>
+    <div class="wa-preview">${result.wa_message}</div>
+    </div>
+    `;
+    document.getElementById('convert-actions').style.display = 'none';
+    }
+    load();
+    }
+
+  </script>
+</body>
+</html>

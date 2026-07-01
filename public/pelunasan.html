@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pelunasan — Sorehari</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Montserrat',sans-serif; background:#f4f1eb; color:#2d2d2d; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .container { max-width:520px; width:100%; }
+
+    .header { text-align:center; margin-bottom:24px; }
+    .header h1 { font-family:'Playfair Display',serif; font-size:28px; color:#1a1a2e; margin-bottom:4px; }
+    .header p { font-size:13px; color:#888; }
+
+    .card { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.06); padding:28px; margin-bottom:16px; }
+    .card h2 { font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; font-size:13px; margin-bottom:16px; }
+    .info-grid .label { color:#888; }
+    .info-grid .value { font-weight:600; }
+
+    .divider { height:1px; background:#f0f0f0; margin:16px 0; }
+
+    .amount-box { background:#faf8f5; border-radius:12px; padding:16px; text-align:center; margin-bottom:16px; }
+    .amount-box .desc { font-size:12px; color:#888; margin-bottom:4px; }
+    .amount-box .amount { font-size:24px; font-weight:800; color:#c9785e; }
+    .amount-box .note { font-size:11px; color:#aaa; margin-top:4px; }
+
+    .sessions { list-style:none; font-size:13px; margin-bottom:16px; }
+    .sessions li { padding:6px 0; border-bottom:1px solid #f5f5f5; display:flex; align-items:center; gap:6px; }
+    .sessions li::before { content:'•'; color:#c9785e; font-weight:700; }
+
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:#888; margin-bottom:6px; font-weight:600; }
+    .form-group input, .form-group select { width:100%; padding:10px 14px; border:1px solid #e0e0e0; border-radius:10px; font-family:'Montserrat',sans-serif; font-size:13px; background:#faf8f5; }
+    .form-group input:focus, .form-group select:focus { outline:none; border-color:#c9785e; }
+
+    .upload-area { border:2px dashed #e0e0e0; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:all .15s; background:#faf8f5; }
+    .upload-area:hover { border-color:#c9785e; }
+    .upload-area.has-file { border-color:#22c55e; background:#f0fdf4; }
+    .upload-area .icon { font-size:32px; margin-bottom:8px; }
+    .upload-area p { font-size:12px; color:#888; }
+    .upload-area .filename { font-size:12px; color:#22c55e; font-weight:600; margin-top:4px; }
+
+    .submit-btn { width:100%; padding:14px; background:linear-gradient(135deg,#1a1a2e,#16213e); color:#fff; border:none; border-radius:12px; font-family:'Montserrat',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .15s; }
+    .submit-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.15); }
+    .submit-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    .success-msg { text-align:center; padding:40px 20px; }
+    .success-msg .icon { font-size:48px; margin-bottom:12px; }
+    .success-msg h2 { font-size:18px; margin-bottom:8px; }
+    .success-msg p { font-size:13px; color:#888; }
+
+    .footer { text-align:center; font-size:11px; color:#aaa; margin-top:16px; }
+
+    @media (max-width:480px) { .container { padding:0; } .card { padding:20px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Sorehari</h1>
+      <p>Photography & Videography</p>
+    </div>
+
+    <div id="form-section">
+      <div class="card">
+        <h2>💰 Pelunasan Pembayaran</h2>
+        <div id="booking-info"></div>
+        <div class="divider"></div>
+        <div class="amount-box" id="amount-box"></div>
+        <div id="sessions-section"></div>
+      </div>
+
+      <div class="card">
+        <h2>📤 Upload Bukti Transfer</h2>
+        <div class="form-group">
+          <label>Nominal Pelunasan</label>
+          <input type="number" id="amount" placeholder="Masukkan jumlah yang ditransfer">
+        </div>
+        <div class="form-group">
+          <label>Metode Pembayaran</label>
+          <select id="method">
+            <option value="transfer">Transfer Bank</option>
+            <option value="ewallet">E-Wallet</option>
+            <option value="cash">Tunai</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bukti Transfer</label>
+          <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+            <div class="icon">📷</div>
+            <p>Klik untuk upload bukti transfer</p>
+            <p style="font-size:11px;color:#aaa;margin-top:4px">JPG, PNG (maks 5MB)</p>
+            <div class="filename" id="file-name"></div>
+            <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
+          </div>
+        </div>
+        <button class="submit-btn" id="submit-btn" onclick="submitPelunasan()" disabled>Kirim Bukti Pelunasan</button>
+      </div>
+    </div>
+
+    <div id="success-section" style="display:none">
+      <div class="card">
+        <div class="success-msg">
+          <div class="icon">✅</div>
+          <h2 id="success-title">Bukti Pelunasan Terkirim!</h2>
+          <p id="success-msg">Menunggu verifikasi dari admin. Terima kasih! 🙏</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 Sorehari Photography</div>
+  </div>
+
+  <script>
+    const token = window.location.pathname.split('/').pop();
+    let bookingData = null;
+    let fileBase64 = null;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/bookings/pelunasan/${token}`);
+        const data = await res.json();
+
+        if (data.error) {
+          document.getElementById('form-section').innerHTML = `
+            <div class="card"><div class="success-msg">
+              <div class="icon">❌</div><h2>Link Tidak Valid</h2>
+              <p>${data.error}</p>
+            </div></div>`;
+          return;
+        }
+
+        if (data._done) {
+          document.getElementById('form-section').innerHTML = `
+            <div class="card"><div class="success-msg">
+              <div class="icon">✅</div><h2>${data.message}</h2>
+            </div></div>`;
+          return;
+        }
+
+        bookingData = data;
+
+        // Info
+        document.getElementById('booking-info').innerHTML = `
+          <div class="info-grid">
+            <div><span class="label">Klien</span><br><span class="value">${data.client_name}</span></div>
+            <div><span class="label">Tanggal</span><br><span class="value">${new Date(data.event_date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</span></div>
+            <div><span class="label">Venue</span><br><span class="value">${data.venue || '-'}</span></div>
+            <div><span class="label">Paket</span><br><span class="value">${data.package_name || '-'}</span></div>
+            <div><span class="label">Harga</span><br><span class="value">Rp ${Number(data.package_price).toLocaleString('id-ID')}</span></div>
+          </div>`;
+
+        // Amount
+        document.getElementById('amount-box').innerHTML = `
+          <div class="desc">Sisa Pembayaran yang Harus Dilunasi</div>
+          <div class="amount">Rp ${Number(data.remaining_payment).toLocaleString('id-ID')}</div>
+          <div class="note">DP Rp ${Number(data.dp_amount).toLocaleString('id-ID')} sudah terverifikasi</div>`;
+
+        // Set amount input
+        document.getElementById('amount').value = data.remaining_payment;
+
+        // Sessions
+        if (data.sessions && data.sessions.length) {
+          document.getElementById('sessions-section').innerHTML = `
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:6px;font-weight:600">Sesi Acara</div>
+            <ul class="sessions">${data.sessions.map(s => `<li>${s}</li>`).join('')}</ul>`;
+        }
+      } catch(e) {
+        document.getElementById('form-section').innerHTML = `
+          <div class="card"><div class="success-msg">
+            <div class="icon">⚠️</div><h2>Terjadi Kesalahan</h2><p>${e.message}</p>
+          </div></div>`;
+      }
+    })();
+
+    function handleFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 5*1024*1024) { alert('Ukuran file maksimal 5MB'); return; }
+
+      document.getElementById('file-name').textContent = 'Mengkompresi...';
+      document.getElementById('upload-area').classList.add('has-file');
+      document.getElementById('submit-btn').disabled = true;
+
+      compressImage(file, 800, 0.7).then(compressed => {
+        fileBase64 = compressed.dataUrl;
+        const sizeKB = Math.round(compressed.size / 1024);
+        document.getElementById('file-name').textContent = `${file.name} (${sizeKB}KB, dikompresi)`;
+        updateSubmitBtn();
+      });
+    }
+
+    function compressImage(file, maxDim, quality) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              const ratio = Math.min(maxDim / w, maxDim / h);
+              w = Math.round(w * ratio);
+              h = Math.round(h * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve({ dataUrl, size: Math.round((dataUrl.length * 3) / 4) });
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function updateSubmitBtn() {
+      const amount = document.getElementById('amount').value;
+      document.getElementById('submit-btn').disabled = !(amount > 0 && fileBase64);
+    }
+
+    document.getElementById('amount').addEventListener('input', updateSubmitBtn);
+
+    async function submitPelunasan() {
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Mengirim...';
+
+      try {
+        const res = await fetch(`/api/bookings/pelunasan/${token}/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: Number(document.getElementById('amount').value),
+            receipt: fileBase64,
+            payment_method: document.getElementById('method').value,
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('form-section').style.display = 'none';
+          document.getElementById('success-section').style.display = 'block';
+        } else {
+          alert(data.error || 'Gagal mengirim');
+          btn.disabled = false;
+          btn.textContent = 'Kirim Bukti Pelunasan';
+        }
+      } catch(e) {
+        alert('Terjadi kesalahan: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Kirim Bukti Pelunasan';
+      }
+    }
+  </script>
+</body>
+</html>
