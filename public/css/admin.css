@@ -390,7 +390,7 @@ tr:last-child td {
 }
 
 tr:hover td {
-  background-color: rgba(249, 248, 246, 0.5);
+  background-color: var(--surface2);
 }
 
 /* Badges */
