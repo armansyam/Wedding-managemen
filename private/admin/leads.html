@@ -291,9 +291,10 @@ Mohon infonya ya, Kak! 😊📸`;
       const now = new Date();
       const daysSince = (now - created) / (1000 * 60 * 60 * 24);
       if (daysSince > 3) {
-        convertBtn = `<button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;font-weight:600" onclick="window.openConvert(${l.id},'${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}', 'expired')">⚠️ Expired</button>`;
+        convertBtn = `<button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;font-weight:600" onclick="window.openConvert(${l.id},'${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}', 'expired')">🔄 Regenerate</button>`;
       } else {
-        convertBtn = `<button class="btn btn-sm" style="background:#10b981;color:#fff;border:none;font-weight:600" onclick="window.openActiveLink('${l.booking_token}', ${l.id}, '${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}')">🔗 Link</button>`;
+        const link = `${window.location.protocol}//${window.location.host}/booking/${l.booking_token}`;
+        convertBtn = `<a href="${link}" target="_blank" class="btn btn-sm" style="background:#10b981;color:#fff;border:none;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap">🔗 Booking Link</a>`;
       }
     } else {
       convertBtn = `<button class="btn btn-sm btn-primary" onclick="window.openConvert(${l.id},'${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}')">Convert</button>`;
