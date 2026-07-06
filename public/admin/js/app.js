@@ -126,7 +126,9 @@ function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.style.display = 'flex';
-    modal.classList.add('active');
+    // scroll overlay to top so long modals always start from the beginning
+    modal.scrollTop = 0;
+    requestAnimationFrame(() => modal.classList.add('active'));
   }
 }
 

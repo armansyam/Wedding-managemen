@@ -393,11 +393,16 @@ tr:hover td {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: none;
-  align-items: center;
+  /* ── scrollable overlay so tall modals are never clipped ── */
+  align-items: flex-start;
   justify-content: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 40px 16px;
   z-index: 1000;
   opacity: 0;
   transition: opacity 0.2s ease-out;
+  box-sizing: border-box;
 }
 
 .modal-overlay.active {
@@ -411,11 +416,12 @@ tr:hover td {
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
   width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
+  /* No fixed max-height — overlay scroll handles long content */
   box-sizing: border-box;
   transform: translateY(20px);
   transition: transform 0.2s ease-out;
+  margin: auto; /* centers vertically when content is short */
+  position: relative;
 }
 
 .modal-overlay.active .modal {
@@ -435,6 +441,22 @@ tr:hover td {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+}
+
+/*
+  .modal--fixed-height: for modals that embed iframes or have their own
+  internal scroll (e.g. invoice preview). The overlay uses align-items:center
+  so the modal stays centered rather than scrolling with the overlay.
+*/
+.modal-overlay:has(.modal--fixed-height) {
+  align-items: center;
+  overflow: hidden;
+  padding: 0;
+}
+.modal--fixed-height {
+  /* let inline style control the height; just prevent overflow on the wrapper */
+  overflow: hidden;
+  margin: 0 auto;
 }
 
 /* ── Calendar Styles ── */
