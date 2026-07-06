@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
     <link rel="icon" type="image/png" href="/logo.png">
@@ -8,257 +8,436 @@
     <title>Sorehari — Story and Rewinded Moments</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap"
         rel="stylesheet">
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
-            background-color: #F9F8F6;
+            background-color: #FAF8F5;
+            color: #2C2A29;
         }
 
         .serif-title {
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: -0.01em;
+        }
+
+        .serif-sub {
             font-family: 'Playfair Display', serif;
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FAF8F5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #E5DCD3;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4C5B9;
+        }
+
+        /* ── Developer Watermark ── */
+        .dev-watermark-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: none;
+        }
+
+        .dev-watermark-btn:hover {
+            transform: scale(1.15) rotate(8deg);
+        }
+
+        .dev-watermark-btn:active {
+            transform: scale(0.95);
+        }
+
+        .dev-watermark-popup {
+            position: fixed;
+            bottom: 84px;
+            right: 24px;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 220, 211, 0.6);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(44, 42, 41, 0.08);
+            z-index: 9998;
+            animation: slideUpFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .dev-watermark-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: #8C7B6E;
+            background: #F4EFE9;
+            padding: 4px 10px;
+            border-radius: 99px;
+            width: fit-content;
+            border: 1px solid #E5DCD3;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .dev-watermark-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #B59A7F;
+            box-shadow: 0 0 8px #B59A7F;
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #B59A7F; }
+            100% { transform: scale(1); opacity: 0.6; }
         }
     </style>
 </head>
 
-<body class="min-h-screen bg-[#F9F8F6] text-slate-900">
-    <header class="sticky top-0 z-30 bg-[#F9F8F6] border-b border-slate-200/80">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10">
-            <a href="#" class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600">Story and Rewinded
-                Moments</a>
-            <nav
-                class="hidden md:flex items-center gap-10 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">
-                <a href="/"
-                    class="border-b-2 border-transparent hover:border-slate-900 hover:text-slate-900 transition">Home</a>
-                <a href="#about" class="text-slate-500 hover:text-slate-900 transition">About</a>
-                <a href="/portfolio.html" class="text-slate-500 hover:text-slate-900 transition">Portfolio</a>
-                <a href="#contact" class="text-slate-500 hover:text-slate-900 transition">Contact</a>
+<body class="min-h-screen bg-[#FAF8F5] text-[#2C2A29] selection:bg-[#E5DCD3]">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-[#FAF8F5]/85 backdrop-blur-md border-b border-[#E5DCD3]/40">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-12">
+            <a href="#" class="text-[11px] font-medium tracking-[0.4em] uppercase text-[#6E6B64] hover:text-[#2C2A29] transition-colors duration-300">
+                Sorehari
+            </a>
+            
+            <nav class="hidden md:flex items-center gap-12 text-[10px] font-semibold tracking-[0.25em] uppercase text-[#6E6B64]">
+                <a href="/" class="text-[#2C2A29] border-b border-[#2C2A29] pb-0.5 transition duration-300">Home</a>
+                <a href="#about" class="hover:text-[#2C2A29] transition duration-300">About</a>
+                <a href="/portfolio.html" class="hover:text-[#2C2A29] transition duration-300">Portfolio</a>
+                <a href="#contact" class="hover:text-[#2C2A29] transition duration-300">Contact</a>
             </nav>
-            <!-- Language Switcher -->
-            <div class="relative ml-6 md:ml-10">
-                <button id="lang-toggle"
-                    class="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-                    aria-label="Switch language">
-                    <span class="uppercase tracking-wider">EN</span>
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                <div id="lang-dropdown"
-                    class="absolute right-0 mt-1.5 min-w-[100px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg opacity-0 invisible translate-y-1 transition-all duration-200 z-50">
-                    <button data-lang="en"
-                        class="w-full px-3 py-1.5 text-left text-xs font-medium text-slate-900 hover:bg-slate-50 transition">English</button>
-                    <button data-lang="id"
-                        class="w-full px-3 py-1.5 text-left text-xs font-medium text-slate-600 hover:bg-slate-50 transition">Indonesia</button>
+
+            <div class="flex items-center gap-4">
+                <!-- Language Switcher -->
+                <div class="relative">
+                    <button id="lang-toggle"
+                        class="flex items-center gap-1.5 rounded-full border border-[#E5DCD3] bg-[#FAF8F5] px-3.5 py-1.5 text-[9px] font-semibold tracking-widest text-[#6E6B64] transition hover:border-[#D4C5B9] hover:bg-white"
+                        aria-label="Switch language">
+                        <span class="uppercase">EN</span>
+                        <svg class="w-2.5 h-2.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="lang-dropdown"
+                        class="absolute right-0 mt-2 min-w-[110px] rounded-xl border border-[#E5DCD3] bg-white py-1 shadow-xl opacity-0 invisible translate-y-1 transition-all duration-200 z-50">
+                        <button data-lang="en"
+                            class="w-full px-4 py-2 text-left text-[10px] font-semibold tracking-wider text-slate-800 hover:bg-[#FAF8F5] transition">English</button>
+                        <button data-lang="id"
+                            class="w-full px-4 py-2 text-left text-[10px] font-semibold tracking-wider text-slate-500 hover:bg-[#FAF8F5] transition">Indonesia</button>
+                    </div>
                 </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="nav-toggle"
+                    class="md:hidden rounded-full border border-[#E5DCD3] px-4 py-1.5 text-[10px] tracking-widest uppercase font-semibold text-[#6E6B64] transition hover:bg-white hover:border-[#D4C5B9]"
+                    aria-controls="mobile-menu" aria-expanded="false">
+                    Menu
+                </button>
             </div>
-            <button id="nav-toggle"
-                class="md:hidden rounded-full border border-slate-300 px-3 py-2 text-slate-700 transition hover:bg-slate-100"
-                aria-controls="mobile-menu" aria-expanded="false">
-                Menu
-            </button>
         </div>
-        <div id="mobile-menu" class="hidden border-t border-slate-200 bg-[#F9F8F6]">
-            <div
-                class="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">
-                <a href="/" class="block rounded-lg px-4 py-2 hover:bg-slate-100">Home</a>
-                <a href="#about" class="block rounded-lg px-4 py-2 hover:bg-slate-100">About</a>
-                <a href="/portfolio.html" class="block rounded-lg px-4 py-2 hover:bg-slate-100">Portfolio</a>
-                <a href="#contact" class="block rounded-lg px-4 py-2 hover:bg-slate-100">Contact</a>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden border-t border-[#E5DCD3]/40 bg-[#FAF8F5]/98 backdrop-blur-md">
+            <div class="mx-auto flex flex-col gap-4 px-8 py-6 text-[10px] font-semibold tracking-[0.25em] uppercase text-[#6E6B64]">
+                <a href="/" class="block py-2 border-b border-[#E5DCD3]/20 text-[#2C2A29]">Home</a>
+                <a href="#about" class="block py-2 border-b border-[#E5DCD3]/20 hover:text-[#2C2A29] transition">About</a>
+                <a href="/portfolio.html" class="block py-2 border-b border-[#E5DCD3]/20 hover:text-[#2C2A29] transition">Portfolio</a>
+                <a href="#contact" class="block py-2 hover:text-[#2C2A29] transition">Contact</a>
             </div>
         </div>
     </header>
 
-    <main id="home" class="mx-auto flex max-w-7xl flex-col px-6 py-10 md:px-10 md:py-16">
-        <section class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div class="space-y-8">
-                <div
-                    class="inline-flex items-center rounded-full bg-slate-900/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-600 shadow-sm ring-1 ring-slate-900/5">
+    <!-- Main Content -->
+    <main id="home" class="mx-auto max-w-7xl px-6 py-12 md:px-12 md:py-24">
+        <!-- Hero Section -->
+        <section class="grid gap-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div class="space-y-10">
+                <div class="inline-flex items-center gap-2 rounded-full border border-[#E5DCD3] bg-white px-4 py-1.5 text-[9px] uppercase tracking-[0.3em] text-[#8C7B6E] font-medium">
+                    <span class="w-1 h-1 rounded-full bg-[#B59A7F]"></span>
                     new journey
                 </div>
-                <div class="space-y-6">
-                    <h1
-                        class="serif-title text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
-                        Sorehari</h1>
-                    <p class="max-w-2xl text-base leading-8 text-slate-700 sm:text-lg" data-i18n="hero_subtitle">Story
-                        and Rewinded Moments —
-                        a collection of memories with an elegant touch, photography, and soothing narratives.</p>
+                <div class="space-y-8">
+                    <h1 class="serif-title text-6xl font-light tracking-wide text-[#2C2A29] sm:text-7xl lg:text-8xl leading-[0.95]">
+                        Sorehari
+                    </h1>
+                    <p class="serif-sub text-[13px] tracking-widest text-[#8C7B6E] uppercase font-light">
+                        Story & Rewinded Moments
+                    </p>
+                    <p class="max-w-xl text-[14px] leading-relaxed text-[#5C5753] font-light" data-i18n="hero_subtitle">
+                        Story and Rewinded Moments — capturing honest emotions and precious fragments of your wedding journey with an elegant, timeless signature.
+                    </p>
                 </div>
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center pt-2">
                     <a href="/portfolio.html"
-                        class="inline-flex w-full items-center justify-center rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+                        class="inline-flex w-full items-center justify-center rounded-full bg-[#2C2A29] px-10 py-4 text-[10px] font-semibold uppercase tracking-widest text-white transition hover:bg-[#4E4B49] sm:w-auto shadow-lg shadow-black/5"
                         data-i18n="hero_portfolio">View Portfolio</a>
                     <a href="#contact"
-                        class="inline-flex w-full items-center justify-center rounded-full border border-slate-900/10 bg-white px-8 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 sm:w-auto"
+                        class="inline-flex w-full items-center justify-center rounded-full border border-[#E5DCD3] bg-white px-10 py-4 text-[10px] font-semibold uppercase tracking-widest text-[#2C2A29] transition hover:bg-[#FAF8F5] hover:border-[#D4C5B9] sm:w-auto"
                         data-i18n="hero_contact">Contact Us</a>
                 </div>
             </div>
 
-            <div class="grid gap-6 sm:grid-cols-2 sm:grid-rows-[auto_auto]" id="portfolio">
-                <div
-                    class="relative overflow-hidden rounded-[2rem] bg-white shadow-[0_35px_70px_-40px_rgba(15,23,42,0.5)]">
+            <!-- Hero Image Gallery (Asymmetrical Design) -->
+            <div class="grid gap-6 sm:grid-cols-2 lg:pl-6" id="portfolio">
+                <!-- Large Image -->
+                <div class="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl shadow-stone-800/5 aspect-[4/5] sm:col-span-1 hover:shadow-2xl transition duration-500 group">
                     <picture>
                         <source srcset="/image/optimized/img1-1200.jpg 1200w, /image/optimized/img1-768.jpg 768w"
                             sizes="(max-width: 768px) 100vw, 540px">
-                        <img src="/image/optimized/img1-1200.jpg" alt="Pasangan di pantai foto elegan"
-                            class="h-full w-full object-cover" loading="lazy">
+                        <img src="/image/optimized/img1-1200.jpg" alt="Elegance of Sorehari Wedding Moments"
+                            class="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" loading="lazy">
                     </picture>
+                    <div class="absolute inset-0 bg-black/5 transition duration-500 group-hover:bg-transparent"></div>
                 </div>
+                <!-- Stacked Smaller Images -->
                 <div class="grid gap-6">
-                    <div class="relative overflow-hidden rounded-[1.75rem] bg-white shadow-lg aspect-square">
+                    <div class="relative overflow-hidden rounded-[2rem] bg-white shadow-lg shadow-stone-800/5 aspect-square hover:shadow-xl transition duration-500 group">
                         <picture>
                             <source srcset="/image/optimized/img2-1200.jpg 1200w, /image/optimized/img2-768.jpg 768w"
                                 sizes="(max-width: 768px) 100vw, 260px">
-                            <img src="/image/optimized/img2-1200.jpg" alt="Foto momen pasangan di pantai"
-                                class="h-full w-full object-cover" loading="lazy">
+                            <img src="/image/optimized/img2-1200.jpg" alt="Timeless couple memories"
+                                class="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" loading="lazy">
                         </picture>
+                        <div class="absolute inset-0 bg-black/5 transition duration-500 group-hover:bg-transparent"></div>
                     </div>
-                    <div class="relative overflow-hidden rounded-[1.75rem] bg-white shadow-lg aspect-square">
+                    <div class="relative overflow-hidden rounded-[2rem] bg-white shadow-lg shadow-stone-800/5 aspect-square hover:shadow-xl transition duration-500 group">
                         <picture>
                             <source srcset="/image/optimized/img3-1200.jpg 1200w, /image/optimized/img3-768.jpg 768w"
                                 sizes="(max-width: 768px) 100vw, 260px">
-                            <img src="/image/optimized/img3-1200.jpg" alt="Detail romantis dalam bingkai foto"
-                                class="h-full w-full object-cover" loading="lazy">
+                            <img src="/image/optimized/img3-1200.jpg" alt="Aesthetic wedding detail frame"
+                                class="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" loading="lazy">
                         </picture>
+                        <div class="absolute inset-0 bg-black/5 transition duration-500 group-hover:bg-transparent"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="about" class="mt-20 space-y-8">
-            <!-- About Section -->
-            <div
-                class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-16 flex flex-col items-center text-center">
-                <h2 class="serif-title text-3xl font-semibold text-slate-900 sm:text-4xl" data-i18n="about_heading">
-                    About Sorehari</h2>
-                <div class="mt-6 w-12 border-b-2 border-slate-300"></div>
-                <p class="mt-8 max-w-2xl text-base leading-8 text-slate-600" data-i18n="about_desc">Sorehari was born
-                    from our love for
-                    memories and stories. We are a team of professional photographers dedicated to capturing precious
-                    moments
-                    in your life — from the thrilling preparations to the most beautiful details at the end of the
-                    event.
-                    Let us frame your moments with a timeless aesthetic touch.</p>
+        <!-- Divider Line -->
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-[#E5DCD3] to-transparent my-24 md:my-32"></div>
+
+        <!-- About Section -->
+        <section id="about" class="max-w-4xl mx-auto space-y-12 text-center">
+            <div class="space-y-4">
+                <span class="text-[9px] uppercase tracking-[0.35em] text-[#B59A7F] font-semibold" data-i18n="about_heading">About Sorehari</span>
+                <h2 class="serif-title text-4xl font-light text-[#2C2A29] sm:text-5xl md:text-6xl italic leading-tight">
+                    The Curators of Raw Emotions
+                </h2>
+            </div>
+            
+            <!-- Elegant Quote-style Text -->
+            <p class="serif-title text-xl md:text-2xl leading-relaxed text-[#4A4643] font-light max-w-3xl mx-auto italic border-l-2 border-[#E5DCD3] pl-6 md:pl-10 text-left my-8">
+                "We believe that every love story deserves to be rewound and remembered with its honest emotions."
+            </p>
+            
+            <p class="text-[14px] leading-loose text-[#6E6B64] font-light max-w-2xl mx-auto pt-4" data-i18n="about_desc">
+                Sorehari was born from an intimate love for memories and storytelling. We are a collective of visual storytellers dedicated to preserving the raw emotions of your most significant day — from the quiet, nervous preparations to the ecstatic details of your celebration. We weave your moments into a timeless, cinematic narrative.
+            </p>
+        </section>
+
+        <!-- Divider Line -->
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-[#E5DCD3] to-transparent my-24 md:my-32"></div>
+
+        <!-- Services Section -->
+        <section class="space-y-16">
+            <div class="text-center space-y-3">
+                <span class="text-[9px] uppercase tracking-[0.3em] text-[#B59A7F] font-semibold">The Chapters</span>
+                <h2 class="serif-title text-4xl font-light text-[#2C2A29] sm:text-5xl">Our Signature Services</h2>
             </div>
 
-            <!-- Services Section -->
-            <div class="grid gap-6 sm:grid-cols-3">
-                <div
-                    class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-10 flex flex-col justify-between">
-                    <div>
-                        <h3 class="serif-title text-2xl font-semibold text-slate-900">Engagement</h3>
-                        <p class="mt-4 text-sm leading-6 text-slate-600" data-i18n="engagement_desc">The first step
-                            towards eternity. Capture
-                            the warm atmosphere of family gatherings in classic snapshots.</p>
+            <!-- Minimalist Editorial Column Layout (divide by thin line, no boxes, no cards) -->
+            <div class="grid gap-12 md:grid-cols-3 md:divide-x md:divide-[#E5DCD3]/60">
+                <!-- Column 1 -->
+                <div class="space-y-6 md:pr-8">
+                    <span class="serif-title text-4xl font-light text-[#B59A7F] block">01</span>
+                    <h3 class="serif-sub text-lg font-medium text-[#2C2A29]">Engagement</h3>
+                    <p class="text-[13px] leading-relaxed text-[#6E6B64] font-light" data-i18n="engagement_desc">
+                        The silent prologue to eternity. We capture the gentle, warm atmosphere of your promise and family gatherings in classic, soft-toned frames.
+                    </p>
+                </div>
+
+                <!-- Column 2 -->
+                <div class="space-y-6 md:px-10">
+                    <span class="serif-title text-4xl font-light text-[#B59A7F] block">02</span>
+                    <h3 class="serif-sub text-lg font-medium text-[#2C2A29]">Pre-Wedding</h3>
+                    <p class="text-[13px] leading-relaxed text-[#6E6B64] font-light" data-i18n="prewedding_desc">
+                        A poetic visualization of your romance. We illustrate your intimate connection and shared laughter prior to the big day, framed in a minimalist, high-fashion aesthetic.
+                    </p>
+                </div>
+
+                <!-- Column 3 -->
+                <div class="space-y-6 md:pl-10">
+                    <span class="serif-title text-4xl font-light text-[#B59A7F] block">03</span>
+                    <h3 class="serif-sub text-lg font-medium text-[#2C2A29]">Wedding Day</h3>
+                    <p class="text-[13px] leading-relaxed text-[#6E6B64] font-light" data-i18n="weddingday_desc">
+                        The complete anthology of your celebration. Every tear of joy, unfiltered laughter, and delicate detail is captured with silent precision and grace.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Full Package Section (Clean, Cardless Split Layout) -->
+            <div class="pt-8">
+                <div class="w-full h-px bg-[#E5DCD3]/60 mb-16"></div>
+                <div class="grid gap-10 md:grid-cols-[0.8fr_1.2fr] items-start">
+                    <div class="space-y-4">
+                        <span class="text-[9px] uppercase tracking-[0.35em] text-[#B59A7F] font-semibold">The Anthology</span>
+                        <h3 class="serif-title text-3xl font-light text-[#2C2A29] sm:text-4xl leading-tight">Full Wedding Package</h3>
+                        <div class="pt-4">
+                            <a href="#contact" class="inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-widest text-[#2C2A29] group">
+                                <span class="border-b border-[#2C2A29] pb-0.5 group-hover:border-[#B59A7F] group-hover:text-[#B59A7F] transition-colors duration-300">Book Package</span>
+                                <svg class="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </a>
+                        </div>
                     </div>
-
-                </div>
-
-                <div
-                    class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-10 flex flex-col justify-between">
                     <div>
-                        <h3 class="serif-title text-2xl font-semibold text-slate-900">Pre-Wedding</h3>
-                        <p class="mt-4 text-sm leading-6 text-slate-600" data-i18n="prewedding_desc">Immortalize your
-                            romance and intimate moments before
-                            the happy day in a <span class="italic">timeless</span> and aesthetic concept.</p>
+                        <p class="text-[14px] leading-loose text-[#5C5753] font-light md:pl-8 border-l border-[#E5DCD3]/60" data-i18n="fullpackage_desc">
+                            An all-inclusive documentation from your first promise to the final celebration. A single creative vision, an uninterrupted story, beautifully preserved.
+                        </p>
                     </div>
-
                 </div>
-
-                <div
-                    class="rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-900/5 sm:p-10 flex flex-col justify-between">
-                    <div>
-                        <h3 class="serif-title text-2xl font-semibold text-slate-900">Wedding Day</h3>
-                        <p class="mt-4 text-sm leading-6 text-slate-600" data-i18n="weddingday_desc">Full documentation
-                            of the most memorable day. Every
-                            laugh, happy tear, and beautiful detail will not be missed.</p>
-                    </div>
-
-                </div>
+                <div class="w-full h-px bg-[#E5DCD3]/60 mt-16"></div>
             </div>
+        </section>
 
-            <!-- Full Package Box -->
-            <div
-                class="rounded-[2rem] bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-8 shadow-xl sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                <div class="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-white opacity-5 blur-3xl"></div>
-                <div class="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white opacity-5 blur-3xl"></div>
-                <div class="text-center sm:text-left relative z-10">
-                    <h3 class="serif-title text-2xl font-semibold text-white sm:text-3xl">Full Package</h3>
-                    <p class="mt-3 text-sm leading-6 text-slate-300 max-w-xl" data-i18n="fullpackage_desc">A complete
-                        package from <span class="text-white font-semibold">Engagement</span> to <span
-                            class="text-white font-semibold">Wedding Day</span>. One team, one complete story — we
-                        accompany every step of your love journey from beginning to end.</p>
-                </div>
+        <!-- Divider Line -->
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-[#E5DCD3] to-transparent my-24 md:my-32"></div>
 
-            </div>
-
-
-
-            <!-- Why Choose Us -->
-            <div
-                class="rounded-[2rem] bg-[#1a1a1a] p-8 shadow-xl sm:p-16 flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-slate-700 opacity-20 blur-3xl"></div>
-                <div class="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-slate-700 opacity-20 blur-3xl"></div>
-
-                <h3 class="serif-title text-3xl font-semibold text-white sm:text-4xl" data-i18n="philosophy_heading">Our
-                    Philosophy</h3>
-                <p class="mt-8 max-w-3xl text-base leading-8 text-slate-300 relative z-10" data-i18n="philosophy_desc">
-                    At Sorehari, we believe
-                    that everyone has their own unique story. Our task is not merely pressing the camera shutter button,
-                    but <span class="italic text-white">capturing honest emotions</span> and <span
-                        class="italic text-white">unrepeatable moments</span>, then weaving them into an
-                    everlasting memory that you can replay anytime.</p>
-            </div>
+        <!-- Philosophy Section (Elegant Typography and Space, Cardless) -->
+        <section class="py-12 text-center max-w-4xl mx-auto space-y-10">
+            <span class="text-[9px] uppercase tracking-[0.35em] text-[#B59A7F] font-semibold" data-i18n="philosophy_heading">Our Philosophy</span>
+            <div class="w-16 h-px bg-[#B59A7F]/60 mx-auto"></div>
+            <p class="serif-title text-2xl md:text-4xl leading-relaxed text-[#2C2A29] font-light italic" data-i18n="philosophy_desc">
+                We believe that photography is not merely about pressing the shutter, but about listening to the quiet, honest emotions that unfold. We capture the unrepeatable fragments of today, transforming them into everlasting heirlooms that you can relive for generations.
+            </p>
+            <div class="w-16 h-px bg-[#B59A7F]/60 mx-auto"></div>
         </section>
     </main>
 
-    <footer id="contact" class="border-t border-slate-200/80 bg-[#F9F8F6] px-6 py-12 md:px-10">
-        <div class="mx-auto max-w-7xl space-y-8">
+    <!-- Footer -->
+    <footer id="contact" class="border-t border-[#E5DCD3]/60 bg-[#FAF8F5] px-6 py-16 md:px-12">
+        <div class="mx-auto max-w-7xl space-y-16">
             <!-- Contact Section -->
-            <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                    <p class="text-sm font-semibold text-slate-900">Sorehari</p>
-                    <p class="mt-2 text-sm text-slate-600">Story and Rewinded Moments</p>
+            <div class="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="space-y-4">
+                    <p class="text-[12px] font-bold tracking-[0.2em] uppercase text-[#2C2A29]">Sorehari</p>
+                    <p class="text-[12px] text-[#8C7B6E] font-light">Story and Rewinded Moments</p>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-slate-900">Contact</p>
-                    <div class="mt-2 space-y-2 text-sm">
+                
+                <div class="space-y-4">
+                    <p class="text-[10px] font-semibold tracking-[0.2em] uppercase text-[#2C2A29]">Contact</p>
+                    <div class="space-y-2 text-[12px] font-light text-[#5C5753]">
                         <p><a href="mailto:hello@sorehari.com"
-                                class="text-slate-600 hover:text-slate-900 transition">hello@sorehari.com</a></p>
+                                class="hover:text-[#2C2A29] transition-colors">hello@sorehari.com</a></p>
                         <p><a href="https://wa.me/6285399098599" target="_blank"
-                                class="text-slate-600 hover:text-slate-900 transition flex items-center gap-2">WA
+                                class="hover:text-[#2C2A29] transition-colors flex items-center gap-1.5">WA
                                 Zulham</a></p>
                         <p><a href="https://wa.me/6282333333420" target="_blank"
-                                class="text-slate-600 hover:text-slate-900 transition flex items-center gap-2">WA
+                                class="hover:text-[#2C2A29] transition-colors flex items-center gap-1.5">WA
                                 Ammang</a></p>
                     </div>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-slate-900">Pages</p>
-                    <ul class="mt-2 space-y-1 text-sm">
-                        <li><a href="/" class="text-slate-600 hover:text-slate-900 transition">Home</a></li>
+
+                <div class="space-y-4">
+                    <p class="text-[10px] font-semibold tracking-[0.2em] uppercase text-[#2C2A29]">Pages</p>
+                    <ul class="space-y-2 text-[12px] font-light text-[#5C5753]">
+                        <li><a href="/" class="hover:text-[#2C2A29] transition-colors">Home</a></li>
                         <li><a href="/portfolio.html"
-                                class="text-slate-600 hover:text-slate-900 transition">Portfolio</a></li>
-                        <li><a href="#about" class="text-slate-600 hover:text-slate-900 transition">About</a></li>
+                                class="hover:text-[#2C2A29] transition-colors">Portfolio</a></li>
+                        <li><a href="#about" class="hover:text-[#2C2A29] transition-colors">About</a></li>
                     </ul>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-slate-900">Resources</p>
-                    <ul class="mt-2 space-y-1 text-sm">
-                        <li><a href="/login" class="text-slate-600 hover:text-slate-900 transition">Admin
+
+                <div class="space-y-4">
+                    <p class="text-[10px] font-semibold tracking-[0.2em] uppercase text-[#2C2A29]">Resources</p>
+                    <ul class="space-y-2 text-[12px] font-light text-[#5C5753]">
+                        <li><a href="/login" class="hover:text-[#2C2A29] transition-colors">Admin
                                 Dashboard</a></li>
                     </ul>
                 </div>
             </div>
 
             <!-- Copyright -->
-            <div class="border-t border-slate-200/80 pt-8 text-center text-sm text-slate-600">
+            <div class="border-t border-[#E5DCD3]/40 pt-10 text-center text-[12px] text-[#8C7B6E] font-light">
                 <p>© 2026 Sorehari. All rights reserved. Built with ❤️ for memorable moments.</p>
             </div>
         </div>
     </footer>
 
+    <!-- Developer Watermark Button -->
+    <button id="dev-watermark" class="dev-watermark-btn animate-bounce" title="Developer Info">
+        <img src="/ams-logo.png" alt="AMS Logo" class="w-[38px] h-[38px] object-contain" />
+    </button>
+
+    <!-- Developer Watermark Popup -->
+    <div id="dev-watermark-popup" class="dev-watermark-popup hidden">
+        <div class="flex justify-between items-center">
+            <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Developer Credit</span>
+            <div class="dev-watermark-status">
+                <span class="dev-watermark-dot"></span>
+                <span>Active Release</span>
+            </div>
+        </div>
+        <div>
+            <img src="/ams-logo.png" alt="AMS Logo" class="h-9 object-contain mb-2" />
+            <p class="m-0 text-[12px] text-slate-600 leading-relaxed font-light">
+                Designed, built, and optimized with Node.js, Express, and SQLite.
+            </p>
+        </div>
+        <div class="border-t border-slate-200/50 pt-3 flex justify-between items-center text-[12px]">
+            <span class="text-slate-500">System Version</span>
+            <strong class="text-slate-800">v2.0.0</strong>
+        </div>
+        <div class="flex gap-2 mt-1">
+            <a href="https://github.com/armansyam" target="_blank" rel="noopener noreferrer" 
+               class="flex-1 text-center bg-[#B59A7F] text-white py-2 rounded-xl text-[12px] font-semibold hover:bg-[#a3886d] transition shadow-md shadow-amber-900/10">
+                GitHub Profile
+            </a>
+            <button id="dev-watermark-close" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-500 text-[12px] font-semibold hover:bg-slate-50 transition">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Block -->
     <script>
         // Mobile menu toggle
         const navToggle = document.getElementById('nav-toggle');
@@ -278,51 +457,37 @@
             });
         });
 
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const href = this.getAttribute('href');
-                if (href === '#') return;
-
-                e.preventDefault();
-                const element = document.querySelector(href);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-        });
-
-        // Language Switcher
+        // Language Switcher Toggle
         const langToggle = document.getElementById('lang-toggle');
         const langDropdown = document.getElementById('lang-dropdown');
         const langLabel = langToggle?.querySelector('span');
 
         const translations = {
             en: {
-                hero_subtitle: 'Story and Rewinded Moments — a collection of memories with an elegant touch, photography, and soothing narratives.',
+                hero_subtitle: 'Story and Rewinded Moments — capturing honest emotions and precious fragments of your wedding journey with an elegant, timeless signature.',
                 hero_portfolio: 'View Portfolio',
                 hero_contact: 'Contact Us',
                 about_heading: 'About Sorehari',
-                about_desc: 'Sorehari was born from our love for memories and stories. We are a team of professional photographers dedicated to capturing precious moments in your life — from the thrilling preparations to the most beautiful details at the end of the event. Let us frame your moments with a timeless aesthetic touch.',
-                engagement_desc: 'The first step towards eternity. Capture the warm atmosphere of family gatherings in classic snapshots.',
-                prewedding_desc: 'Immortalize your romance and intimate moments before the happy day in a timeless and aesthetic concept.',
-                weddingday_desc: 'Full documentation of the most memorable day. Every laugh, happy tear, and beautiful detail will not be missed.',
-                fullpackage_desc: 'A complete package from Engagement to Wedding Day. One team, one complete story — we accompany every step of your love journey from beginning to end.',
+                about_desc: 'Sorehari was born from an intimate love for memories and storytelling. We are a collective of visual storytellers dedicated to preserving the raw emotions of your most significant day — from the quiet, nervous preparations to the ecstatic details of your celebration. We weave your moments into a timeless, cinematic narrative.',
+                engagement_desc: 'The silent prologue to eternity. We capture the gentle, warm atmosphere of your promise and family gatherings in classic, soft-toned frames.',
+                prewedding_desc: 'A poetic visualization of your romance. We illustrate your intimate connection and shared laughter prior to the big day, framed in a minimalist, high-fashion aesthetic.',
+                weddingday_desc: 'The complete anthology of your celebration. Every tear of joy, unfiltered laughter, and delicate detail is captured with silent precision and grace.',
+                fullpackage_desc: 'An all-inclusive documentation from your first promise to the final celebration. A single creative vision, an uninterrupted story, beautifully preserved.',
                 philosophy_heading: 'Our Philosophy',
-                philosophy_desc: 'At Sorehari, we believe that everyone has their own unique story. Our task is not merely pressing the camera shutter button, but capturing honest emotions and unrepeatable moments, then weaving them into an everlasting memory that you can replay anytime.'
+                philosophy_desc: 'We believe that photography is not merely about pressing the shutter, but about listening to the quiet, honest emotions that unfold. We capture the unrepeatable fragments of today, transforming them into everlasting heirlooms that you can relive for generations.'
             },
             id: {
-                hero_subtitle: 'Story and Rewinded Moments — sajian kenangan dengan sentuhan elegan, foto, dan narasi yang menenangkan.',
+                hero_subtitle: 'Story and Rewinded Moments — merajut emosi jujur dan serpihan momen berharga dalam perjalanan cinta Anda dengan sentuhan estetika yang abadi.',
                 hero_portfolio: 'Lihat Portofolio',
                 hero_contact: 'Hubungi Kami',
                 about_heading: 'Tentang Sorehari',
-                about_desc: 'Sorehari lahir dari kecintaan kami pada memori dan cerita. Kami adalah tim fotografer profesional yang berdedikasi untuk merekam detik-detik berharga dalam hidup Anda—dari persiapan yang mendebarkan hingga detail terindah di akhir acara. Biarkan kami membingkai momen Anda dengan sentuhan estetis yang tak lekang oleh waktu.',
-                engagement_desc: 'Langkah pertama menuju keabadian. Tangkap nuansa hangat pertemuan keluarga dalam jepretan klasik.',
-                prewedding_desc: 'Abadikan romansa dan momen intim Anda sebelum hari bahagia dalam konsep yang timeless dan estetis.',
-                weddingday_desc: 'Dokumentasi penuh hari paling berkesan. Setiap tawa, tangis bahagia, dan detail terindah tak akan terlewatkan.',
-                fullpackage_desc: 'Paket lengkap dari Engagement hingga Wedding Day. Satu tim, satu cerita utuh — kami menemani setiap langkah perjalanan cinta Anda dari awal hingga akhir.',
+                about_desc: 'Sorehari lahir dari kecintaan mendalam pada memori dan seni bercerita. Kami adalah kolektif pembuat cerita visual yang berdedikasi mengabadikan emosi murni di hari terpenting Anda — mulai dari persiapan yang tenang penuh debar hingga detail pesta yang penuh sukacita. Kami merangkai momen Anda menjadi narasi sinematik yang tak lekang oleh waktu.',
+                engagement_desc: 'Prolog sunyi menuju keabadian. Kami merekam kehangatan janji suci dan pertemuan keluarga Anda dalam bingkai klasik bernada lembut.',
+                prewedding_desc: 'Visualisasi puitis dari kisah romansa Anda. Kami menggambarkan kedekatan intim dan tawa bersama sebelum hari besar, dibingkai dalam estetika minimalis yang berkelas.',
+                weddingday_desc: 'Antologi lengkap dari perayaan Anda. Setiap tetes air mata bahagia, tawa lepas, dan detail terkecil ditangkap dengan presisi hening dan keanggunan.',
+                fullpackage_desc: 'Dokumentasi menyeluruh mulai dari janji pertama hingga perayaan akhir. Satu visi kreatif, satu cerita tanpa jeda, diabadikan dengan indah.',
                 philosophy_heading: 'Filosofi Kami',
-                philosophy_desc: 'Kami di Sorehari percaya bahwa setiap orang memiliki cerita uniknya masing-masing. Tugas kami bukanlah sekadar menekan tombol rana kamera, melainkan menangkap emosi jujur dan momen yang tak terulang, lalu merangkainya menjadi sebuah kenangan abadi yang bisa Anda putar kembali kapan saja.'
+                philosophy_desc: 'Kami percaya bahwa fotografi bukan sekadar menekan tombol rana, melainkan tentang mendengarkan emosi hening yang jujur. Kami mengabadikan pecahan momen hari ini yang tak akan terulang, mengubahnya menjadi warisan berharga yang dapat Anda nikmati kembali lintas generasi.'
             }
         };
 
@@ -373,6 +538,27 @@
 
         // Apply saved language on load
         applyLang(currentLang);
+
+        // ── Developer Watermark Scripting ──
+        const devWatermarkBtn = document.getElementById('dev-watermark');
+        const devWatermarkPopup = document.getElementById('dev-watermark-popup');
+        const devWatermarkClose = document.getElementById('dev-watermark-close');
+
+        devWatermarkBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            devWatermarkPopup?.classList.toggle('hidden');
+        });
+
+        devWatermarkClose?.addEventListener('click', () => {
+            devWatermarkPopup?.classList.add('hidden');
+        });
+
+        // Close watermark popup on clicking outside
+        document.addEventListener('click', (e) => {
+            if (devWatermarkPopup && !devWatermarkPopup.contains(e.target) && e.target !== devWatermarkBtn) {
+                devWatermarkPopup.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 
