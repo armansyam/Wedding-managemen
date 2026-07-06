@@ -160,7 +160,8 @@ router.get('/invoice/:id', (req, res) => {
     package_price: booking.package_price,
     additional_income: booking.additional_income || 0,
     dp_amount: dpAmount,
-    remaining_payment: remaining,
+    remaining_payment: booking.remaining_payment || 0,
+    total_paid: booking.total_paid || 0,
     sessions,
     bank_name: settings.bank_name || 'BCA',
     bank_account: settings.bank_account || '3420-1111-99',
@@ -241,8 +242,8 @@ router.post('/pelunasan/:token/upload', (req, res) => {
 
   // Insert payment
   db.prepare(`
-    INSERT INTO payments (booking_id, type, amount, payment_date, payment_method, reference, notes)
-    VALUES (?, 'pelunasan', ?, date('now','localtime'), ?, ?, 'Pelunasan via form client')
+    INSERT INTO payments (booking_id, type, amount, payment_date, payment_method, reference, notes, status)
+    VALUES (?, 'pelunasan', ?, date('now','localtime'), ?, ?, 'Pelunasan via form client', 'pending')
   `).run(booking.id, amount, payment_method || 'transfer', refName);
 
   res.json({ success: true, message: 'Bukti pelunasan terkirim. Menunggu verifikasi admin 🙏' });
@@ -288,7 +289,7 @@ router.post('/public/:token/upload-receipt', (req, res) => {
   fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
 
   // Record payment
-  db.prepare('INSERT INTO payments (booking_id, type, amount, payment_date, payment_method, reference, notes) VALUES (?, ?, ?, datetime(\'now\',\'localtime\'), ?, ?, ?)')
+  db.prepare('INSERT INTO payments (booking_id, type, amount, payment_date, payment_method, reference, notes, status) VALUES (?, ?, ?, datetime(\'now\',\'localtime\'), ?, ?, ?, \'pending\')')
     .run(booking.id, 'dp', dp_amount, 'transfer', filename, `Bukti upload dari client`);
 
   // Update status to pending_verification — menunggu admin verifikasi
@@ -330,6 +331,9 @@ router.post('/:id/verify-dp', (req, res) => {
   // Update status to confirmed
   db.prepare("UPDATE bookings SET status = 'confirmed', updated_at = datetime('now','localtime') WHERE id = ?").run(booking.id);
 
+  // Verify the DP payment in database
+  db.prepare("UPDATE payments SET status = 'verified' WHERE booking_id = ? AND type = 'dp'").run(booking.id);
+
   // Update lead status to booked
   db.prepare("UPDATE leads SET status = 'booked', updated_at = datetime('now','localtime') WHERE id = ?").run(booking.lead_id);
 
@@ -341,8 +345,9 @@ router.post('/:id/confirm-pelunasan', (req, res) => {
   const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(req.params.id);
   if (!booking) return res.status(404).json({ error: 'Booking not found' });
 
-  // Payment is already recorded via /payments route — just return success
-  // Work status must be updated separately by admin via PUT /:id/status
+  // Verify the pelunasan payment in database so it is officially counted as paid
+  db.prepare("UPDATE payments SET status = 'verified' WHERE booking_id = ? AND type = 'pelunasan'").run(booking.id);
+
   res.json({ success: true, message: 'Pelunasan dikonfirmasi' });
 });
 

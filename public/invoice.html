@@ -144,9 +144,9 @@
       document.getElementById('inv-num').textContent = b.invoice_number;
       document.getElementById('inv-date').textContent = b.invoice_date;
 
-      // Status — check if DP already paid
-      const dpPaid = ['confirmed','in_progress','completed'].includes(b.status);
-      const fullyPaid = b.status === 'completed';
+      // Status — check if DP/Pelunasan already paid based on verified payments
+      const dpPaid = b.total_paid >= b.dp_amount || ['confirmed','in_progress','event_day','editing','delivery','completed'].includes(b.status);
+      const fullyPaid = b.total_paid >= (b.package_price + b.additional_income);
       const stEl = document.getElementById('inv-status');
 
       if (fullyPaid && invType === 'lunas') { stEl.textContent = '✅ LUNAS'; stEl.className = 'inv-status status-lunas'; }

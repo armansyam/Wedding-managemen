@@ -284,8 +284,10 @@
     const dpAmount = b.dp_amount || Math.round(b.package_price * 0.3);
     const phone = (b.client && b.client.phone) || '';
 
-    const dpPaid = ['dp_pending','confirmed','in_progress','completed'].includes(b.status);
-    const isLunas = b.status === 'completed';
+    const dpPayment = b.payments ? b.payments.find(p => p.type === 'dp' && p.status === 'verified') : null;
+    const dpPaid = !!dpPayment;
+    const pelunasanPayment = b.payments ? b.payments.find(p => p.type === 'pelunasan' && p.status === 'verified') : null;
+    const isLunas = !!pelunasanPayment;
     let html = '';
 
     // Invoice DP — green check when paid
@@ -326,17 +328,16 @@
     // WA / Pelunasan card — context-aware
     if (isLunas) {
     // Sudah lunas → tampilkan detail pembayaran, bukan WA
-    const totalPaid = (b.dp_amount || Math.round(b.package_price * 0.3)) + (b.total_paid || 0);
     html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;min-width:220px">
     <div style="font-size:20px;margin-bottom:6px">✅</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px;color:var(--green)">Pembayaran Lunas</div>
     <div style="font-size:12px;color:var(--text2)">
     Total: <strong style="color:var(--green)">${formatIDR(b.package_price)}</strong><br>
-    Dibayar: ${formatIDR(totalPaid)}<br>
+    Dibayar: ${formatIDR(b.total_paid || b.package_price)}<br>
     Sisa: <span style="color:var(--green)">Rp 0</span>
     </div>
     </div>`;
-    } else if (['confirmed','in_progress','event_day'].includes(b.status) && hasPackage && phone) {
+    } else if (dpPaid && hasPackage && phone) {
     html += `<div style="background:var(--surface);border:1px solid var(--yellow);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--yellow)'" onclick="window.sendPelunasanWA()">
     <div style="font-size:20px;margin-bottom:6px">💸</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Kirim Link Pelunasan</div>
@@ -412,8 +413,8 @@ Upload bukti transfer melalui link di atas. Terima kasih 🙏`;
     const el = document.getElementById('pelunasan-confirm-section');
     const pelunasan = b.payments ? b.payments.find(p => p.type === 'pelunasan') : null;
 
-    // Already confirmed (completed) — show lunas summary
-    if (b.status === 'completed') {
+    // Already confirmed (verified) — show lunas summary
+    if (pelunasan && pelunasan.status === 'verified') {
     el.style.display = 'block';
     el.innerHTML = `
     <div class="finance-panel" style="border:2px solid var(--green)">

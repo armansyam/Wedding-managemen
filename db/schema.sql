@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_method TEXT,
   reference TEXT,
   notes TEXT,
+  status TEXT NOT NULL DEFAULT 'verified',
   created_at TEXT DEFAULT (datetime('now','localtime')),
   FOREIGN KEY (booking_id) REFERENCES bookings(id)
 );
@@ -239,7 +240,7 @@ LEFT JOIN (
   SELECT booking_id, SUM(amount) AS total_expense FROM booking_expenses GROUP BY booking_id
 ) exp ON b.id = exp.booking_id
 LEFT JOIN (
-  SELECT booking_id, SUM(amount) AS total_paid FROM payments GROUP BY booking_id
+  SELECT booking_id, SUM(amount) AS total_paid FROM payments WHERE status = 'verified' GROUP BY booking_id
 ) pay ON b.id = pay.booking_id;
 
 CREATE VIEW IF NOT EXISTS v_monthly_summary AS

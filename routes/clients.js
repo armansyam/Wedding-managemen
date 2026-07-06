@@ -15,7 +15,7 @@ router.get('/confirmed', (req, res) => {
     FROM clients c
     JOIN bookings b ON b.client_id = c.id
     LEFT JOIN packages p ON b.package_id = p.id
-    LEFT JOIN (SELECT booking_id, SUM(amount) AS total_paid FROM payments GROUP BY booking_id) pay ON pay.booking_id = b.id
+    LEFT JOIN (SELECT booking_id, SUM(amount) AS total_paid FROM payments WHERE status = 'verified' GROUP BY booking_id) pay ON pay.booking_id = b.id
     LEFT JOIN (SELECT booking_id, SUM(amount) AS total_expense FROM booking_expenses GROUP BY booking_id) exp ON exp.booking_id = b.id
     WHERE b.status IN ('confirmed','in_progress','event_day','editing','delivery','completed')
     ORDER BY b.event_date DESC
