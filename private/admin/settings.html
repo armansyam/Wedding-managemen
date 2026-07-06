@@ -112,40 +112,104 @@
     <!-- Panel: Template WA -->
     <div class="settings-panel" id="panel-templates">
       <div class="setting-card">
-        <h3>💬 Template WA — Leads</h3>
-        <p class="desc">Pesan yang dikirim admin ke leads (WA Welcome). Variabel: <code>{{name}}</code>, <code>{{partner_name}}</code>, <code>{{vendor_name}}</code></p>
-        <textarea id="s-wa_welcome" rows="6"></textarea>
-        <div class="template-preview" id="preview-wa_welcome"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+          <div>
+            <h3 style="margin-bottom:4px">💬 Template Notifikasi WhatsApp</h3>
+            <p class="desc">Kelola isi pesan otomatis WhatsApp untuk berbagai alur kerja. Gunakan tombol edit untuk memodifikasi pesan.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="window.resetDefaults()" style="font-size:12px; padding:6px 12px">🔄 Reset Default</button>
+        </div>
+
+        <div class="table-wrap" style="margin-top:12px">
+          <table style="width:100%; border-collapse:collapse; font-size:13px">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border)">
+                <th style="text-align:left; padding:12px 8px">Template</th>
+                <th style="text-align:left; padding:12px 8px">Keterangan / Tujuan</th>
+                <th style="text-align:center; padding:12px 8px; width:100px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Leads (Welcome)</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan awal untuk menghubungi leads yang baru masuk.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_welcome')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Booking Proposal</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan proposal berisi link pilihan paket saat memproses leads.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_booking_proposal')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — DP Diverifikasi</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan pemberitahuan bahwa pembayaran uang muka (DP) disetujui.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_dp_verified')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — DP Dikonfirmasi</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan otomatis konfirmasi DP berhasil diverifikasi oleh sistem.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_dp_confirmed')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Invoice DP</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan penagihan awal beserta link invoice pembayaran uang muka.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_invoice')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Pelunasan</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan penagihan sisa pembayaran beserta link pelunasan.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_pelunasan')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Hidden inputs to store template values for standard saveAll() -->
+        <textarea id="s-wa_welcome" style="display:none"></textarea>
+        <textarea id="s-wa_booking_proposal" style="display:none"></textarea>
+        <textarea id="s-wa_dp_verified" style="display:none"></textarea>
+        <textarea id="s-wa_dp_confirmed" style="display:none"></textarea>
+        <textarea id="s-wa_invoice" style="display:none"></textarea>
+        <textarea id="s-wa_pelunasan" style="display:none"></textarea>
       </div>
-      <div class="setting-card">
-        <h3>💬 Template WA — Booking Proposal</h3>
-        <p class="desc">Pesan saat lead di-convert ke booking (via backend). Variabel: <code>{{name}}</code>, <code>{{vendor_name}}</code>, <code>{{booking_link}}</code></p>
-        <textarea id="s-wa_booking_proposal" rows="6"></textarea>
-        <div class="template-preview" id="preview-wa_booking_proposal"></div>
-      </div>
-      <div class="setting-card">
-        <h3>💬 Template WA — DP Diverifikasi</h3>
-        <p class="desc">Pesan setelah admin verifikasi DP. Variabel: <code>{{client_name}}</code>, <code>{{partner_name}}</code>, <code>{{event_date}}</code>, <code>{{venue}}</code>, <code>{{package_name}}</code></p>
-        <textarea id="s-wa_dp_verified" rows="6"></textarea>
-        <div class="template-preview" id="preview-wa_dp_verified"></div>
-      </div>
-      <div class="setting-card">
-        <h3>💬 Template WA — DP Dikonfirmasi</h3>
-        <p class="desc">Pesan setelah konfirmasi DP. Sama variabel dengan DP Verified.</p>
-        <textarea id="s-wa_dp_confirmed" rows="6"></textarea>
-        <div class="template-preview" id="preview-wa_dp_confirmed"></div>
-      </div>
-      <div class="setting-card">
-        <h3>💬 Template WA — Invoice DP</h3>
-        <p class="desc">Pesan invoice DP ke client. Variabel: <code>{{client_name}}</code>, <code>{{vendor_name}}</code>, <code>{{package_name}}</code>, <code>{{dp_amount}}</code>, <code>{{invoice_url}}</code></p>
-        <textarea id="s-wa_invoice" rows="6"></textarea>
-        <div class="template-preview" id="preview-wa_invoice"></div>
-      </div>
-      <div class="setting-card">
-        <h3>💬 Template WA — Pelunasan</h3>
-        <p class="desc">Pesan link pelunasan ke client. Variabel: <code>{{client_name}}</code>, <code>{{event_date}}</code>, <code>{{pelunasan_url}}</code>, <code>{{remaining}}</code></p>
-        <textarea id="s-wa_pelunasan" rows="6"></textarea>
-        <div class="template-preview" id="preview-wa_pelunasan"></div>
+    </div>
+
+    <!-- Modal Edit Template WA -->
+    <div class="modal-overlay" id="modal-edit-template">
+      <div class="modal" style="max-width:600px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2 id="template-editor-title" style="font-size:18px">Edit Template WA</h2>
+          <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-edit-template')">✕</button>
+        </div>
+        
+        <p id="template-editor-desc" style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5"></p>
+        
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2)">Konten Template</label>
+          <textarea id="template-editor-textarea" rows="8" style="font-family:monospace;width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box" oninput="window.onTemplateEditorInput()"></textarea>
+        </div>
+        
+        <div style="margin-bottom:16px">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:6px">Pratinjau Pesan (WhatsApp Preview)</label>
+          <pre id="template-editor-preview" style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12px;white-space:pre-wrap;max-height:220px;overflow:auto;border:1px solid var(--border)"></pre>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeModal('modal-edit-template')">Batal</button>
+          <button class="btn btn-primary" onclick="window.saveActiveTemplate()">Simpan Template</button>
+        </div>
       </div>
     </div>
 
@@ -282,11 +346,76 @@
     window.saveAll = saveAll;
     window.previewLogo = previewLogo;
 
-    // --- Template Preview ---
+    let activeTemplateKey = '';
+
+    const templateMeta = {
+      wa_welcome: {
+        title: 'Template WA — Leads (Welcome)',
+        desc: 'Pesan awal untuk menghubungi leads yang baru masuk. Variabel: {{name}}, {{partner_name}}, {{vendor_name}}'
+      },
+      wa_booking_proposal: {
+        title: 'Template WA — Booking Proposal',
+        desc: 'Pesan proposal berisi link pilihan paket saat memproses leads. Variabel: {{name}}, {{vendor_name}}, {{booking_link}}'
+      },
+      wa_dp_verified: {
+        title: 'Template WA — DP Diverifikasi',
+        desc: 'Pesan pemberitahuan bahwa pembayaran uang muka (DP) disetujui. Variabel: {{client_name}}, {{partner_name}}, {{event_date}}, {{venue}}, {{package_name}}'
+      },
+      wa_dp_confirmed: {
+        title: 'Template WA — DP Dikonfirmasi',
+        desc: 'Pesan otomatis konfirmasi DP berhasil diverifikasi oleh sistem. Variabel: {{client_name}}, {{partner_name}}, {{event_date}}, {{venue}}, {{package_name}}'
+      },
+      wa_invoice: {
+        title: 'Template WA — Invoice DP',
+        desc: 'Pesan penagihan awal beserta link invoice pembayaran uang muka. Variabel: {{client_name}}, {{vendor_name}}, {{package_name}}, {{dp_amount}}, {{invoice_url}}'
+      },
+      wa_pelunasan: {
+        title: 'Template WA — Pelunasan',
+        desc: 'Pesan penagihan sisa pembayaran beserta link pelunasan. Variabel: {{client_name}}, {{event_date}}, {{pelunasan_url}}, {{remaining}}'
+      }
+    };
+
+    function openEditTemplate(key) {
+      activeTemplateKey = key;
+      const meta = templateMeta[key];
+      if (!meta) return;
+
+      document.getElementById('template-editor-title').textContent = meta.title;
+      document.getElementById('template-editor-desc').textContent = meta.desc;
+
+      const hiddenEl = document.getElementById('s-' + key);
+      const editorTextarea = document.getElementById('template-editor-textarea');
+      editorTextarea.value = hiddenEl ? hiddenEl.value : '';
+
+      window.onTemplateEditorInput();
+      openModal('modal-edit-template');
+    }
+    window.openEditTemplate = openEditTemplate;
+
+    function onTemplateEditorInput() {
+      const text = document.getElementById('template-editor-textarea').value;
+      const previewEl = document.getElementById('template-editor-preview');
+      if (previewEl) {
+        previewEl.textContent = renderPreview(text, demoVars) || '(template kosong)';
+      }
+    }
+    window.onTemplateEditorInput = onTemplateEditorInput;
+
+    async function saveActiveTemplate() {
+      if (!activeTemplateKey) return;
+      const text = document.getElementById('template-editor-textarea').value;
+      const hiddenEl = document.getElementById('s-' + activeTemplateKey);
+      if (hiddenEl) {
+        hiddenEl.value = text;
+      }
+      closeModal('modal-edit-template');
+      await saveAll(); // Auto-save all settings to SQLite instantly
+    }
+    window.saveActiveTemplate = saveActiveTemplate;
+
+    // --- Template Preview Engine ---
     function setupTemplatePreviews() {
-      document.querySelectorAll('textarea[id^="s-wa_"]').forEach(ta => {
-        ta.addEventListener('input', () => updatePreview(ta.id.replace('s-', '')));
-      });
+      // No-op: we now preview inside the modal
     }
 
     const demoVars = {
@@ -316,89 +445,60 @@
     }
 
     function updatePreview(key) {
-      const el = document.getElementById('s-' + key);
-      const preview = document.getElementById('preview-' + key);
-      if (!el || !preview) return;
-      preview.textContent = renderPreview(el.value, demoVars) || '(template kosong)';
+      // No-op: handled in modal view
     }
 
     function updatePreviews() {
-      document.querySelectorAll('textarea[id^="s-wa_"]').forEach(ta => {
-        updatePreview(ta.id.replace('s-', ''));
-      });
+      // No-op: no static previews on the page
     }
 
     // --- Reset Defaults ---
     const DEFAULTS = {
       wa_welcome: `Halo Kak {{name}}! 👋
-
-Terima kasih sudah menghubungi *{{vendor_name}}* ✨
-
-Senang sekali bisa membantu merencanakan momen spesial Kak {{name}}{{#partner}} dan {{partner_name}}{{/partner}} 🙏
-
-Saya Ammang, owner. Boleh kita diskusi lebih lanjut tentang kebutuhan foto/video untuk acara Kakak? Apa yang Kakak butuhkan dan budget yang dianggarkan?
-
-Mohon infonya ya, Kak! 😊📸`,
+\nTerima kasih sudah menghubungi *{{vendor_name}}* ✨
+\nSenang sekali bisa membantu merencanakan momen spesial Kak {{name}}{{#partner}} dan {{partner_name}}{{/partner}} 🙏
+\nSaya Ammang, owner. Boleh kita diskusi lebih lanjut tentang kebutuhan foto/video untuk acara Kakak? Apa yang Kakak butuhkan dan budget yang dianggarkan?
+\nMohon infonya ya, Kak! 😊📸`,
       wa_booking_proposal: `Halo Kak {{name}}! 👋
-
-Terima kasih sudah menghubungi *{{vendor_name}}* ✨
-
-Untuk memilih paket dan mengirimkan bukti DP, silakan klik link di bawah ya, Kak:
+\nTerima kasih sudah menghubungi *{{vendor_name}}* ✨
+\nUntuk memilih paket dan mengirimkan bukti DP, silakan klik link di bawah ya, Kak:
 {{booking_link}}
-
-Setelah memilih paket, harga dan detail booking akan otomatis terupdate. Kami tunggu kabarnya! 😊📸`,
+\nSetelah memilih paket, harga dan detail booking akan otomatis terupdate. Kami tunggu kabarnya! 😊📸`,
       wa_dp_verified: `Halo Kak {{client_name}}! 👋
-
-DP untuk booking {{client_name}} & {{partner_name}} telah **DIVERIFIKASI** ✅
-
-📅 Tanggal Acara: {{event_date}}
+\nDP untuk booking {{client_name}} & {{partner_name}} telah **DIVERIFIKASI** ✅
+\n📅 Tanggal Acara: {{event_date}}
 📍 Venue: {{venue}}
 🎨 Paket: {{package_name}}
-
-Booking status sekarang: **Confirmed**
-
-Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`,
+\nBooking status sekarang: **Confirmed**
+\nTim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`,
       wa_dp_confirmed: `Halo Kak {{client_name}}! 👋
-
-DP untuk booking {{client_name}} & {{partner_name}} telah **DIKONFIRMASI** ✅
-
-📅 Tanggal Acara: {{event_date}}
+\nDP untuk booking {{client_name}} & {{partner_name}} telah **DIKONFIRMASI** ✅
+\n📅 Tanggal Acara: {{event_date}}
 📍 Venue: {{venue}}
 🎨 Paket: {{package_name}}
-
-Booking status sekarang: **Confirmed**
-
-Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`,
+\nBooking status sekarang: **Confirmed**
+\nTim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`,
       wa_invoice: `Halo {{client_name}} 👋
-
-Terima kasih telah memilih *{{vendor_name}}* 📸
-
-📋 *Invoice DP:*
+\nTerima kasih telah memilih *{{vendor_name}}* 📸
+\n📋 *Invoice DP:*
 Paket: {{package_name}}
 DP: {{dp_amount}}
-
-Silakan buka link invoice lengkap:
+\nSilakan buka link invoice lengkap:
 {{invoice_url}}
-
-Terima kasih 🙏`,
+\nTerima kasih 🙏`,
       wa_pelunasan: `Halo {{client_name}} 👋
-
-DP untuk acara *{{event_date}}* telah terverifikasi ✅
-
-Silakan lunasi sisa pembayaran melalui link berikut:
+\nDP untuk acara *{{event_date}}* telah terverifikasi ✅
+\nSilakan lunasi sisa pembayaran melalui link berikut:
 {{pelunasan_url}}
-
-📋 Sisa Pembayaran: *{{remaining}}*
-
-Terima kasih 🙏`,
+\n📋 Sisa Pembayaran: *{{remaining}}*
+\nTerima kasih 🙏`,
     };
 
     async function resetDefaults() {
       if (!confirm('Reset semua template WA ke default?')) return;
       for (const [k, v] of Object.entries(DEFAULTS)) {
         const el = document.getElementById('s-' + k);
-        if (el) el.value = v;
-        updatePreview(k);
+        if (el) el.value = v.replace(/\\n/g, '\n');
       }
       await saveAll();
     }
