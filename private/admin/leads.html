@@ -284,6 +284,7 @@ Mohon infonya ya, Kak! 😊📸`;
       });
       return encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => l[k] !== undefined ? String(l[k]) : m));
     })();
+    const waLink = phone ? `https://wa.me/${phone}?text=${waMsg}` : '#';
     let convertBtn = '';
     if (l.booking_token) {
       const created = new Date(l.booking_created_at);
