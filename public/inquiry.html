@@ -52,8 +52,8 @@
         }
 
         .check-item input[type="checkbox"]:checked {
-            background-color: #1e293b;
-            border-color: #1e293b;
+            background-color: #C9A96E;
+            border-color: #C9A96E;
         }
 
         .check-item input[type="checkbox"]:checked::after {
@@ -68,9 +68,13 @@
         }
 
         .check-item:has(input:checked) {
-            background-color: #1e293b;
-            border-color: #1e293b;
-            color: white;
+            background-color: #FAF6F0;
+            border-color: #C9A96E;
+        }
+
+        .check-item:has(input:checked) span {
+            color: #2C2A29 !important;
+            font-weight: 600;
         }
 
         /* Smooth focus */
