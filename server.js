@@ -123,6 +123,11 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 
 
+// Public status tracking page
+app.get('/track', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'track.html'));
+});
+
 // Fixed inquiry page with escaping
 app.get('/inquiry', (req, res) => {
   const vendorPhone = db.prepare("SELECT value FROM settings WHERE key = 'vendor_phone'").get()?.value || '6282333333420';
