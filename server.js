@@ -119,6 +119,8 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public/landing.htm
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+app.get('/inquiry.html', (req, res) => res.redirect('/inquiry'));
+
 // Fixed inquiry page with escaping
 app.get('/inquiry', (req, res) => {
   const vendorPhone = db.prepare("SELECT value FROM settings WHERE key = 'vendor_phone'").get()?.value || '6282333333420';
