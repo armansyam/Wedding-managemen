@@ -68,7 +68,7 @@
     <div id="content" style="display:none">
       <div class="page-header">
         <div>
-          <a href="/admin/bookings" style="color:var(--accent);text-decoration:none;font-size:13px">← Kembali ke Bookings</a>
+          <a id="back-link" href="/admin/bookings" style="color:var(--accent);text-decoration:none;font-size:13px">← Kembali ke Bookings</a>
           <h1 id="booking-title" style="margin-top:4px"></h1>
         </div>
         <span id="booking-status"></span>
@@ -96,6 +96,12 @@
             <div id="finance-rows"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Compact Work Progress Roadmap -->
+      <div id="work-roadmap-section" style="margin-bottom:20px;display:none">
+        <h2 style="font-size:15px;margin-bottom:10px">🗺️ Progres Pekerjaan</h2>
+        <div id="work-roadmap" style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0 8px;scrollbar-width:thin"></div>
       </div>
 
       <!-- Invoice Section -->
@@ -148,8 +154,15 @@
     let bookingData = null;
     let templates = {};
 
+    const fromCtx = new URLSearchParams(window.location.search).get('from') || 'bookings';
     document.addEventListener('DOMContentLoaded', () => {
-    renderSidebar('bookings');
+    renderSidebar(fromCtx);
+    // Update back link
+    const backLink = document.getElementById('back-link');
+    if (fromCtx === 'clients') {
+      backLink.href = '/admin/clients';
+      backLink.textContent = '← Kembali ke Clients';
+    }
     (async () => {
       templates = await API.get('/api/templates');
     })();
@@ -223,12 +236,105 @@
     // Timeline
     renderTimeline(b.sessions);
 
+    // Work progress roadmap (shown for confirmed+ bookings)
+    renderWorkRoadmap(b);
+
     // Invoice buttons
     renderInvoiceButtons(b);
 
     // Pelunasan confirm (check if pelunasan receipt exists)
     renderPelunasanConfirm(b);
     }
+
+    // ── Compact horizontal work roadmap ───────────────────────────────
+    const WORK_STAGES = [
+      { key: 'confirmed',   label: 'Confirmed',    icon: '✅' },
+      { key: 'in_progress', label: 'Persiapan',    icon: '🔄' },
+      { key: 'event_day',   label: 'Hari H',       icon: '📸' },
+      { key: 'editing',     label: 'Pengeditan',   icon: '🎞️' },
+      { key: 'delivery',    label: 'Penyerahan',   icon: '📦' },
+      { key: 'completed',   label: 'Selesai',      icon: '🏁' },
+    ];
+    const POST_PAYMENT_STAGES = ['editing','delivery','completed'];
+    async function renderWorkRoadmap(b) {
+      const el = document.getElementById('work-roadmap');
+      const section = document.getElementById('work-roadmap-section');
+      const skipStatuses = ['proposal_sent','pending_verification','cancelled'];
+      if (skipStatuses.includes(b.status)) { section.style.display = 'none'; return; }
+      section.style.display = 'block';
+
+      const currentIdx = WORK_STAGES.findIndex(s => s.key === b.status);
+      const isLunas = b.payments && b.payments.some(p => p.type === 'pelunasan' && p.status === 'verified');
+
+      let html = '';
+      WORK_STAGES.forEach((stage, i) => {
+        const isDone    = i < currentIdx;
+        const isCurrent = i === currentIdx;
+        const isFuture  = i > currentIdx;
+        const isPostPayment = POST_PAYMENT_STAGES.includes(stage.key);
+
+        // Node color
+        let nodeBg = 'var(--border)';
+        let nodeColor = 'var(--text2)';
+        if (isDone)    { nodeBg = 'var(--green)';  nodeColor = '#fff'; }
+        if (isCurrent) { nodeBg = 'var(--accent)'; nodeColor = '#fff'; }
+
+        // Can move to this stage?
+        const canClick = isFuture && (i === currentIdx + 1) && (!isPostPayment || isLunas);
+        const tooltip  = canClick ? '' : (isPostPayment && !isLunas ? 'Pelunasan harus dikonfirmasi dulu' : '');
+
+        html += `
+          <div style="display:flex;align-items:center;flex-shrink:0">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;position:relative">
+              <button
+                onclick="${canClick ? `window.advanceToStage('${stage.key}',${b.booking_id})` : ''}"
+                title="${tooltip}"
+                style="
+                  width:34px;height:34px;border-radius:50%;border:2px solid ${isDone ? 'var(--green)' : isCurrent ? 'var(--accent)' : 'var(--border)'};
+                  background:${nodeBg};color:${nodeColor};font-size:14px;
+                  cursor:${canClick ? 'pointer' : 'default'};
+                  outline:none;transition:transform .15s;
+                  ${isCurrent ? 'box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent)' : ''}
+                "
+                ${canClick ? 'onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'"' : ''}
+              >${isDone ? '✓' : stage.icon}</button>
+              <span style="font-size:9px;font-weight:600;color:${isCurrent ? 'var(--accent)' : isDone ? 'var(--green)' : 'var(--text2)'};text-align:center;white-space:nowrap;max-width:52px;line-height:1.2">
+                ${stage.label}${isCurrent ? '\n<span style="font-size:8px;background:var(--accent);color:#fff;border-radius:4px;padding:0 3px">AKTIF</span>' : ''}
+              </span>
+            </div>
+            ${i < WORK_STAGES.length - 1 ? `<div style="width:28px;height:2px;background:${i < currentIdx ? 'var(--green)' : 'var(--border)'};flex-shrink:0;margin-bottom:14px"></div>` : ''}
+          </div>`;
+      });
+
+      el.innerHTML = html;
+    }
+    window.advanceToStage = async function(status, id) {
+      const errEl = document.getElementById('status-error-roadmap');
+      if (errEl) errEl.style.display = 'none';
+      try {
+        const res = await fetch(`/api/bookings/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          // show inline error near roadmap
+          let e = document.getElementById('status-error-roadmap');
+          if (!e) {
+            e = document.createElement('div');
+            e.id = 'status-error-roadmap';
+            e.style.cssText = 'background:#fee2e2;color:#dc2626;border-radius:8px;padding:8px 12px;font-size:12px;margin-top:6px';
+            document.getElementById('work-roadmap-section').appendChild(e);
+          }
+          e.textContent = '⚠️ ' + (data.error || 'Gagal update status');
+          e.style.display = 'block';
+          return;
+        }
+        await load();
+      } catch(e) { alert('Kesalahan jaringan'); }
+    };
+
     function renderTimeline(sessions) {
     const el = document.getElementById('timeline');
     if (!sessions || !sessions.length) {
