@@ -122,6 +122,10 @@
         <h2 style="font-size:18px">📲 Preview WA ke Freelance</h2>
         <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-wa-preview')">✕</button>
       </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:4px">Metode / Rekening Pembayaran</label>
+        <select id="wa-payment-method" style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:'Montserrat',sans-serif" onchange="window.updateWaPreviewText()"></select>
+      </div>
       <pre id="wa-preview-body" style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto"></pre>
       <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
         <button class="btn btn-secondary" onclick="closeModal('modal-wa-preview')">Batal</button>
@@ -384,16 +388,19 @@
     if (e.target.classList.contains('pay-check')) updatePaySummary();
     });
 
-    async function payJob(freelancerId) {
-    const checked = document.querySelectorAll('.pay-check:checked');
-    if (!checked.length) return alert('Pilih job yang mau dibayar');
-    const crewIds = Array.from(checked).map(c => parseInt(c.dataset.crewId));
-    const total = Array.from(checked).reduce((s, c) => s + parseInt(c.dataset.fee), 0);
-    const jobs = Array.from(checked).map(c => `• ${c.dataset.session} — ${c.dataset.client} (${formatIDR(parseInt(c.dataset.fee))})`).join('\n');
-    
-    // Get freelancer info for preview
-    const f = await API.get(`/api/freelancers/${freelancerId}`);
-    const msg = `━━━━━━━━━━━━━━━━━━
+    let currentFreelancer = null;
+    let currentJobsText = '';
+    let currentTotal = 0;
+    let currentCrewIds = [];
+
+    // Rebuilds the preview message based on selected payment method
+    function updateWaPreviewText() {
+      if (!currentFreelancer) return;
+      const f = currentFreelancer;
+      const selectEl = document.getElementById('wa-payment-method');
+      const selectedMethod = selectEl ? selectEl.value : 'Transfer Bank';
+
+      const msg = `━━━━━━━━━━━━━━━━━━
 💰 *PEMBAYARAN FEE FREELANCE*
 ━━━━━━━━━━━━━━━━━━
 
@@ -401,22 +408,54 @@ Halo ${f.name},
 
 Sorehari akan membayarkan fee untuk job berikut:
 
-${jobs}
+${currentJobsText}
 
 ━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
+💵 *Total: ${formatIDR(currentTotal)}*
 📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+💳 Pembayaran: ${selectedMethod}
 ━━━━━━━━━━━━━━━━━━
 
 Terima kasih atas kerjasamanya! 🙏`;
-    
-    // Show preview modal
-    document.getElementById('wa-preview-body').textContent = msg;
 
-    // Option A: Only send WhatsApp message for validation (No DB write)
-    document.getElementById('wa-preview-only').onclick = () => {
-      closeModal('modal-wa-preview');
-      const validationMsg = `━━━━━━━━━━━━━━━━━━
+      document.getElementById('wa-preview-body').textContent = msg;
+    }
+
+    // Attach to window so it is accessible inline
+    window.updateWaPreviewText = updateWaPreviewText;
+
+    async function payJob(freelancerId) {
+      const checked = document.querySelectorAll('.pay-check:checked');
+      if (!checked.length) return alert('Pilih job yang mau dibayar');
+      
+      currentCrewIds = Array.from(checked).map(c => parseInt(c.dataset.crewId));
+      currentTotal = Array.from(checked).reduce((s, c) => s + parseInt(c.dataset.fee), 0);
+      currentJobsText = Array.from(checked).map(c => `• ${c.dataset.session} — ${c.dataset.client} (${formatIDR(parseInt(c.dataset.fee))})`).join('\n');
+      
+      const f = await API.get(`/api/freelancers/${freelancerId}`);
+      currentFreelancer = f;
+
+      // Populate dropdown options
+      const selectEl = document.getElementById('wa-payment-method');
+      if (selectEl) {
+        selectEl.innerHTML = '';
+        if (f.bank_account) {
+          selectEl.innerHTML += `<option value="Transfer Bank (${f.bank_account})">Transfer Bank (${f.bank_account})</option>`;
+        } else {
+          selectEl.innerHTML += `<option value="Transfer Bank (Belum diatur)">Transfer Bank (Belum diatur)</option>`;
+        }
+        selectEl.innerHTML += `<option value="Cash / Tunai">Cash / Tunai</option>`;
+        selectEl.innerHTML += `<option value="E-Wallet">E-Wallet</option>`;
+      }
+
+      updateWaPreviewText();
+
+      // Option A: Only send WhatsApp message for validation (No DB write)
+      document.getElementById('wa-preview-only').onclick = () => {
+        closeModal('modal-wa-preview');
+        const selectedMethod = selectEl ? selectEl.value : 'Transfer Bank';
+        
+        const validationMsg = `━━━━━━━━━━━━━━━━━━
 📱 *VALIDASI TAGIHAN FREELANCE*
 ━━━━━━━━━━━━━━━━━━
 
@@ -424,27 +463,32 @@ Halo ${f.name},
 
 Mohon dicek & divalidasi terlebih dahulu untuk rincian job berikut:
 
-${jobs}
+${currentJobsText}
 
 ━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
-💳 Rekening Anda: ${f.bank_account || '-'}
+💵 *Total: ${formatIDR(currentTotal)}*
+💳 Pembayaran: ${selectedMethod}
 ━━━━━━━━━━━━━━━━━━
 
 *Catatan:*
 Jika data di atas sudah benar, silakan kabari ya agar dana bisa segera dirilis. Terima kasih! 🙏`;
-      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
-    };
+        window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
+      };
 
-    // Option B: Confirm Payment and release (DB write + WhatsApp notification with digital receipt link)
-    document.getElementById('wa-preview-confirm').onclick = async () => {
-      closeModal('modal-wa-preview');
-      // Pay and get token
-      const result = await API.post(`/api/freelancers/${freelancerId}/pay-job`, { crew_ids: crewIds });
-      
-      const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
-      
-      const paidMsg = `━━━━━━━━━━━━━━━━━━
+      // Option B: Confirm Payment and release (DB write + WhatsApp notification with digital receipt link)
+      document.getElementById('wa-preview-confirm').onclick = async () => {
+        closeModal('modal-wa-preview');
+        const selectedMethod = selectEl ? selectEl.value : 'Transfer Bank';
+        
+        // Pay and get token
+        const result = await API.post(`/api/freelancers/${freelancerId}/pay-job`, { 
+          crew_ids: currentCrewIds,
+          method: selectedMethod
+        });
+        
+        const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
+        
+        const paidMsg = `━━━━━━━━━━━━━━━━━━
 💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
 ━━━━━━━━━━━━━━━━━━
 
@@ -452,12 +496,12 @@ Halo ${f.name},
 
 Sorehari TELAH mentransfer fee untuk job berikut:
 
-${jobs}
+${currentJobsText}
 
 ━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
+💵 *Total: ${formatIDR(currentTotal)}*
 📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
-💳 Rekening Tujuan: ${f.bank_account || '-'}
+💳 Pembayaran: ${selectedMethod}
 ━━━━━━━━━━━━━━━━━━
 
 Resi / Kuitansi Pembayaran Resmi:
@@ -465,12 +509,12 @@ ${receiptLink}
 
 Terima kasih atas kerjasamanya! 🙏`;
 
-      // Open WhatsApp with receipt
-      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
-      viewDetail(freelancerId);
-      load();
-    };
-    openModal('modal-wa-preview');
+        // Open WhatsApp with receipt
+        window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
+        viewDetail(freelancerId);
+        load();
+      };
+      openModal('modal-wa-preview');
     }
 
   </script>

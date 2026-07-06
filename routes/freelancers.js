@@ -158,7 +158,7 @@ router.post('/:id/pay-job', (req, res) => {
   const totalAmount = jobFees.reduce((s, j) => s + j.fee_amount, 0);
   if (totalAmount > 0) {
     db.prepare('INSERT INTO freelance_payments (freelancer_id, amount, payment_date, method, notes, payment_token) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(req.params.id, totalAmount, new Date().toISOString().split('T')[0], 'job_payment', `Bayar ${crew_ids.length} job`, paymentToken);
+      .run(req.params.id, totalAmount, new Date().toISOString().split('T')[0], req.body.method || 'Transfer Bank', `Bayar ${crew_ids.length} job`, paymentToken);
   }
   res.json({ message: 'Jobs paid', count: crew_ids.length, total: totalAmount, payment_token: paymentToken });
 });
