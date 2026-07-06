@@ -379,6 +379,18 @@ router.get('/calendar/events', (req, res) => {
 // GET all bookings (with finance)
 router.get('/', (req, res) => {
   const { status, month, search } = req.query;
+
+  // Auto transition active bookings first
+  try {
+    const { autoTransitionBooking } = require('../helpers/statusAutoTransition');
+    const active = db.prepare("SELECT id FROM bookings WHERE status IN ('confirmed', 'in_progress', 'event_day')").all();
+    for (const b of active) {
+      autoTransitionBooking(b.id);
+    }
+  } catch (e) {
+    console.error('Auto transition error in bookings GET /:', e);
+  }
+
   let sql = 'SELECT * FROM v_booking_finance';
   const params = [];
   const conditions = [];
@@ -393,8 +405,29 @@ router.get('/', (req, res) => {
   res.json(db.prepare(sql).all(...params));
 });
 
+// GET /api/bookings/:id/unpaid-crew
+router.get('/:id/unpaid-crew', (req, res) => {
+  const unpaid = db.prepare(`
+    SELECT bsc.id, bsc.fee_amount, f.name AS freelancer_name, s.name AS session_name
+    FROM booking_session_crew bsc
+    JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
+    JOIN freelancers f ON bsc.freelancer_id = f.id
+    JOIN sessions s ON bs.session_id = s.id
+    WHERE bs.booking_id = ? AND bsc.is_paid = 0
+  `).all(req.params.id);
+  res.json(unpaid);
+});
+
 // GET single booking with full detail
 router.get('/:id', (req, res) => {
+  // Auto transition this booking first
+  try {
+    const { autoTransitionBooking } = require('../helpers/statusAutoTransition');
+    autoTransitionBooking(req.params.id);
+  } catch (e) {
+    console.error('Auto transition error in GET /:id:', e);
+  }
+
   const booking = db.prepare('SELECT * FROM v_booking_finance WHERE booking_id = ?').get(req.params.id);
   if (!booking) return res.status(404).json({ error: 'Booking not found' });
 
@@ -523,6 +556,26 @@ router.put('/:id/status', (req, res) => {
         sisa,
         total_paid,
         package_price: price
+      });
+    }
+  }
+
+  // Freelance payment gate: 'completed' status requires all assigned crew to be paid
+  if (status === 'completed') {
+    const unpaid = db.prepare(`
+      SELECT bsc.id, bsc.fee_amount, f.name AS freelancer_name, s.name AS session_name
+      FROM booking_session_crew bsc
+      JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
+      JOIN freelancers f ON bsc.freelancer_id = f.id
+      JOIN sessions s ON bs.session_id = s.id
+      WHERE bs.booking_id = ? AND bsc.is_paid = 0
+    `).all(req.params.id);
+
+    if (unpaid.length > 0) {
+      const names = unpaid.map(u => `${u.freelancer_name} (${u.session_name}: Rp ${Number(u.fee_amount).toLocaleString('id-ID')})`).join(', ');
+      return res.status(400).json({
+        error: `Ada crew freelancer yang belum terbayar: ${names}`,
+        unpaid
       });
     }
   }

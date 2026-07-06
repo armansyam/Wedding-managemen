@@ -30,6 +30,14 @@ router.get('/', (req, res) => {
     return res.status(400).json({ error: 'Format kode tidak valid. Gunakan format: SH-YYYY-XXXX' });
   }
 
+  // Auto transition first
+  try {
+    const { autoTransitionBooking } = require('../helpers/statusAutoTransition');
+    autoTransitionBooking(bookingId);
+  } catch (e) {
+    console.error('Auto transition error:', e);
+  }
+
   const booking = db.prepare(`
     SELECT b.id, b.event_date, b.venue, b.status, b.created_at,
            c.name AS client_name, c.partner_name,
