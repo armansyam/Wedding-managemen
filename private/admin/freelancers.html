@@ -25,7 +25,7 @@
       <h1>👥 Freelance</h1>
       <div class="btn-group">
         <div class="search-bar"><input type="text" placeholder="Cari nama..." id="search" oninput="window.load()"></div>
-        <button class="btn btn-primary" onclick="openModal('modal-add')">+ Tambah</button>
+        <button class="btn btn-primary" onclick="window.openAddFreelancer()">+ Tambah</button>
       </div>
     </div>
 
@@ -66,7 +66,11 @@
         </select>
       </div>
       <div class="form-group"><label>Telepon (WA)</label><input type="text" id="f-phone" placeholder="08xxx"></div>
-      <div class="form-group"><label>No. Rekening</label><input type="text" id="f-bank" placeholder="Bank - No Rek - a.n."></div>
+      <div class="form-group">
+        <label>Daftar Rekening / E-Wallet</label>
+        <div id="f-bank-container" style="display:flex; flex-direction:column; margin-bottom:4px;"></div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="window.addBankRow('f-bank-container')" style="font-size:11px; padding:6px 12px; border:1px dashed var(--border); border-radius:8px; background:none; color:var(--text2); display:inline-block; width:fit-content; cursor:pointer;">➕ Tambah Rekening / E-Wallet</button>
+      </div>
       <div class="form-group"><label>Fee Default (Rp)</label><input type="number" id="f-rate" value="0"></div>
       <div class="form-group"><label>Catatan</label><textarea id="f-notes" rows="2"></textarea></div>
       <div class="modal-actions">
@@ -89,7 +93,11 @@
         </select>
       </div>
       <div class="form-group"><label>Telepon (WA)</label><input type="text" id="e-phone" placeholder="08xxx"></div>
-      <div class="form-group"><label>No. Rekening</label><input type="text" id="e-bank" placeholder="Bank - No Rek - a.n."></div>
+      <div class="form-group">
+        <label>Daftar Rekening / E-Wallet</label>
+        <div id="e-bank-container" style="display:flex; flex-direction:column; margin-bottom:4px;"></div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="window.addBankRow('e-bank-container')" style="font-size:11px; padding:6px 12px; border:1px dashed var(--border); border-radius:8px; background:none; color:var(--text2); display:inline-block; width:fit-content; cursor:pointer;">➕ Tambah Rekening / E-Wallet</button>
+      </div>
       <div class="form-group"><label>Fee Default (Rp)</label><input type="number" id="e-rate"></div>
       <div class="form-group"><label>Catatan</label><textarea id="e-notes" rows="2"></textarea></div>
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
@@ -194,14 +202,19 @@
     const phoneDisplay = f.phone || '-';
     const phoneHref = f.phone ? waLink(f.phone) : '';
 
-    // Fee column: show default/avg fee, click for full breakdown
-    const avgFee = fees.length > 0 ? Math.round(fees.reduce((s,fee) => s + fee.fee_amount, 0) / fees.length) : (f.rate_default || 0);
-    let feeHtml = '';
-    if (avgFee > 0) {
-    feeHtml = `<span class="fee-pill" onclick="window.showFeePreview(${f.id})" title="Klik lihat semua sesi">${formatIDR(avgFee)}<span style="font-size:9px;color:var(--text2);margin-left:2px">rata²</span></span>`;
-    if (fees.length > 0) feeHtml += ` <span class="fee-pill" onclick="window.showFeePreview(${f.id})" style="font-size:9px;color:var(--text2)">${fees.length} sesi</span>`;
-    } else {
-    feeHtml = '<span style="font-size:11px;color:var(--text2)">-</span>';
+    // Parse bank account JSON for summary display
+    let bankSummary = '-';
+    if (f.bank_account) {
+      try {
+        const accounts = JSON.parse(f.bank_account);
+        if (Array.isArray(accounts) && accounts.length > 0) {
+          bankSummary = accounts.map(a => `${a.provider} (${a.number})`).join(', ');
+        } else {
+          bankSummary = f.bank_account;
+        }
+      } catch (e) {
+        bankSummary = f.bank_account;
+      }
     }
 
     return `<tr>
@@ -214,7 +227,7 @@
     <td>${formatIDR(earned)}</td>
     <td style="color:var(--green)">${formatIDR(paid)}</td>
     <td style="font-weight:700">${formatIDR(remaining)}</td>
-    <td style="font-size:12px;max-width:150px">${f.bank_account || '<span style="color:var(--text2)">-</span>'}</td>
+    <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${bankSummary}">${bankSummary}</td>
     <td>${f.is_active ? '<span class="badge badge-confirmed">Aktif</span>' : '<span class="badge badge-cancelled">Nonaktif</span>'}</td>
     <td><div class="btn-group">
     <button class="btn-icon" onclick="window.viewDetail(${f.id})" title="Detail">📋</button>
@@ -243,68 +256,156 @@
     }
     openModal('modal-fee-preview');
     }
+    // ── Helper to manage dynamic bank/e-wallet rows ──────────────────────────
+    function addBankRow(containerId, data = null) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      const row = document.createElement('div');
+      row.className = 'bank-row';
+      row.style = 'display:grid; grid-template-columns:1.2fr 1.5fr 1.3fr 30px; gap:6px; align-items:center; margin-bottom:8px; width:100%';
+
+      const provider = data ? (data.provider || '') : '';
+      const number = data ? (data.number || '') : '';
+      const holder = data ? (data.holder || '') : '';
+
+      row.innerHTML = `
+        <input type="text" class="b-provider" placeholder="Bank/E-Wallet" value="${provider}" style="padding:6px 8px; font-size:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface)">
+        <input type="text" class="b-number" placeholder="No Rek/HP" value="${number}" style="padding:6px 8px; font-size:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface)">
+        <input type="text" class="b-holder" placeholder="a.n. Pemilik" value="${holder}" style="padding:6px 8px; font-size:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface)">
+        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--red); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; height:28px; width:28px">✕</button>
+      `;
+      container.appendChild(row);
+    }
+    window.addBankRow = addBankRow;
+
+    function openAddFreelancer() {
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-skill').value = 'Photographer';
+      document.getElementById('f-phone').value = '';
+      document.getElementById('f-rate').value = '0';
+      document.getElementById('f-notes').value = '';
+      
+      const container = document.getElementById('f-bank-container');
+      if (container) {
+        container.innerHTML = '';
+        addBankRow('f-bank-container'); // Start with 1 empty row
+      }
+      openModal('modal-add');
+    }
+    window.openAddFreelancer = openAddFreelancer;
+
     async function toggleActive(id, active) {
-    if (active) await API.post(`/api/freelancers/${id}/activate`);
-    else { if (!confirm('Nonaktifkan?')) return; await API.del(`/api/freelancers/${id}`); }
-    load();
+      if (active) await API.post(`/api/freelancers/${id}/activate`);
+      else { if (!confirm('Nonaktifkan?')) return; await API.del(`/api/freelancers/${id}`); }
+      load();
     }
+
     async function saveFreelancer() {
-    const data = {
-    name: document.getElementById('f-name').value,
-    skill: document.getElementById('f-skill').value,
-    phone: document.getElementById('f-phone').value,
-    bank_account: document.getElementById('f-bank').value,
-    rate_default: parseInt(document.getElementById('f-rate').value) || 0,
-    notes: document.getElementById('f-notes').value,
-    };
-    if (!data.name) return alert('Nama wajib diisi');
-    await API.post('/api/freelancers', data);
-    closeModal('modal-add');
-    load();
+      // Gather dynamic bank account rows into JSON
+      const bankRows = document.querySelectorAll('#f-bank-container .bank-row');
+      const bankAccounts = [];
+      bankRows.forEach(row => {
+        const provider = row.querySelector('.b-provider').value.trim();
+        const number = row.querySelector('.b-number').value.trim();
+        const holder = row.querySelector('.b-holder').value.trim();
+        if (provider && number) {
+          bankAccounts.push({ provider, number, holder });
+        }
+      });
+      const bankJson = bankAccounts.length > 0 ? JSON.stringify(bankAccounts) : '';
+
+      const data = {
+        name: document.getElementById('f-name').value,
+        skill: document.getElementById('f-skill').value,
+        phone: document.getElementById('f-phone').value,
+        bank_account: bankJson,
+        rate_default: parseInt(document.getElementById('f-rate').value) || 0,
+        notes: document.getElementById('f-notes').value,
+      };
+      if (!data.name) return alert('Nama wajib diisi');
+      await API.post('/api/freelancers', data);
+      closeModal('modal-add');
+      load();
     }
+
     async function editFreelancer(id) {
-    const f = await API.get(`/api/freelancers/${id}`);
-    document.getElementById('e-id').value = f.id;
-    document.getElementById('e-name').value = f.name;
-    document.getElementById('e-skill').value = f.skill || 'Photographer';
-    document.getElementById('e-phone').value = f.phone || '';
-    document.getElementById('e-bank').value = f.bank_account || '';
-    document.getElementById('e-rate').value = f.rate_default || 0;
-    document.getElementById('e-notes').value = f.notes || '';
+      const f = await API.get(`/api/freelancers/${id}`);
+      document.getElementById('e-id').value = f.id;
+      document.getElementById('e-name').value = f.name;
+      document.getElementById('e-skill').value = f.skill || 'Photographer';
+      document.getElementById('e-phone').value = f.phone || '';
+      document.getElementById('e-rate').value = f.rate_default || 0;
+      document.getElementById('e-notes').value = f.notes || '';
 
-    const feeMap = {};
-    for (const fee of (f.fees || [])) feeMap[fee.session_id] = fee.fee_amount;
+      // Populate dynamic bank accounts
+      const container = document.getElementById('e-bank-container');
+      container.innerHTML = '';
+      if (f.bank_account) {
+        try {
+          const accounts = JSON.parse(f.bank_account);
+          if (Array.isArray(accounts) && accounts.length > 0) {
+            accounts.forEach(acc => addBankRow('e-bank-container', acc));
+          } else {
+            // Legacy plaintext bank account format fallback
+            addBankRow('e-bank-container', { provider: 'Bank/E-Wallet', number: f.bank_account, holder: f.name });
+          }
+        } catch (e) {
+          // Legacy format fallback
+          addBankRow('e-bank-container', { provider: 'Bank/E-Wallet', number: f.bank_account, holder: f.name });
+        }
+      } else {
+        addBankRow('e-bank-container'); // Start with 1 empty row if none
+      }
 
-    document.getElementById('fee-per-session-list').innerHTML = allSessions.length
-    ? allSessions.map(s =>
-    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-    <span style="flex:1;font-size:13px">${s.name}</span>
-    <input type="number" class="fee-sesi" data-sid="${s.id}" value="${feeMap[s.id] || ''}" placeholder="Rp 0" style="width:140px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
-    </div>`
-    ).join('')
-    : '<p style="color:var(--text2);font-size:12px">Belum ada sesi. Buat di Master Sesi dulu.</p>';
+      const feeMap = {};
+      for (const fee of (f.fees || [])) feeMap[fee.session_id] = fee.fee_amount;
 
-    openModal('modal-edit');
+      document.getElementById('fee-per-session-list').innerHTML = allSessions.length
+      ? allSessions.map(s =>
+      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="flex:1;font-size:13px">${s.name}</span>
+      <input type="number" class="fee-sesi" data-sid="${s.id}" value="${feeMap[s.id] || ''}" placeholder="Rp 0" style="width:140px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+      </div>`
+      ).join('')
+      : '<p style="color:var(--text2);font-size:12px">Belum ada sesi. Buat di Master Sesi dulu.</p>';
+
+      openModal('modal-edit');
     }
+
     async function updateFreelancer() {
-    const id = document.getElementById('e-id').value;
-    await API.put(`/api/freelancers/${id}`, {
-    name: document.getElementById('e-name').value,
-    skill: document.getElementById('e-skill').value,
-    phone: document.getElementById('e-phone').value,
-    bank_account: document.getElementById('e-bank').value,
-    rate_default: parseInt(document.getElementById('e-rate').value) || 0,
-    notes: document.getElementById('e-notes').value,
-    });
+      const id = document.getElementById('e-id').value;
+      
+      // Gather dynamic bank account rows into JSON
+      const bankRows = document.querySelectorAll('#e-bank-container .bank-row');
+      const bankAccounts = [];
+      bankRows.forEach(row => {
+        const provider = row.querySelector('.b-provider').value.trim();
+        const number = row.querySelector('.b-number').value.trim();
+        const holder = row.querySelector('.b-holder').value.trim();
+        if (provider && number) {
+          bankAccounts.push({ provider, number, holder });
+        }
+      });
+      const bankJson = bankAccounts.length > 0 ? JSON.stringify(bankAccounts) : '';
 
-    const fees = [...document.querySelectorAll('.fee-sesi')].map(el => ({
-    session_id: parseInt(el.dataset.sid),
-    fee_amount: parseInt(el.value) || 0,
-    })).filter(f => f.fee_amount > 0);
+      await API.put(`/api/freelancers/${id}`, {
+        name: document.getElementById('e-name').value,
+        skill: document.getElementById('e-skill').value,
+        phone: document.getElementById('e-phone').value,
+        bank_account: bankJson,
+        rate_default: parseInt(document.getElementById('e-rate').value) || 0,
+        notes: document.getElementById('e-notes').value,
+      });
 
-    await API.post(`/api/freelancers/${id}/fees`, { fees });
-    closeModal('modal-edit');
-    load();
+      const fees = [...document.querySelectorAll('.fee-sesi')].map(el => ({
+        session_id: parseInt(el.dataset.sid),
+        fee_amount: parseInt(el.value) || 0,
+      })).filter(f => f.fee_amount > 0);
+
+      await API.post(`/api/freelancers/${id}/fees`, { fees });
+      closeModal('modal-edit');
+      load();
     }
     async function viewDetail(id) {
     const f = await API.get(`/api/freelancers/${id}`);
@@ -326,10 +427,25 @@
     </div>
     </div>`;
 
+    // Format bank accounts info for detail popup
+    let bankHtml = '';
+    if (f.bank_account) {
+      try {
+        const accounts = JSON.parse(f.bank_account);
+        if (Array.isArray(accounts) && accounts.length > 0) {
+          bankHtml = accounts.map(a => `<span>🏦 ${a.provider} - ${a.number} (a.n. ${a.holder})</span>`).join(' &middot; ');
+        } else {
+          bankHtml = `<span>🏦 ${f.bank_account}</span>`;
+        }
+      } catch (e) {
+        bankHtml = `<span>🏦 ${f.bank_account}</span>`;
+      }
+    }
+
     // Contact info
-    html += `<div style="display:flex;gap:12px;margin-bottom:16px;font-size:13px;color:var(--text2)">`;
+    html += `<div style="display:flex;gap:12px;margin-bottom:16px;font-size:13px;color:var(--text2);flex-wrap:wrap">`;
     if (f.phone) html += `<span>📱 <a class="phone-link" href="${phoneHref}" target="_blank">${f.phone}</a></span>`;
-    if (f.bank_account) html += `<span>🏦 ${f.bank_account}</span>`;
+    if (bankHtml) html += `<span>${bankHtml}</span>`;
     if (f.notes) html += `<span>📝 ${f.notes}</span>`;
     html += `</div>`;
 
@@ -439,13 +555,30 @@ Terima kasih atas kerjasamanya! 🙏`;
       const selectEl = document.getElementById('wa-payment-method');
       if (selectEl) {
         selectEl.innerHTML = '';
+        let hasTransfer = false;
+
         if (f.bank_account) {
-          selectEl.innerHTML += `<option value="Transfer Bank (${f.bank_account})">Transfer Bank (${f.bank_account})</option>`;
-        } else {
-          selectEl.innerHTML += `<option value="Transfer Bank (Belum diatur)">Transfer Bank (Belum diatur)</option>`;
+          try {
+            const accounts = JSON.parse(f.bank_account);
+            if (Array.isArray(accounts) && accounts.length > 0) {
+              accounts.forEach(acc => {
+                const label = `${acc.provider} (${acc.number} a.n. ${acc.holder})`;
+                selectEl.innerHTML += `<option value="Transfer / E-Wallet (${label})">Transfer / E-Wallet (${label})</option>`;
+              });
+              hasTransfer = true;
+            }
+          } catch(e) {}
         }
+
+        if (!hasTransfer) {
+          if (f.bank_account) {
+            selectEl.innerHTML += `<option value="Transfer / E-Wallet (${f.bank_account})">Transfer / E-Wallet (${f.bank_account})</option>`;
+          } else {
+            selectEl.innerHTML += `<option value="Transfer / E-Wallet (Belum diatur)">Transfer / E-Wallet (Belum diatur)</option>`;
+          }
+        }
+
         selectEl.innerHTML += `<option value="Cash / Tunai">Cash / Tunai</option>`;
-        selectEl.innerHTML += `<option value="E-Wallet">E-Wallet</option>`;
       }
 
       updateWaPreviewText();

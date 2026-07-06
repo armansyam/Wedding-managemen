@@ -199,6 +199,35 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15);
 }
 
+/* Modal Form Groups & Rows */
+.form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+}
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
 /* Search bar styling */
 .search-bar input {
   width: 240px;
