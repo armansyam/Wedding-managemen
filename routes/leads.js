@@ -29,7 +29,11 @@ router.get('/', (req, res) => {
            b.booking_token AS booking_token, 
            b.created_at AS booking_created_at
     FROM leads
-    LEFT JOIN bookings b ON b.lead_id = leads.id AND b.status = 'proposal_sent'
+    LEFT JOIN (
+      SELECT id, lead_id, booking_token, created_at, status
+      FROM bookings
+      WHERE id IN (SELECT MAX(id) FROM bookings GROUP BY lead_id)
+    ) b ON b.lead_id = leads.id AND b.status = 'proposal_sent'
   `;
   const params = [];
   const conditions = [];
@@ -45,8 +49,8 @@ router.get('/:id', (req, res) => {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
   
-  // Look up associated booking token
-  const booking = db.prepare('SELECT id, booking_token FROM bookings WHERE lead_id = ?').get(lead.id);
+  // Look up associated booking token (latest one first)
+  const booking = db.prepare('SELECT id, booking_token FROM bookings WHERE lead_id = ? ORDER BY id DESC').get(lead.id);
   if (booking) {
     lead.booking_id = booking.id;
     lead.booking_token = booking.booking_token;
