@@ -142,7 +142,10 @@
   <!-- Modal Convert to Booking -->
   <div class="modal-overlay" id="modal-convert">
     <div class="modal" style="max-width:480px">
-      <h2>🔄 Convert ke Booking</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:18px;margin:0">🔄 Convert ke Booking</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-convert')">✕</button>
+      </div>
       <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Lead ini akan menjadi client + booking baru.</p>
       <input type="hidden" id="c-id">
       <div class="form-group"><label>Tanggal Acara *</label><input type="date" id="c-date" required></div>
@@ -374,6 +377,7 @@ Mohon infonya ya, Kak! 😊📸`;
     <a href="${result.wa_link}" target="_blank" rel="noopener">📱 Kirim Booking Link ke Client</a>
     </div>
     <div class="wa-preview">${result.wa_message}</div>
+    <button class="btn btn-secondary w-full" onclick="closeModal('modal-convert'); load();" style="margin-top:16px; width:100%">Selesai & Tutup</button>
     </div>
     `;
     document.getElementById('convert-actions').style.display = 'none';

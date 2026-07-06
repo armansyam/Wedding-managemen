@@ -142,6 +142,13 @@ function closeModal(modalId) {
   }
 }
 
+// Close modals when clicking on the dark overlay background
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    closeModal(e.target.id);
+  }
+});
+
 // Sidebar rendering helper
 function renderSidebar(activePage) {
   const sidebarEl = document.getElementById('sidebar');
