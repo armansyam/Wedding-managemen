@@ -37,6 +37,14 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
+  
+  // Look up associated booking token
+  const booking = db.prepare('SELECT id, booking_token FROM bookings WHERE lead_id = ?').get(lead.id);
+  if (booking) {
+    lead.booking_id = booking.id;
+    lead.booking_token = booking.booking_token;
+  }
+  
   res.json(lead);
 });
 

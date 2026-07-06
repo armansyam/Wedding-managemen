@@ -274,6 +274,12 @@ Mohon infonya ya, Kak! 😊📸`;
     const needs = l.message ? l.message.split('\n').filter(x => x.includes('Kebutuhan:')).map(x => x.replace('Kebutuhan:','').trim()).join(', ') : '-';
     const pureMsg = l.message ? l.message.split('\n').filter(x => !x.includes('Kebutuhan:')).join('\n').trim() : '';
 
+    let bookingLinkHtml = '';
+    if (l.booking_token) {
+      const link = `${window.location.protocol}//${window.location.host}/booking/${l.booking_token}`;
+      bookingLinkHtml = `<div class="item" style="grid-column: span 2"><div class="label">Link Booking Client (Pilih Paket)</div><div class="val" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap"><a href="${link}" target="_blank" class="phone-link" style="font-weight:600">🔗 ${link}</a><button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('${link}'); alert('Link booking disalin!')" style="padding:2px 8px; font-size:11px; height:auto">Salin</button></div></div>`;
+    }
+
     document.getElementById('detail-content').innerHTML = `
     <div class="lead-preview-grid">
     <div class="item"><div class="label">Nama</div><div class="val">${l.name}</div></div>
@@ -286,6 +292,7 @@ Mohon infonya ya, Kak! 😊📸`;
     <div class="item"><div class="label">Sumber</div><div class="val">${l.source || '-'}</div></div>
     <div class="item"><div class="label">Status</div><div class="val">${statusBadge(l.status)}</div></div>
     <div class="item"><div class="label">Dibuat</div><div class="val">${l.created_at || '-'}</div></div>
+    ${bookingLinkHtml}
     </div>
     ${pureMsg ? `<div class="lead-message-box">${pureMsg}</div>` : ''}
     `;
