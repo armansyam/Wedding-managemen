@@ -23,13 +23,20 @@ router.use(requireAuth);
 // GET all leads
 router.get('/', (req, res) => {
   const { status, search } = req.query;
-  let sql = 'SELECT * FROM leads';
+  let sql = `
+    SELECT leads.*, 
+           b.id AS booking_id, 
+           b.booking_token AS booking_token, 
+           b.created_at AS booking_created_at
+    FROM leads
+    LEFT JOIN bookings b ON b.lead_id = leads.id AND b.status = 'proposal_sent'
+  `;
   const params = [];
   const conditions = [];
-  if (status) { conditions.push('status = ?'); params.push(status); }
-  if (search) { conditions.push('(name LIKE ? OR phone LIKE ? OR partner_name LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
+  if (status) { conditions.push('leads.status = ?'); params.push(status); }
+  if (search) { conditions.push('(leads.name LIKE ? OR leads.phone LIKE ? OR leads.partner_name LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
   if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
-  sql += ' ORDER BY created_at DESC';
+  sql += ' ORDER BY leads.created_at DESC';
   res.json(db.prepare(sql).all(...params));
 });
 
@@ -83,6 +90,9 @@ router.post('/:id/convert', (req, res) => {
 
   const { event_date, venue, package_id, package_price, notes } = req.body;
   if (!event_date) return res.status(400).json({ error: 'event_date required' });
+
+  // Clean up any old booking proposal for this lead to avoid duplicates
+  db.prepare("DELETE FROM bookings WHERE lead_id = ? AND status = 'proposal_sent'").run(lead.id);
 
   const bookingToken = crypto.randomUUID();
 

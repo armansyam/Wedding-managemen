@@ -143,21 +143,50 @@
   <div class="modal-overlay" id="modal-convert">
     <div class="modal" style="max-width:480px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h2 style="font-size:18px;margin:0">🔄 Convert ke Booking</h2>
+        <h2 style="font-size:18px;margin:0" id="convert-title">🔄 Convert ke Booking</h2>
         <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-convert')">✕</button>
       </div>
+      
+      <div id="convert-warning-banner" style="display:none; background:#fef3c7; color:#d97706; padding:12px 14px; border-radius:10px; font-size:12px; margin-bottom:16px; border:1px solid #fde68a; line-height:1.5">
+        ⚠️ <strong>Perhatian:</strong> Klien ini sudah memiliki link booking sebelumnya. Melanjutkan proses ini akan membatalkan link lama dan memperpanjang masa aktif link baru selama 3 hari.
+      </div>
+
       <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Lead ini akan menjadi client + booking baru.</p>
       <input type="hidden" id="c-id">
       <div class="form-group"><label>Tanggal Acara *</label><input type="date" id="c-date" required></div>
       <div class="form-group"><label>Venue</label><input type="text" id="c-venue" placeholder="Lokasi acara"></div>
       <div class="form-group"><label>Catatan (opsional)</label><input type="text" id="c-notes" placeholder="Catatan booking..."></div>
-      <div style="background:var(--surface2);padding:12px 16px;border-radius:12px;font-size:12px;color:var(--text2);line-height:1.6">
+      <div style="background:var(--surface2);padding:12px 16px;border-radius:12px;font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px">
         📲 Booking token akan dibuat. Client terima link booking via WA untuk pilih paket sendiri.
       </div>
       <div id="convert-result" style="display:none"></div>
       <div class="modal-actions" id="convert-actions">
         <button class="btn btn-secondary" onclick="closeModal('modal-convert')">Batal</button>
         <button class="btn btn-primary" onclick="window.convertLead()" id="btn-convert">Convert & Buat Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Active Booking Link -->
+  <div class="modal-overlay" id="modal-active-link">
+    <div class="modal" style="max-width:460px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:18px;margin:0">🔗 Link Booking Klien</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-active-link')">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5">Link booking proposal ini masih aktif dan dapat digunakan oleh klien untuk memilih paket layanan.</p>
+      
+      <div class="form-group" style="margin-bottom:20px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2)">Tautan Booking</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
+          <input type="text" id="active-link-input" readonly style="flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); font-size:13px">
+          <button class="btn btn-primary" onclick="window.copyActiveLink()" style="padding:10px 16px; font-size:13px">Salin</button>
+        </div>
+      </div>
+      
+      <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-active-link')">Tutup</button>
+        <button class="btn btn-secondary" style="color:var(--red); border:1px dashed var(--red); background:none" onclick="window.forceRegenerate()">🔄 Buat Ulang Link</button>
       </div>
     </div>
   </div>
@@ -255,7 +284,20 @@ Mohon infonya ya, Kak! 😊📸`;
       });
       return encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => l[k] !== undefined ? String(l[k]) : m));
     })();
-    const waLink = phone ? `https://wa.me/${phone}?text=${waMsg}` : '#';
+    let convertBtn = '';
+    if (l.booking_token) {
+      const created = new Date(l.booking_created_at);
+      const now = new Date();
+      const daysSince = (now - created) / (1000 * 60 * 60 * 24);
+      if (daysSince > 3) {
+        convertBtn = `<button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;font-weight:600" onclick="window.openConvert(${l.id},'${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}', 'expired')">⚠️ Expired</button>`;
+      } else {
+        convertBtn = `<button class="btn btn-sm" style="background:#10b981;color:#fff;border:none;font-weight:600" onclick="window.openActiveLink('${l.booking_token}', ${l.id}, '${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}')">🔗 Link</button>`;
+      }
+    } else {
+      convertBtn = `<button class="btn btn-sm btn-primary" onclick="window.openConvert(${l.id},'${l.name.replace(/'/g,"\\'")}', '${l.wedding_date||''}', '${(l.venue||'').replace(/'/g,"\\'")}')">Convert</button>`;
+    }
+
     return `<tr>
     <td><strong>${l.name}</strong></td><td>${l.partner_name || '-'}</td><td>${l.phone}</td>
     <td>${l.wedding_date ? formatDate(l.wedding_date) : '-'}</td>
@@ -264,7 +306,7 @@ Mohon infonya ya, Kak! 😊📸`;
     <td><div class="btn-group">
     <button class="btn btn-sm btn-secondary" onclick="window.viewDetail(${l.id})">Detail</button>
     <button class="btn btn-sm btn-secondary" onclick="window.editStatus(${l.id},'${l.status}','${(l.notes||'').replace(/'/g,"\\'")}')">Status</button>
-    <button class="btn btn-sm btn-primary" onclick="window.openConvert(${l.id},'${l.name}','${l.wedding_date||''}','${l.venue||''}')">Convert</button>
+    ${convertBtn}
     </div></td>
     </tr>`}).join('')
     : '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:30px">Belum ada inquiry</td></tr>';
@@ -353,16 +395,65 @@ Mohon infonya ya, Kak! 😊📸`;
     closeModal('modal-status');
     load();
     }
-    function openConvert(id, name, date, venue) {
-    document.getElementById('c-id').value = id;
-    document.getElementById('c-date').value = date;
-    document.getElementById('c-venue').value = venue;
-    document.getElementById('c-notes').value = '';
-    document.getElementById('convert-result').style.display = 'none';
-    document.getElementById('convert-actions').style.display = 'flex';
-    document.getElementById('btn-convert').disabled = false;
-    openModal('modal-convert');
+    let activeLinkToken = '';
+    let activeLinkLeadId = '';
+    let activeLinkLeadName = '';
+    let activeLinkLeadDate = '';
+    let activeLinkLeadVenue = '';
+
+    function openActiveLink(token, leadId, name, date, venue) {
+      activeLinkToken = token;
+      activeLinkLeadId = leadId;
+      activeLinkLeadName = name;
+      activeLinkLeadDate = date;
+      activeLinkLeadVenue = venue;
+      
+      const link = `${window.location.protocol}//${window.location.host}/booking/${token}`;
+      document.getElementById('active-link-input').value = link;
+      openModal('modal-active-link');
     }
+    window.openActiveLink = openActiveLink;
+
+    function copyActiveLink() {
+      const input = document.getElementById('active-link-input');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      alert('Link booking berhasil disalin!');
+    }
+    window.copyActiveLink = copyActiveLink;
+
+    function forceRegenerate() {
+      closeModal('modal-active-link');
+      openConvert(activeLinkLeadId, activeLinkLeadName, activeLinkLeadDate, activeLinkLeadVenue, 'regenerate');
+    }
+    window.forceRegenerate = forceRegenerate;
+
+    function openConvert(id, name, date, venue, mode = '') {
+      document.getElementById('c-id').value = id;
+      document.getElementById('c-date').value = date;
+      document.getElementById('c-venue').value = venue;
+      document.getElementById('c-notes').value = '';
+      document.getElementById('convert-result').style.display = 'none';
+      document.getElementById('convert-actions').style.display = 'flex';
+      document.getElementById('btn-convert').disabled = false;
+      
+      const banner = document.getElementById('convert-warning-banner');
+      const title = document.getElementById('convert-title');
+      const btn = document.getElementById('btn-convert');
+      
+      if (mode === 'expired' || mode === 'regenerate') {
+        banner.style.display = 'block';
+        title.textContent = '🔄 Buat Ulang Link Booking';
+        btn.textContent = 'Convert & Buat Ulang Link';
+      } else {
+        banner.style.display = 'none';
+        title.textContent = '🔄 Convert ke Booking';
+        btn.textContent = 'Convert & Buat Booking';
+      }
+      openModal('modal-convert');
+    }
+    window.openConvert = openConvert;
+
     async function convertLead() {
     const data = {
     event_date: document.getElementById('c-date').value,

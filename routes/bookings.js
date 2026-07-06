@@ -31,12 +31,12 @@ router.get('/public/:token', (req, res) => {
   `).get(req.params.token);
   if (!booking) return res.status(404).json({ error: 'Booking not found', expired: true });
 
-  // Token expiry: 7 days from creation
+  // Token expiry: 3 days from creation
   const created = new Date(booking.created_at);
   const now = new Date();
   const daysSince = (now - created) / (1000 * 60 * 60 * 24);
-  if (daysSince > 7 && !booking.package_id) {
-    return res.status(410).json({ error: 'Link sudah kedaluwarsa', expired: true });
+  if (daysSince > 3 && !booking.package_id) {
+    return res.status(410).json({ error: 'Link booking sudah kedaluwarsa (berlaku maks 3 hari)', expired: true });
   }
 
   // Already completed (package selected + DP uploaded + verified) → show done state
