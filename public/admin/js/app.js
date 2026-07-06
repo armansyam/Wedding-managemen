@@ -157,8 +157,8 @@ function renderSidebar(activePage) {
   const menuItems = [
     { id: 'dashboard', label: '📊 Dashboard', url: '/admin' },
     { id: 'leads', label: '📥 Leads / Inquiry', url: '/admin/leads' },
-    { id: 'clients', label: '👥 Clients', url: '/admin/clients' },
     { id: 'bookings', label: '📋 Bookings', url: '/admin/bookings' },
+    { id: 'clients', label: '👥 Clients', url: '/admin/clients' },
     { id: 'freelancers', label: '💼 Freelancers', url: '/admin/freelancers' },
     { id: 'packages', label: '📦 Packages', url: '/admin/packages' },
     { id: 'sessions', label: '⏰ Sessions', url: '/admin/sessions' },

@@ -294,6 +294,11 @@ router.post('/public/:token/upload-receipt', (req, res) => {
   // Update status to pending_verification — menunggu admin verifikasi
   db.prepare("UPDATE bookings SET status = 'pending_verification', updated_at = datetime('now','localtime') WHERE id = ?").run(booking.id);
 
+  // Mark associated lead as booked so it disappears from Inquiry list
+  if (booking.lead_id) {
+    db.prepare("UPDATE leads SET status = 'booked', updated_at = datetime('now','localtime') WHERE id = ?").run(booking.lead_id);
+  }
+
   res.json({ message: 'Bukti pembayaran berhasil dikirim. Menunggu verifikasi admin 🙏', filename });
 });
 
