@@ -8,7 +8,7 @@ require('dotenv').config();
 const db = require('./db');
 
 // Import authentication middleware
-const { requireAuth } = require('./middleware/auth');
+const { requireAuth, passwordUtils } = require('./middleware/auth');
 
 const app = express();
 
@@ -20,6 +20,10 @@ app.use(helmet({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'sorehari-secret-change-in-production')) {
+  console.warn('\x1b[33m%s\x1b[0m', 'WARNING: SESSION_SECRET is using default fallback or not set in production. Please set it in .env!');
+}
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'sorehari-secret-change-in-production',
@@ -39,7 +43,9 @@ const loginAttempts = new Map();
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS_PLAIN = process.env.ADMIN_PASSWORD || 'sorehari2026';
 
-const allowedOrigins = ['http://localhost:8080', 'http://192.168.100.254:8080', 'http://192.168.100.77:8080', 'https://sorehari.ammang.my.id'];
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS 
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:8080', 'http://192.168.100.254:8080', 'http://192.168.100.77:8080', 'https://sorehari.ammang.my.id'];
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
@@ -132,46 +138,13 @@ app.get('/admin/:page', requireAuth, (req, res) => {
 });
 
 // Login with XSS fixes
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.redirect('/login?error=Username dan password wajib diisi');
-  }
+app.post('/login', async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.redirect('/login?error=Username dan password wajib diisi');
+    }
 
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const attempt = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
-  if (now < attempt.lockUntil) {
-    const mins = Math.ceil((attempt.lockUntil - now) / 60000);
-    return res.redirect(`/login?error=Terlalu banyak percobaan. Coba lagi ${mins} menit lagi.`);
-  }
-
-  if (username === ADMIN_USER && password === ADMIN_PASS_PLAIN) {
-    loginAttempts.delete(ip);
-    req.session.user = { username: ADMIN_USER, role: 'admin' };
-    req.session.save((err) => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.redirect('/login?error=Terjadi kesalahan sistem');
-      }
-      res.redirect('/admin');
-    });
-    return;
-  }
-
-  attempt.count++;
-  if (attempt.count >= 5) {
-    attempt.lockUntil = now + 15 * 60 * 1000;
-    loginAttempts.set(ip, attempt);
-    return res.redirect(`/login?error=Terlalu banyak percobaan. Coba lagi 15 menit lagi.`);
-  }
-  loginAttempts.set(ip, attempt);
-  return res.redirect('/login?error=Username atau password salah');
-});
-
-app.get('/login', (req, res) => {
-  const { username, password, error } = req.query;
-  if (username && password) {
     const ip = req.ip || req.connection.remoteAddress;
     const now = Date.now();
     const attempt = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
@@ -179,7 +152,9 @@ app.get('/login', (req, res) => {
       const mins = Math.ceil((attempt.lockUntil - now) / 60000);
       return res.redirect(`/login?error=Terlalu banyak percobaan. Coba lagi ${mins} menit lagi.`);
     }
-    if (username === ADMIN_USER && password === ADMIN_PASS_PLAIN) {
+
+    const isPasswordMatch = await passwordUtils.comparePassword(password, ADMIN_PASS_PLAIN);
+    if (username === ADMIN_USER && isPasswordMatch) {
       loginAttempts.delete(ip);
       req.session.user = { username: ADMIN_USER, role: 'admin' };
       req.session.save((err) => {
@@ -191,6 +166,7 @@ app.get('/login', (req, res) => {
       });
       return;
     }
+
     attempt.count++;
     if (attempt.count >= 5) {
       attempt.lockUntil = now + 15 * 60 * 1000;
@@ -199,28 +175,68 @@ app.get('/login', (req, res) => {
     }
     loginAttempts.set(ip, attempt);
     return res.redirect('/login?error=Username atau password salah');
+  } catch (error) {
+    next(error);
   }
+});
 
-  // XSS-safe error display
-  let html = fs.readFileSync(path.join(__dirname, 'public/login.html'), 'utf8');
-  if (error) {
-    // Safe escaping for error message
-    const escapedError = error
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/\'/g, '&#x27;');
-    html = html.replace(
-      '<div id="errorMsg" style="display: none;"',
-      `<div id="errorMsg" style="display: block;"`
-    );
-    html = html.replace(
-      'id="errorMsg"></div>',
-      `id="errorMsg">${escapedError}</div>`
-    );
+app.get('/login', async (req, res, next) => {
+  try {
+    const { username, password, error } = req.query;
+    if (username && password) {
+      const ip = req.ip || req.ip || req.connection.remoteAddress;
+      const now = Date.now();
+      const attempt = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
+      if (now < attempt.lockUntil) {
+        const mins = Math.ceil((attempt.lockUntil - now) / 60000);
+        return res.redirect(`/login?error=Terlalu banyak percobaan. Coba lagi ${mins} menit lagi.`);
+      }
+      const isPasswordMatch = await passwordUtils.comparePassword(password, ADMIN_PASS_PLAIN);
+      if (username === ADMIN_USER && isPasswordMatch) {
+        loginAttempts.delete(ip);
+        req.session.user = { username: ADMIN_USER, role: 'admin' };
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            return res.redirect('/login?error=Terjadi kesalahan sistem');
+          }
+          res.redirect('/admin');
+        });
+        return;
+      }
+      attempt.count++;
+      if (attempt.count >= 5) {
+        attempt.lockUntil = now + 15 * 60 * 1000;
+        loginAttempts.set(ip, attempt);
+        return res.redirect(`/login?error=Terlalu banyak percobaan. Coba lagi 15 menit lagi.`);
+      }
+      loginAttempts.set(ip, attempt);
+      return res.redirect('/login?error=Username atau password salah');
+    }
+
+    // XSS-safe error display
+    let html = fs.readFileSync(path.join(__dirname, 'public/login.html'), 'utf8');
+    if (error) {
+      // Safe escaping for error message
+      const escapedError = error
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"')
+        .replace(/\'/g, '&#x27;');
+      html = html.replace(
+        '<div id="errorMsg" style="display: none;"',
+        `<div id="errorMsg" style="display: block;"`
+      );
+      html = html.replace(
+        'id="errorMsg"></div>',
+        `id="errorMsg">${escapedError}</div>`
+      );
+    }
+    res.send(html);
+  } catch (error) {
+    next(error);
   }
-  res.send(html);
 });
 
 app.post('/logout', (req, res) => {
@@ -230,41 +246,46 @@ app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login'));
 });
 
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username dan password wajib diisi' });
-  }
+app.post('/api/login', async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username dan password wajib diisi' });
+    }
 
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const attempt = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
-  if (now < attempt.lockUntil) {
-    const mins = Math.ceil((attempt.lockUntil - now) / 60000);
-    return res.status(429).json({ error: `Terlalu banyak percobaan. Coba lagi ${mins} menit lagi.` });
-  }
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    const attempt = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
+    if (now < attempt.lockUntil) {
+      const mins = Math.ceil((attempt.lockUntil - now) / 60000);
+      return res.status(429).json({ error: `Terlalu banyak percobaan. Coba lagi ${mins} menit lagi.` });
+    }
 
-  if (username === ADMIN_USER && password === ADMIN_PASS_PLAIN) {
-    loginAttempts.delete(ip);
-    req.session.user = { username: ADMIN_USER, role: 'admin' };
-    req.session.save((err) => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.status(500).json({ error: 'Terjadi kesalahan sistem' });
-      }
-      res.json({ success: true, message: 'Login berhasil' });
-    });
-    return;
-  }
+    const isPasswordMatch = await passwordUtils.comparePassword(password, ADMIN_PASS_PLAIN);
+    if (username === ADMIN_USER && isPasswordMatch) {
+      loginAttempts.delete(ip);
+      req.session.user = { username: ADMIN_USER, role: 'admin' };
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: 'Terjadi kesalahan sistem' });
+        }
+        res.json({ success: true, message: 'Login berhasil' });
+      });
+      return;
+    }
 
-  attempt.count++;
-  if (attempt.count >= 5) {
-    attempt.lockUntil = now + 15 * 60 * 1000;
+    attempt.count++;
+    if (attempt.count >= 5) {
+      attempt.lockUntil = now + 15 * 60 * 1000;
+      loginAttempts.set(ip, attempt);
+      return res.status(429).json({ error: 'Terlalu banyak percobaan. Coba lagi 15 menit lagi.' });
+    }
     loginAttempts.set(ip, attempt);
-    return res.status(429).json({ error: 'Terlalu banyak percobaan. Coba lagi 15 menit lagi.' });
+    return res.status(401).json({ error: 'Username atau password salah' });
+  } catch (error) {
+    next(error);
   }
-  loginAttempts.set(ip, attempt);
-  return res.status(401).json({ error: 'Username atau password salah' });
 });
 
 // Fixed 404 and error handlers

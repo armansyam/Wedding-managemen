@@ -1,7 +1,7 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'sorehari.db');
+const dbPath = path.join(__dirname, 'db', 'data', 'sorehari.db');
 const db = new Database(dbPath);
 
 // Performance: WAL mode + foreign keys

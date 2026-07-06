@@ -14,6 +14,7 @@ node_modules/
 *.sqlite-*
 *.sqlite3-*
 *sorehari.db*
+db/data/
 
 # uploads / user data
 private/uploads/

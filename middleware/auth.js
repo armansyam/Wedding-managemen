@@ -52,7 +52,9 @@ const passwordUtils = {
       });
       return crypto.timingSafeEqual(Buffer.from(check, 'hex'), Buffer.from(derived, 'hex'));
     }
-    return crypto.timingSafeEqual(Buffer.from(password), Buffer.from(storedHash));
+    const a = crypto.createHash('sha256').update(password).digest();
+    const b = crypto.createHash('sha256').update(storedHash).digest();
+    return crypto.timingSafeEqual(a, b);
   }
 };
 
