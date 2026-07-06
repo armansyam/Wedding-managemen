@@ -106,7 +106,7 @@ app.get('/inquiry', (req, res) => {
   try { eventTypes = JSON.parse(eventTypesJson); } catch { eventTypes = ['Wedding 💍', 'Engagement 💕', 'Prewedding 📸']; }
   try { needs = JSON.parse(needsJson); } catch { needs = ['📷 Foto', '🎬 Video', '🎞️ SDE']; }
 
-  let html = fs.readFileSync(path.join(__dirname, 'inquiry.html'), 'utf8');
+  let html = fs.readFileSync(path.join(__dirname, 'public', 'inquiry.html'), 'utf8');
   html = html.replace(/__VENDOR_PHONE__/g, vendorPhone.replace(/[^0-9]/g, ''));
   const typeOpts = eventTypes.map(t => `<option value="${t}">${t}</option>`).join('\n');
   html = html.replace(/__EVENT_TYPES__/g, typeOpts);
