@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Pekerjaan — Sorehari Photography</title>
+  <meta name="description" content="Pantau status pekerjaan foto & video Anda bersama Sorehari Photography menggunakan kode booking.">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9A96E;
+      --gold-light: #E8D5B0;
+      --gold-dark: #9a7240;
+      --cream: #FAF6F0;
+      --dark: #1a1510;
+      --dark2: #2d1f0e;
+      --text: #3d3530;
+      --text2: #7a6a60;
+      --surface: #ffffff;
+      --border: #e8ddd5;
+      --green: #059669;
+      --green-light: #d1fae5;
+      --blue: #2563eb;
+      --teal: #0891b2;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--dark);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-img { width: 36px; height: 36px; object-fit: contain; }
+    .logo-text { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 21px; font-weight: 700; }
+    .logo-sub  { color: rgba(255,255,255,0.4); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(140deg, var(--dark) 0%, var(--dark2) 100%);
+      padding: 64px 24px 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% -20%, rgba(201,169,110,0.18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(201,169,110,0.15);
+      border: 1px solid rgba(201,169,110,0.3);
+      color: var(--gold-light);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      color: #fff;
+      font-size: clamp(26px, 5vw, 40px);
+      margin-bottom: 14px;
+      position: relative;
+      line-height: 1.2;
+    }
+    .hero h1 em { color: var(--gold); font-style: normal; }
+    .hero p {
+      color: rgba(255,255,255,0.6);
+      font-size: 15px;
+      max-width: 440px;
+      margin: 0 auto;
+      line-height: 1.7;
+      position: relative;
+    }
+
+    /* ── Search Card ── */
+    .search-wrap {
+      max-width: 520px;
+      margin: -52px auto 48px;
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+    .search-card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 30px 28px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.13);
+      border: 1px solid var(--border);
+    }
+    .search-card h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 13px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      color: var(--dark);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .input-group input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,169,110,0.12);
+      background: #fff;
+    }
+    .input-group input::placeholder { color: #c0b0a8; letter-spacing: 0; }
+    .btn-search {
+      padding: 13px 22px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-search:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(201,169,110,0.35); }
+    .btn-search:active { transform: translateY(0); }
+
+    .input-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .input-hint strong { color: var(--gold-dark); }
+
+    .error-box {
+      display: none;
+      margin-top: 14px;
+      background: #fff5f5;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #dc2626;
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    /* ── Result ── */
+    .result-wrap {
+      max-width: 680px;
+      margin: 0 auto 80px;
+      padding: 0 16px;
+      display: none;
+    }
+
+    /* Client info header */
+    .client-header {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%);
+      border-radius: 20px 20px 0 0;
+      padding: 28px 32px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .client-header::after {
+      content: '❤';
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 64px;
+      opacity: 0.05;
+    }
+    .booking-code-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(201,169,110,0.18);
+      border: 1px solid rgba(201,169,110,0.35);
+      color: var(--gold-light);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 4px 12px;
+      border-radius: 50px;
+      margin-bottom: 12px;
+    }
+    .client-names {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .client-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+    }
+    .client-meta span { display: flex; align-items: center; gap: 5px; }
+
+    /* Roadmap section */
+    .roadmap-section {
+      background: var(--surface);
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+      border-top: none;
+      overflow: hidden;
+    }
+
+    .roadmap-header {
+      padding: 24px 32px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .roadmap-header h3 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+    }
+    .progress-fraction {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+    .progress-fraction span { color: var(--gold-dark); font-size: 16px; }
+
+    /* Roadmap visual */
+    .roadmap {
+      padding: 28px 32px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .road-step {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* vertical connector line */
+    .road-step:not(:last-child) .road-line {
+      position: absolute;
+      left: 23px;
+      top: 52px;
+      width: 2px;
+      bottom: -8px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .road-step.done:not(:last-child) .road-line { background: var(--green); }
+    .road-step.active:not(:last-child) .road-line {
+      background: linear-gradient(to bottom, var(--gold) 0%, var(--border) 100%);
+    }
+
+    .road-node {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      z-index: 1;
+      position: relative;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+    .road-step.done .road-node {
+      background: var(--green);
+      color: white;
+      box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+    }
+    .road-step.active .road-node {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: white;
+      box-shadow: 0 4px 20px rgba(201,169,110,0.45);
+      animation: nodePulse 2.5s ease-in-out infinite;
+    }
+    .road-step.future .road-node {
+      background: var(--cream);
+      color: var(--text2);
+      border: 2px dashed var(--border);
+    }
+
+    @keyframes nodePulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(201,169,110,0.45); }
+      50% { box-shadow: 0 4px 30px rgba(201,169,110,0.7), 0 0 0 8px rgba(201,169,110,0.1); }
+    }
+
+    .road-content {
+      padding: 10px 0 24px;
+    }
+    .road-step:last-child .road-content { padding-bottom: 0; }
+
+    .road-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .road-step.future .road-label { color: var(--text2); font-weight: 500; }
+    .road-step.active .road-label { color: var(--gold-dark); }
+
+    .road-label .active-chip {
+      background: var(--gold);
+      color: white;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 50px;
+    }
+    .road-sublabel {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+    .road-step.active .road-sublabel { color: var(--text); }
+
+    /* Message card */
+    .msg-card {
+      margin: 0 32px 28px;
+      background: linear-gradient(135deg, #fffbf5 0%, #fef9f0 100%);
+      border: 1px solid var(--gold-light);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .msg-icon-large { font-size: 28px; flex-shrink: 0; line-height: 1; }
+    .msg-body .msg-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gold-dark); margin-bottom: 5px; }
+    .msg-body .msg-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+
+    /* WA CTA */
+    .wa-cta {
+      margin: 0 32px 32px;
+      text-align: center;
+    }
+    .wa-cta p { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+    .btn-wa {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 26px;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(37,211,102,0.25);
+    }
+    .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,0.35); }
+
+    /* Loading */
+    .loading { display: none; text-align: center; padding: 20px; color: var(--text2); font-size: 14px; }
+
+    footer {
+      text-align: center;
+      padding: 28px;
+      color: var(--text2);
+      font-size: 12px;
+    }
+    footer a { color: var(--gold-dark); text-decoration: none; }
+
+    @media (max-width: 520px) {
+      .search-card { padding: 24px 20px; }
+      .input-group { flex-direction: column; }
+      .btn-search { width: 100%; }
+      .client-header { padding: 22px 20px; }
+      .roadmap-header { padding: 20px 20px 0; }
+      .roadmap { padding: 20px 20px 24px; }
+      .msg-card, .wa-cta { margin-left: 20px; margin-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <img src="/logo.png" class="logo-img" onerror="this.style.display='none'">
+  <div>
+    <div class="logo-text">Sorehari</div>
+    <div class="logo-sub">Photography & Videography</div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">🔍 Status Tracker</div>
+  <h1>Pantau <em>Progress</em><br>Pekerjaan Anda</h1>
+  <p>Masukkan kode booking untuk melihat tahap pekerjaan foto & video Anda secara real-time.</p>
+</div>
+
+<div class="search-wrap">
+  <div class="search-card">
+    <h2>🔖 Kode Booking</h2>
+    <div class="input-group">
+      <input type="text" id="input-code"
+             placeholder="Contoh: SH-2026-0020"
+             autocomplete="off"
+             oninput="this.value = this.value.toUpperCase().replace(/[^SH0-9\-]/g,'')"
+             onkeydown="if(event.key==='Enter') doSearch()">
+      <button class="btn-search" onclick="doSearch()">Cek →</button>
+    </div>
+    <p class="input-hint">Kode dikirim admin via WhatsApp. Format: <strong>SH-TAHUN-NOMOR</strong></p>
+    <div class="error-box" id="error-box"></div>
+  </div>
+</div>
+
+<!-- Result section -->
+<div class="result-wrap" id="result-wrap">
+  <div class="client-header">
+    <div class="booking-code-pill">🔖 <span id="res-code"></span></div>
+    <div class="client-names" id="res-names"></div>
+    <div class="client-meta">
+      <span>📅 <span id="res-date"></span></span>
+      <span>📍 <span id="res-venue"></span></span>
+      <span>🏷️ <span id="res-package"></span></span>
+    </div>
+  </div>
+
+  <div class="roadmap-section">
+    <div class="roadmap-header">
+      <h3>Roadmap Pekerjaan</h3>
+      <div class="progress-fraction"><span id="res-step"></span> / <span id="res-total"></span> Tahap</div>
+    </div>
+
+    <div class="roadmap" id="roadmap-steps"></div>
+
+    <div class="msg-card" id="msg-card">
+      <div class="msg-icon-large" id="msg-icon"></div>
+      <div class="msg-body">
+        <div class="msg-title">Status Saat Ini</div>
+        <div class="msg-text" id="msg-text"></div>
+      </div>
+    </div>
+
+    <div class="wa-cta">
+      <p>Punya pertanyaan seputar pekerjaan Anda?</p>
+      <a id="wa-link" href="#" target="_blank" class="btn-wa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Hubungi Admin via WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 <a href="/">Sorehari Photography</a> — Mengabadikan Setiap Momen Berharga</p>
+</footer>
+
+<script>
+  const STAGE_CONFIG = {
+    confirmed:   { label: 'Booking Dikonfirmasi', sub: 'DP diterima & tanggal diamankan',     icon: '✅', doneIcon: '✓' },
+    in_progress: { label: 'Persiapan',            sub: 'Koordinasi & briefing menjelang hari H', icon: '🔄', doneIcon: '✓' },
+    event_day:   { label: 'Hari H Shooting',      sub: 'Proses pengambilan foto & video',       icon: '📸', doneIcon: '✓' },
+    editing:     { label: 'Pengeditan',            sub: 'Post-production & editing file',        icon: '🎞️', doneIcon: '✓' },
+    delivery:    { label: 'Penyerahan File',       sub: 'File siap & dikirimkan ke Anda',       icon: '📦', doneIcon: '✓' },
+    completed:   { label: 'Selesai',               sub: 'Pekerjaan tuntas — terima kasih! 🙏',  icon: '🏁', doneIcon: '🏁' },
+  };
+
+  const STATUS_MESSAGES = {
+    confirmed:   { icon: '✅', text: 'Booking Anda sudah dikonfirmasi! Tim Sorehari siap mengabadikan momen spesial Anda. Kami akan menghubungi untuk koordinasi lebih lanjut.' },
+    in_progress: { icon: '🔄', text: 'Tim kami sedang mempersiapkan segala kebutuhan untuk hari H Anda. Pastikan Anda sudah menerima briefing dari admin ya!' },
+    event_day:   { icon: '📸', text: 'Hari yang dinantikan telah tiba! Tim Sorehari siap di lokasi untuk mengabadikan setiap momen indah Anda hari ini.' },
+    editing:     { icon: '🎞️', text: 'File Anda sedang dalam proses editing oleh tim kreatif kami. Kami berkomitmen memberikan hasil terbaik. Harap bersabar ya, Kak!' },
+    delivery:    { icon: '📦', text: 'Pengeditan selesai! File Anda akan segera diserahkan. Tim admin akan menghubungi Anda untuk proses pengiriman file.' },
+    completed:   { icon: '🎉', text: 'Pekerjaan telah selesai dengan sempurna! Terima kasih sudah mempercayakan momen spesial Anda kepada Sorehari Photography. Semoga hasilnya memuaskan!' },
+  };
+
+  function formatDate(d) {
+    if (!d) return '-';
+    return new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.innerHTML = '⚠️ ' + msg;
+    el.style.display = 'block';
+    document.getElementById('result-wrap').style.display = 'none';
+  }
+
+  async function doSearch() {
+    const code = document.getElementById('input-code').value.trim();
+    if (!code) { showError('Masukkan kode booking terlebih dahulu.'); return; }
+    document.getElementById('error-box').style.display = 'none';
+
+    try {
+      const res = await fetch('/api/track?code=' + encodeURIComponent(code));
+      const data = await res.json();
+      if (!res.ok) { showError(data.error || 'Data tidak ditemukan.'); return; }
+      renderResult(data);
+    } catch(e) {
+      showError('Gagal menghubungi server. Silakan coba lagi.');
+    }
+  }
+
+  function renderResult(data) {
+    const ALL_STAGES = data.stages || ['confirmed','in_progress','event_day','editing','delivery','completed'];
+    const currentIdx = data.stage_index;
+
+    document.getElementById('res-code').textContent = data.booking_code;
+    const partner = data.partner_name ? ` & ${data.partner_name}` : '';
+    document.getElementById('res-names').textContent = (data.client_name || '-') + partner;
+    document.getElementById('res-date').textContent = formatDate(data.event_date);
+    document.getElementById('res-venue').textContent = data.venue;
+    document.getElementById('res-package').textContent = data.package_name;
+    document.getElementById('res-step').textContent = currentIdx + 1;
+    document.getElementById('res-total').textContent = ALL_STAGES.length;
+
+    // Roadmap steps
+    const stepsHtml = ALL_STAGES.map((s, i) => {
+      const cfg = STAGE_CONFIG[s] || { label: s, sub: '', icon: '●', doneIcon: '✓' };
+      const state = i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'future';
+      const nodeContent = i < currentIdx ? `<span style="font-size:16px;font-weight:700">✓</span>` : cfg.icon;
+      const activeChip  = state === 'active' ? `<span class="active-chip">Berlangsung</span>` : '';
+
+      return `<div class="road-step ${state}">
+        <div class="road-line"></div>
+        <div class="road-node">${nodeContent}</div>
+        <div class="road-content">
+          <div class="road-label">${cfg.label} ${activeChip}</div>
+          <div class="road-sublabel">${cfg.sub}</div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('roadmap-steps').innerHTML = stepsHtml;
+
+    // Message
+    const msgCfg = STATUS_MESSAGES[data.status] || { icon: '💬', text: 'Sedang dalam proses. Hubungi kami untuk info lebih lanjut.' };
+    document.getElementById('msg-icon').textContent = msgCfg.icon;
+    document.getElementById('msg-text').textContent  = msgCfg.text;
+
+    // WA button
+    const waMsg = `Halo, saya ingin menanyakan status pekerjaan booking dengan kode *${data.booking_code}*.\n\nNama: ${data.client_name}${partner}\nAcara: ${formatDate(data.event_date)}`;
+    document.getElementById('wa-link').href = `https://wa.me/6285255555555?text=${encodeURIComponent(waMsg)}`;
+
+    document.getElementById('result-wrap').style.display = 'block';
+    setTimeout(() => document.getElementById('result-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
+
+  // Auto-search if code in URL
+  const urlCode = new URLSearchParams(location.search).get('code');
+  if (urlCode) {
+    document.getElementById('input-code').value = urlCode.toUpperCase();
+    doSearch();
+  }
+</script>
+</body>
+</html>

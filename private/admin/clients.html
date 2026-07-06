@@ -121,14 +121,32 @@
           const price = c.package_price || 0;
           const remaining = price - paid;
           const pct = price > 0 ? Math.round((paid/price)*100) : 0;
-          const isLunas = c.booking_status === 'completed';
+          const isLunas = price > 0 && paid >= price;
 
           const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
           const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} di ${c.venue || '-'} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
           const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
 
-          const statusColors = { confirmed:'var(--blue)', in_progress:'var(--accent,#C9A96E)', event_day:'var(--green)', completed:'var(--green)' };
-          const statusLabels = { confirmed:'Confirmed', in_progress:'Persiapan', event_day:'Hari H', completed:'Selesai', archived:'Arsip', cancelled:'Batal' };
+          const statusColors = {
+            confirmed: 'var(--blue)',
+            in_progress: 'var(--accent,#C9A96E)',
+            event_day: '#7c3aed',
+            editing: '#0891b2',
+            delivery: '#059669',
+            completed: 'var(--green)',
+            archived: 'var(--text2)',
+            cancelled: 'var(--red)'
+          };
+          const statusLabels = {
+            confirmed: 'Confirmed',
+            in_progress: 'Persiapan',
+            event_day: '📸 Hari H',
+            editing: '🎞️ Pengeditan',
+            delivery: '📦 Penyerahan',
+            completed: '✅ Selesai',
+            archived: 'Arsip',
+            cancelled: 'Batal'
+          };
           const badgeColor = statusColors[c.booking_status] || 'var(--text2)';
           const badgeLabel = statusLabels[c.booking_status] || c.booking_status;
 
@@ -189,6 +207,21 @@
         notes: document.getElementById('pul-notes').value || 'Pelunasan',
       });
       closeModal('modal-pelunasan');
+
+      // Auto-open WA with tracking link for client
+      try {
+        const bk = await API.get(`/api/bookings/${id}`);
+        if (bk && bk.client_phone) {
+          const phone = bk.client_phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+          const year = new Date(bk.event_date || Date.now()).getFullYear();
+          const bookingCode = `SH-${year}-${String(id).padStart(4,'0')}`;
+          const trackUrl = `${window.location.protocol}//${window.location.host}/track?code=${bookingCode}`;
+          const clientName = bk.client_name || 'Kak';
+          const msg = `Halo ${clientName}! 👋\n\nPembayaran pelunasan Anda telah *DIKONFIRMASI* ✅\n\nTim kami segera memulai proses pengeditan foto & video Anda.\n\n🔖 Kode Booking: *${bookingCode}*\n🔍 Pantau progress pekerjaan di:\n${trackUrl}\n\nTerima kasih atas kepercayaan Anda! 🙏📸`;
+          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+      } catch(e) { /* silent fail - don't block reload */ }
+
       window.loadClients();
     }
   </script>

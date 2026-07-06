@@ -336,14 +336,14 @@ router.post('/:id/verify-dp', (req, res) => {
   res.json({ success: true, status: 'confirmed', client_id: clientId });
 });
 
-// POST confirm pelunasan (admin)
+// POST confirm pelunasan (admin) — only records payment, does NOT change work status
 router.post('/:id/confirm-pelunasan', (req, res) => {
   const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(req.params.id);
   if (!booking) return res.status(404).json({ error: 'Booking not found' });
 
-  // Update status to completed
-  db.prepare("UPDATE bookings SET status = 'completed', updated_at = datetime('now','localtime') WHERE id = ?").run(booking.id);
-  res.json({ success: true, status: 'completed' });
+  // Payment is already recorded via /payments route — just return success
+  // Work status must be updated separately by admin via PUT /:id/status
+  res.json({ success: true, message: 'Pelunasan dikonfirmasi' });
 });
 
 // POST generate pelunasan token
@@ -501,8 +501,26 @@ router.put('/:id', (req, res) => {
 // PUT update booking status
 router.put('/:id/status', (req, res) => {
   const { status } = req.body;
-  const valid = ['dp_pending', 'confirmed', 'in_progress', 'event_day', 'completed', 'archived', 'cancelled'];
+  const valid = ['dp_pending', 'confirmed', 'in_progress', 'event_day', 'editing', 'delivery', 'completed', 'archived', 'cancelled'];
   if (!valid.includes(status)) return res.status(400).json({ error: `Invalid status. Use: ${valid.join(', ')}` });
+
+  // Payment gate: editing, delivery, completed require full payment (pelunasan)
+  const postProductionStatuses = ['editing', 'delivery', 'completed'];
+  if (postProductionStatuses.includes(status)) {
+    const booking = db.prepare('SELECT package_price FROM bookings WHERE id = ?').get(req.params.id);
+    const { total_paid } = db.prepare('SELECT COALESCE(SUM(amount),0) AS total_paid FROM payments WHERE booking_id = ?').get(req.params.id);
+    const price = booking ? (booking.package_price || 0) : 0;
+    if (price > 0 && total_paid < price) {
+      const sisa = price - total_paid;
+      const fmt = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
+      return res.status(400).json({
+        error: `Tidak bisa pindah ke tahap ini. Client belum melunasi pembayaran. Sisa: ${fmt(sisa)}`,
+        sisa,
+        total_paid,
+        package_price: price
+      });
+    }
+  }
 
   db.prepare("UPDATE bookings SET status = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(status, req.params.id);
   res.json(db.prepare('SELECT * FROM v_booking_finance WHERE booking_id = ?').get(req.params.id));

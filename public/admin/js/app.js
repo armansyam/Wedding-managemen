@@ -112,8 +112,10 @@ function statusBadge(status) {
     'pending_verification': { label: 'Menunggu Verifikasi', class: 'badge-pending' },
     'confirmed': { label: 'Confirmed', class: 'badge-confirmed' },
     'in_progress': { label: 'Persiapan', class: 'badge-progress' },
-    'event_day': { label: 'Hari H', class: 'badge-progress' },
-    'completed': { label: 'Selesai', class: 'badge-completed' },
+    'event_day': { label: '📸 Hari H', class: 'badge-progress' },
+    'editing': { label: '🎞️ Pengeditan', class: 'badge-editing' },
+    'delivery': { label: '📦 Penyerahan', class: 'badge-delivery' },
+    'completed': { label: '✅ Selesai', class: 'badge-completed' },
     'cancelled': { label: 'Batal', class: 'badge-cancelled' }
   };
 

@@ -25,6 +25,7 @@
           <option value="proposal_sent">Proposal Dikirim</option>
           <option value="confirmed">Confirmed</option>
           <option value="in_progress">Persiapan</option><option value="event_day">Hari H</option>
+          <option value="editing">Pengeditan</option><option value="delivery">Penyerahan</option>
           <option value="completed">Selesai</option><option value="cancelled">Batal</option>
         </select>
       </div>
@@ -72,15 +73,18 @@
 
   <!-- Modal Update Status -->
   <div class="modal-overlay" id="modal-status">
-    <div class="modal" style="max-width:380px">
+    <div class="modal" style="max-width:400px">
       <h2>Update Status</h2>
+      <div id="status-error" style="display:none;background:#fee2e2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;line-height:1.5"></div>
       <div class="form-group"><label>Status</label>
-        <select id="b-status">
+        <select id="b-status" onchange="document.getElementById('status-error').style.display='none'">
           <option value="proposal_sent">Proposal Dikirim</option>
           <option value="pending_verification">Menunggu Verifikasi</option>
           <option value="confirmed">Confirmed</option>
           <option value="in_progress">Persiapan</option><option value="event_day">Hari H</option>
-          <option value="completed">Selesai</option><option value="archived">Arsip</option>
+          <option value="editing">🎞️ Pengeditan</option>
+          <option value="delivery">📦 Penyerahan</option>
+          <option value="completed">✅ Selesai</option><option value="archived">Arsip</option>
           <option value="cancelled">Batal</option>
         </select>
       </div>
@@ -250,15 +254,21 @@ Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanj
     
     // Send WA to client
     if (booking.client_phone) {
+    const year = new Date(booking.event_date || booking.created_at || Date.now()).getFullYear();
+    const bookingCode = `SH-${year}-${String(booking.booking_id || id).padStart(4,'0')}`;
+    const trackUrl = `${window.location.protocol}//${window.location.host}/track?code=${bookingCode}`;
     let tpl = templates.wa_dp_confirmed || `Halo Kak {{client_name}}! 👋
 
-DP untuk booking {{client_name}} & {{partner_name}} telah **DIKONFIRMASI** ✅
+DP untuk booking {{client_name}} & {{partner_name}} telah *DIKONFIRMASI* ✅
 
 📅 Tanggal Acara: {{event_date}}
 📍 Venue: {{venue}}
 🎨 Paket: {{package_name}}
 
-Booking status sekarang: **Confirmed**
+Booking status sekarang: *Confirmed*
+
+🔖 Kode Booking Anda: *${bookingCode}*
+🔍 Pantau progress pekerjaan di: ${trackUrl}
 
 Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`;
     tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
@@ -277,11 +287,28 @@ Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanj
     openModal('modal-status');
     }
     async function updateBookingStatus() {
-    await API.put(`/api/bookings/${document.getElementById('b-id').value}/status`, {
-    status: document.getElementById('b-status').value,
-    });
-    closeModal('modal-status');
-    load();
+      const id = document.getElementById('b-id').value;
+      const status = document.getElementById('b-status').value;
+      const errEl = document.getElementById('status-error');
+      errEl.style.display = 'none';
+      try {
+        const res = await fetch(`/api/bookings/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent = '⚠️ ' + (data.error || 'Gagal update status');
+          errEl.style.display = 'block';
+          return;
+        }
+        closeModal('modal-status');
+        load();
+      } catch(e) {
+        errEl.textContent = '⚠️ Terjadi kesalahan jaringan';
+        errEl.style.display = 'block';
+      }
     }
     function openPaymentModal(bookingId) {
     document.getElementById('p-booking-id').value = bookingId;

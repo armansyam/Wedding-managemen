@@ -72,6 +72,7 @@ app.use('/api/products', requireAuth, require('./routes/products'));
 app.use('/api/settings', requireAuth, require('./routes/settings'));
 app.use('/api/dashboard', requireAuth, require('./routes/dashboard'));
 app.use('/api/archive', requireAuth, require('./routes/archive'));
+app.use('/api/track', require('./routes/track'));
 
 app.use('/api/uploads/receipts', requireAuth, express.static(path.join(__dirname, 'private/uploads/receipts')));
 
