@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
+const sse = require('../helpers/sse');
 
 // POST new lead (PUBLIC - inquiry form submission)
 router.post('/', (req, res) => {
@@ -10,6 +11,9 @@ router.post('/', (req, res) => {
   if (!name || !phone) return res.status(400).json({ error: 'name and phone required' });
   const result = db.prepare('INSERT INTO leads (name, email, phone, partner_name, wedding_date, venue, package_interest, message, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(name, email || null, phone, partner_name || null, wedding_date || null, venue || null, package_interest || null, message || null, source || 'inquiry_form');
+  const newLead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid);
+  // Notify all connected admin SSE clients of the new lead
+  sse.broadcast('new_lead', newLead);
   res.json({ id: result.lastInsertRowid, message: 'Lead created' });
 });
 
@@ -50,12 +54,17 @@ router.put('/:id', (req, res) => {
   updates.push("updated_at = datetime('now','localtime')");
   params.push(req.params.id);
   db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = ?`).run(...params);
-  res.json(db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id));
+  const updated = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  // Notify all connected admin SSE clients of the update
+  sse.broadcast('lead_updated', updated);
+  res.json(updated);
 });
 
 // DELETE lead
 router.delete('/:id', (req, res) => {
   db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
+  // Notify admin SSE clients
+  sse.broadcast('lead_deleted', { id: parseInt(req.params.id) });
   res.json({ message: 'Lead deleted' });
 });
 

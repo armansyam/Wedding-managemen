@@ -21,13 +21,40 @@
     .lead-preview-grid .item .label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
     .lead-preview-grid .item .val { font-weight:600; color:var(--text); }
     .lead-message-box { background:var(--surface2); border-radius:12px; padding:14px; margin-top:12px; font-size:13px; line-height:1.6; color:var(--text); white-space:pre-wrap; }
+
+    /* ── Realtime live dot ──────────────────────────────────────────────── */
+    .live-dot {
+      display: inline-block; width: 9px; height: 9px;
+      border-radius: 50%; margin-left: 10px; vertical-align: middle;
+      transition: background 0.3s;
+    }
+    .live-dot.live     { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.25); animation: pulse-dot 2s infinite; }
+    .live-dot.offline  { background: #ef4444; }
+    .live-dot.connecting { background: #f59e0b; animation: pulse-dot 1s infinite; }
+    @keyframes pulse-dot {
+      0%,100% { box-shadow: 0 0 0 3px rgba(34,197,94,.25); }
+      50%      { box-shadow: 0 0 0 6px rgba(34,197,94,.05); }
+    }
+
+    /* ── SSE Toast notification ─────────────────────────────────────────── */
+    .sse-toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      padding: 12px 18px; border-radius: 12px; font-size: 13px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25); max-width: 320px;
+      transform: translateY(20px); opacity: 0;
+      transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s;
+      pointer-events: none;
+    }
+    .sse-toast--visible { transform: translateY(0); opacity: 1; }
+    .sse-toast--new  { background: #1e3a2f; color: #86efac; border: 1px solid #22c55e44; }
+    .sse-toast--info { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
   </style>
 </head>
 <body>
   <div class="sidebar" id="sidebar"></div>
   <div class="main">
     <div class="page-header">
-      <h1>📥 Leads / Inquiry</h1>
+      <h1>📥 Leads / Inquiry <span class="live-dot connecting" id="live-dot" title="Menghubungkan…"></span></h1>
       <div class="btn-group">
         <div class="search-bar"><input type="text" placeholder="Cari nama/phone..." id="search" oninput="window.load()"></div>
         <select id="filter-status" onchange="window.load()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
@@ -136,14 +163,65 @@
   
   <script>
     let templates = {};
+    let _sseSource = null;
+
+    // ── Live indicator dot ───────────────────────────────────────────────────
+    function setLiveDot(state) {
+      const dot = document.getElementById('live-dot');
+      if (!dot) return;
+      dot.className = 'live-dot ' + state; // 'connecting' | 'live' | 'offline'
+      dot.title = state === 'live' ? 'Realtime aktif' : state === 'offline' ? 'Koneksi terputus — coba reconnect' : 'Menghubungkan…';
+    }
+
+    // ── Toast notification ───────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const t = document.createElement('div');
+      t.className = `sse-toast sse-toast--${type}`;
+      t.innerHTML = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.classList.add('sse-toast--visible'), 20);
+      setTimeout(() => { t.classList.remove('sse-toast--visible'); setTimeout(() => t.remove(), 400); }, 4000);
+    }
+
+    // ── SSE connection ───────────────────────────────────────────────────────
+    function connectSSE() {
+      if (_sseSource) { _sseSource.close(); }
+      setLiveDot('connecting');
+      _sseSource = new EventSource('/api/realtime-leads');
+
+      _sseSource.addEventListener('connected', () => {
+        setLiveDot('live');
+      });
+
+      _sseSource.addEventListener('new_lead', (e) => {
+        const lead = JSON.parse(e.data);
+        showToast(`📥 <strong>Inquiry Baru!</strong> ${lead.name} (${lead.phone})`, 'new');
+        load(); // reload table
+      });
+
+      _sseSource.addEventListener('lead_updated', () => {
+        load(); // silently refresh
+      });
+
+      _sseSource.addEventListener('lead_deleted', () => {
+        load(); // silently refresh
+      });
+
+      _sseSource.onerror = () => {
+        setLiveDot('offline');
+        _sseSource.close();
+        // Auto-reconnect after 5 seconds
+        setTimeout(connectSSE, 5000);
+      };
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-
-    renderSidebar('leads');
-    (async () => {
-      templates = await API.get('/api/templates');
-      load();
-    })();
+      renderSidebar('leads');
+      (async () => {
+        templates = await API.get('/api/templates');
+        load();
+        connectSSE(); // Start realtime stream
+      })();
     });
 
     async function load() {

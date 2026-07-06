@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const helmet = require('helmet');
 require('dotenv').config();
 const db = require('./db');
+const sse = require('./helpers/sse');
 
 // Import authentication middleware
 const { requireAuth, passwordUtils } = require('./middleware/auth');
@@ -72,6 +73,27 @@ app.use('/api/dashboard', requireAuth, require('./routes/dashboard'));
 app.use('/api/archive', requireAuth, require('./routes/archive'));
 
 app.use('/api/uploads/receipts', requireAuth, express.static(path.join(__dirname, 'private/uploads/receipts')));
+
+// ── SSE: realtime leads stream (admin only) ──────────────────────────────────
+app.get('/api/realtime-leads', requireAuth, (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'X-Accel-Buffering': 'no',   // nginx: disable proxy buffering
+    'Connection': 'keep-alive',
+  });
+  res.flushHeaders();
+  // Send an initial connection acknowledgement
+  res.write('event: connected\ndata: {"status":"ok"}\n\n');
+  // Heartbeat every 25s to keep the connection alive through proxies
+  const heartbeat = setInterval(() => {
+    try { res.write(': ping\n\n'); } catch (_) { clearInterval(heartbeat); }
+  }, 25000);
+  req.on('close', () => clearInterval(heartbeat));
+  sse.addClient(res);
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 
 // Fixed token generation with http -> https protocol fix
 const generateToken = (length = 12) => {
