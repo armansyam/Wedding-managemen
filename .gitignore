@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# databases / runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.db-*
+*.sqlite-*
+*.sqlite3-*
+*sorehari.db*
+
+# uploads / user data
+private/uploads/
+.temp-uploads/
+public/uploads/
+
+# logs / temp
+*.log
+logs/
+tmp/
+.temp/
+
+# macOS metadata
+.DS_Store
+._*
+
+# backups / PDFs / temporary
+*.backup
+*.bak
+*.server-backup
+*.active-backup
+*_backup_*/
+*.pdf
+.agents/
+task-progress.md
