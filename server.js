@@ -59,6 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/inquiry.html', (req, res) => res.redirect('/inquiry'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/leads', require('./routes/leads'));
@@ -119,7 +120,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public/landing.htm
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-app.get('/inquiry.html', (req, res) => res.redirect('/inquiry'));
+
 
 // Fixed inquiry page with escaping
 app.get('/inquiry', (req, res) => {

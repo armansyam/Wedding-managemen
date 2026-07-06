@@ -93,13 +93,17 @@
     <div class="settings-panel" id="panel-inquiry">
       <div class="setting-card">
         <h3>📋 Form Inquiry</h3>
-        <p class="desc">Satu item per baris. Edit sesuai jenis acara & kebutuhan yang ditawarkan.</p>
-        <div class="setting-row">
-          <div><label>Jenis Acara (dropdown)</label>
-            <textarea id="s-inquiry_event_types" rows="8" placeholder="Wedding 💍&#10;Engagement 💕&#10;Prewedding 📸"></textarea>
+        <p class="desc" style="margin-bottom:16px">Tentukan pilihan jenis acara dan kebutuhan layanan yang ditawarkan pada formulir inquiry klien secara dinamis.</p>
+        <div class="setting-row" style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start">
+          <div class="form-group">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:6px">Jenis Acara (Dropdown)</label>
+            <div id="inquiry-event-types-container" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px"></div>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.addSettingRow('inquiry-event-types-container')" style="font-size:11px; padding:6px 12px; border:1px dashed var(--border); border-radius:8px; background:none; color:var(--text2); display:inline-block; width:fit-content; cursor:pointer">➕ Tambah Jenis Acara</button>
           </div>
-          <div><label>Yang Dibutuhkan (checkbox)</label>
-            <textarea id="s-inquiry_needs" rows="8" placeholder="📷 Foto&#10;🎬 Video&#10;🎞️ SDE"></textarea>
+          <div class="form-group">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:6px">Yang Dibutuhkan (Checkbox)</label>
+            <div id="inquiry-needs-container" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px"></div>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.addSettingRow('inquiry-needs-container')" style="font-size:11px; padding:6px 12px; border:1px dashed var(--border); border-radius:8px; background:none; color:var(--text2); display:inline-block; width:fit-content; cursor:pointer">➕ Tambah Kebutuhan</button>
           </div>
         </div>
       </div>
@@ -169,18 +173,52 @@
       });
     }
 
+    // ── Helper to manage dynamic setting rows ───────────────────────────
+    function addSettingRow(containerId, value = '') {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const row = document.createElement('div');
+      row.className = 'setting-input-row';
+      row.style = 'display:flex; gap:8px; align-items:center; width:100%; margin-bottom:8px';
+      row.innerHTML = `
+        <input type="text" class="s-row-val" value="${value}" style="flex:1; padding:8px 12px; font-size:13px; border-radius:8px; border:1px solid var(--border); background:var(--surface)" placeholder="Contoh: Wedding 💍 atau 📷 Foto">
+        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--red); font-size:16px; cursor:pointer; height:32px; width:32px; display:flex; align-items:center; justify-content:center">✕</button>
+      `;
+      container.appendChild(row);
+    }
+    window.addSettingRow = addSettingRow;
+
     // --- Load ---
     async function loadSettings() {
       const s = await API.get('/api/settings');
       for (const [k, v] of Object.entries(s)) {
+        if (k === 'inquiry_event_types' || k === 'inquiry_needs') {
+          const containerId = k === 'inquiry_event_types' ? 'inquiry-event-types-container' : 'inquiry-needs-container';
+          const container = document.getElementById(containerId);
+          if (container) {
+            container.innerHTML = '';
+            try {
+              const items = JSON.parse(v);
+              if (Array.isArray(items) && items.length > 0) {
+                items.forEach(item => addSettingRow(containerId, item));
+              } else {
+                addSettingRow(containerId);
+              }
+            } catch (e) {
+              const items = (v || '').split('\n').map(x => x.trim()).filter(Boolean);
+              if (items.length > 0) {
+                items.forEach(item => addSettingRow(containerId, item));
+              } else {
+                addSettingRow(containerId);
+              }
+            }
+          }
+          continue;
+        }
+
         const el = document.getElementById('s-' + k);
         if (el) {
-          if (el.tagName === 'TEXTAREA' && (k === 'inquiry_event_types' || k === 'inquiry_needs')) {
-            // Convert JSON array to lines
-            try { el.value = JSON.parse(v).join('\\n'); } catch { el.value = v; }
-          } else {
-            el.value = v || '';
-          }
+          el.value = v || '';
         }
       }
       updatePreviews();
@@ -211,13 +249,17 @@
     async function saveAll() {
       const data = {};
       for (const k of SAVE_KEYS) {
+        if (k === 'inquiry_event_types' || k === 'inquiry_needs') {
+          const containerId = k === 'inquiry_event_types' ? 'inquiry-event-types-container' : 'inquiry-needs-container';
+          const rows = document.querySelectorAll(`#${containerId} .s-row-val`);
+          const items = Array.from(rows).map(row => row.value.trim()).filter(Boolean);
+          data[k] = JSON.stringify(items);
+          continue;
+        }
+
         const el = document.getElementById('s-' + k);
         if (!el) continue;
-        if (k === 'inquiry_event_types' || k === 'inquiry_needs') {
-          data[k] = JSON.stringify(el.value.split('\n').map(s => s.trim()).filter(Boolean));
-        } else {
-          data[k] = el.value;
-        }
+        data[k] = el.value;
       }
       if (logoBase64) {
         data['vendor_logo'] = logoBase64;
