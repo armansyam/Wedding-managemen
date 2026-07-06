@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kuitansi Pembayaran Freelance — Sorehari</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Montserrat',sans-serif; background:#f4f1eb; color:#2d2d2d; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .container { max-width:550px; width:100%; }
+
+    .header { text-align:center; margin-bottom:24px; }
+    .header h1 { font-family:'Playfair Display',serif; font-size:28px; color:#1a1a2e; margin-bottom:4px; }
+    .header p { font-size:13px; color:#888; text-transform:uppercase; letter-spacing:2px; }
+
+    .card { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.06); padding:32px; position:relative; overflow:hidden; }
+    
+    /* Elegant PAID Stamp */
+    .stamp-container { position:absolute; top:20px; right:20px; transform:rotate(12deg); z-index:10; }
+    .paid-stamp {
+      border:3px double #10b981; color:#10b981; font-family:'Playfair Display',serif;
+      font-size:16px; font-weight:800; padding:6px 16px; border-radius:8px;
+      text-transform:uppercase; letter-spacing:2px; display:inline-block;
+      background:rgba(16,185,129,0.05); text-shadow: 0 0 1px rgba(16,185,129,0.1);
+    }
+
+    .title-area { margin-bottom:24px; }
+    .title-area h2 { font-size:16px; color:#888; text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:4px; }
+    .title-area .receipt-id { font-size:12px; color:#aaa; font-family:monospace; }
+
+    .info-grid { display:grid; grid-template-columns:1fr; gap:12px; font-size:13px; margin-bottom:20px; }
+    .info-item { display:flex; justify-content:space-between; border-bottom:1px dashed #f0f0f0; padding-bottom:8px; }
+    .info-item .label { color:#888; }
+    .info-item .value { font-weight:600; text-align:right; }
+
+    .divider { height:1px; background:#e5e5e5; margin:20px 0; }
+
+    .jobs-title { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:12px; font-weight:600; }
+    
+    .job-list { list-style:none; font-size:13px; margin-bottom:20px; }
+    .job-item { background:#faf8f5; border-radius:8px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+    .job-item .job-desc { display:flex; flex-direction:column; gap:2px; }
+    .job-item .job-session { font-weight:700; color:#2d2d2d; }
+    .job-item .job-client { font-size:11px; color:#888; }
+    .job-item .job-fee { font-weight:700; color:#c9785e; font-size:14px; }
+
+    .amount-box { background:#faf8f5; border-radius:12px; border:1px solid #f0eae1; padding:20px; text-align:center; }
+    .amount-box .desc { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:4px; }
+    .amount-box .amount { font-size:28px; font-weight:800; color:#c9785e; }
+    .amount-box .date { font-size:11px; color:#aaa; margin-top:6px; }
+
+    .footer { text-align:center; font-size:11px; color:#aaa; margin-top:20px; }
+    
+    /* Loading overlay */
+    .loading-state { text-align:center; padding:40px 0; }
+    .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #c9785e; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .error-state { text-align:center; padding:30px 10px; color:#ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="vendor-name-title">Sorehari</h1>
+      <p id="vendor-tagline">Photography &amp; Videography</p>
+    </div>
+
+    <div class="card" id="receipt-card">
+      <!-- Loading State -->
+      <div class="loading-state" id="loading-el">
+        <div class="loading-spinner"></div>
+        <p style="font-size:13px;color:#888">Memuat kuitansi...</p>
+      </div>
+      
+      <!-- Error State (hidden by default) -->
+      <div class="error-state" id="error-el" style="display:none">
+        <p style="font-size:24px;margin-bottom:8px">⚠️</p>
+        <p id="error-msg" style="font-size:13px;font-weight:600">Kuitansi tidak ditemukan atau token tidak valid.</p>
+      </div>
+
+      <!-- Content State (hidden by default) -->
+      <div id="content-el" style="display:none">
+        <div class="stamp-container">
+          <div class="paid-stamp">Lunas / Paid</div>
+        </div>
+
+        <div class="title-area">
+          <h2>Kuitansi Pembayaran</h2>
+          <div class="receipt-id" id="receipt-token">TOKEN: -</div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Penerima (Freelance)</span>
+            <span class="value" id="freelancer-name">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Keahlian / Peran</span>
+            <span class="value" id="freelancer-skill">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Tujuan Rekening</span>
+            <span class="value" id="freelancer-bank">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Metode Pembayaran</span>
+            <span class="value" id="payment-method">Transfer</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="jobs-section" id="jobs-section">
+          <h3 class="jobs-title">Rincian Pekerjaan (Job)</h3>
+          <ul class="job-list" id="job-list-el">
+            <!-- Render dynamically -->
+          </ul>
+        </div>
+
+        <div class="amount-box">
+          <div class="desc">Total Dibayarkan</div>
+          <div class="amount" id="total-amount">Rp 0</div>
+          <div class="date" id="payment-date">Tanggal Rilis: -</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>&copy; <span id="year">2026</span> <span id="vendor-name-footer">Sorehari</span>. Seluruh hak cipta dilindungi.</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function formatIDR(val) {
+      return 'Rp ' + Number(val).toLocaleString('id-ID');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    // Extract token from URL
+    const token = window.location.pathname.split('/').pop();
+
+    async function loadReceipt() {
+      try {
+        const res = await fetch(`/api/receipt/freelance/${token}`);
+        if (!res.ok) {
+          throw new Error('Kuitansi tidak ditemukan');
+        }
+        const data = await res.json();
+        
+        // Vendor info
+        document.title = `Kuitansi Pembayaran Freelance — ${data.vendor.name}`;
+        document.getElementById('vendor-name-title').textContent = data.vendor.name;
+        document.getElementById('vendor-name-footer').textContent = data.vendor.name;
+        
+        // Payment info
+        document.getElementById('receipt-token').textContent = `TOKEN: ${data.payment.payment_token.slice(0,8).toUpperCase()}...`;
+        document.getElementById('freelancer-name').textContent = data.payment.name;
+        document.getElementById('freelancer-skill').textContent = data.payment.skill || 'Freelancer';
+        document.getElementById('freelancer-bank').textContent = data.payment.bank_account || 'Cash / Tunai';
+        document.getElementById('payment-method').textContent = data.payment.method === 'job_payment' ? 'Transfer Bank' : (data.payment.method || 'Transfer Bank');
+        document.getElementById('total-amount').textContent = formatIDR(data.payment.amount);
+        document.getElementById('payment-date').textContent = `Tanggal Rilis: ${formatDate(data.payment.payment_date)}`;
+
+        // Job list render
+        const listEl = document.getElementById('job-list-el');
+        listEl.innerHTML = '';
+        
+        if (data.jobs && data.jobs.length) {
+          data.jobs.forEach(j => {
+            listEl.innerHTML += `
+              <li class="job-item">
+                <div class="job-desc">
+                  <span class="job-session">${j.session_name}</span>
+                  <span class="job-client">${j.client_name} · ${formatDate(j.event_date)}</span>
+                </div>
+                <span class="job-fee">${formatIDR(j.fee_amount)}</span>
+              </li>
+            `;
+          });
+        } else {
+          // If no specific jobs linked (e.g. legacy payments or lump-sum manual payments)
+          listEl.innerHTML = `
+            <li class="job-item">
+              <div class="job-desc">
+                <span class="job-session">${data.payment.notes || 'Pembayaran Freelance'}</span>
+                <span class="job-client">Lump-sum Payment / Pembayaran Sekaligus</span>
+              </div>
+              <span class="job-fee">${formatIDR(data.payment.amount)}</span>
+            </li>
+          `;
+        }
+
+        // Switch displays
+        document.getElementById('loading-el').style.display = 'none';
+        document.getElementById('content-el').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('loading-el').style.display = 'none';
+        document.getElementById('error-el').style.display = 'block';
+        document.getElementById('error-msg').textContent = err.message;
+      }
+    }
+
+    if (token) {
+      loadReceipt();
+    } else {
+      document.getElementById('loading-el').style.display = 'none';
+      document.getElementById('error-el').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

@@ -416,16 +416,57 @@ Terima kasih atas kerjasamanya! 🙏`;
     // Option A: Only send WhatsApp message for validation (No DB write)
     document.getElementById('wa-preview-only').onclick = () => {
       closeModal('modal-wa-preview');
-      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
+      const validationMsg = `━━━━━━━━━━━━━━━━━━
+📱 *VALIDASI TAGIHAN FREELANCE*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Mohon dicek & divalidasi terlebih dahulu untuk rincian job berikut:
+
+${jobs}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+💳 Rekening Anda: ${f.bank_account || '-'}
+━━━━━━━━━━━━━━━━━━
+
+*Catatan:*
+Jika data di atas sudah benar, silakan kabari ya agar dana bisa segera dirilis. Terima kasih! 🙏`;
+      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
     };
 
-    // Option B: Confirm Payment and release (DB write + WhatsApp notification)
+    // Option B: Confirm Payment and release (DB write + WhatsApp notification with digital receipt link)
     document.getElementById('wa-preview-confirm').onclick = async () => {
       closeModal('modal-wa-preview');
-      // Pay
-      await API.post(`/api/freelancers/${freelancerId}/pay-job`, { crew_ids: crewIds });
-      // Open WhatsApp
-      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
+      // Pay and get token
+      const result = await API.post(`/api/freelancers/${freelancerId}/pay-job`, { crew_ids: crewIds });
+      
+      const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
+      
+      const paidMsg = `━━━━━━━━━━━━━━━━━━
+💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Sorehari TELAH mentransfer fee untuk job berikut:
+
+${jobs}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+💳 Rekening Tujuan: ${f.bank_account || '-'}
+━━━━━━━━━━━━━━━━━━
+
+Resi / Kuitansi Pembayaran Resmi:
+${receiptLink}
+
+Terima kasih atas kerjasamanya! 🙏`;
+
+      // Open WhatsApp with receipt
+      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
       viewDetail(freelancerId);
       load();
     };

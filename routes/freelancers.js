@@ -146,28 +146,32 @@ router.post('/:id/fees', (req, res) => {
 router.post('/:id/pay-job', (req, res) => {
   const { crew_ids } = req.body;
   if (!crew_ids || !crew_ids.length) return res.status(400).json({ error: 'crew_ids required' });
-  const stmt = db.prepare("UPDATE booking_session_crew SET is_paid = 1, paid_at = datetime('now','localtime') WHERE id = ?");
+  const crypto = require('crypto');
+  const paymentToken = crypto.randomUUID();
+  const stmt = db.prepare("UPDATE booking_session_crew SET is_paid = 1, paid_at = datetime('now','localtime'), payment_token = ? WHERE id = ?");
   const tx = db.transaction(() => {
-    for (const cid of crew_ids) stmt.run(cid);
+    for (const cid of crew_ids) stmt.run(paymentToken, cid);
   });
   tx();
   // Also record in freelance_payments for backwards compat
   const jobFees = db.prepare(`SELECT fee_amount FROM booking_session_crew WHERE id IN (${crew_ids.map(() => '?').join(',')})`).all(...crew_ids);
   const totalAmount = jobFees.reduce((s, j) => s + j.fee_amount, 0);
   if (totalAmount > 0) {
-    db.prepare('INSERT INTO freelance_payments (freelancer_id, amount, payment_date, method, notes) VALUES (?, ?, ?, ?, ?)')
-      .run(req.params.id, totalAmount, new Date().toISOString().split('T')[0], 'job_payment', `Bayar ${crew_ids.length} job`);
+    db.prepare('INSERT INTO freelance_payments (freelancer_id, amount, payment_date, method, notes, payment_token) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(req.params.id, totalAmount, new Date().toISOString().split('T')[0], 'job_payment', `Bayar ${crew_ids.length} job`, paymentToken);
   }
-  res.json({ message: 'Jobs paid', count: crew_ids.length, total: totalAmount });
+  res.json({ message: 'Jobs paid', count: crew_ids.length, total: totalAmount, payment_token: paymentToken });
 });
 
 // POST bayar lump-sum (legacy)
 router.post('/:id/pay', (req, res) => {
   const { amount, payment_date, method, notes } = req.body;
   if (!amount || amount <= 0) return res.status(400).json({ error: 'amount required' });
-  const result = db.prepare('INSERT INTO freelance_payments (freelancer_id, amount, payment_date, method, notes) VALUES (?, ?, ?, ?, ?)')
-    .run(req.params.id, amount, payment_date || new Date().toISOString().split('T')[0], method || 'transfer', notes || null);
-  res.json({ id: result.lastInsertRowid, message: 'Payment recorded' });
+  const crypto = require('crypto');
+  const paymentToken = crypto.randomUUID();
+  const result = db.prepare('INSERT INTO freelance_payments (freelancer_id, amount, payment_date, method, notes, payment_token) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(req.params.id, amount, payment_date || new Date().toISOString().split('T')[0], method || 'transfer', notes || null, paymentToken);
+  res.json({ id: result.lastInsertRowid, message: 'Payment recorded', payment_token: paymentToken });
 });
 
 // PUT update freelancer

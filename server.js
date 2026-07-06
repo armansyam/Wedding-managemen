@@ -144,6 +144,42 @@ app.get('/inquiry', (req, res) => {
 
 app.get('/pelunasan/:token', (req, res) => res.sendFile(path.join(__dirname, 'public/pelunasan.html')));
 
+app.get('/receipt/freelance/:token', (req, res) => res.sendFile(path.join(__dirname, 'public/freelance-receipt.html')));
+
+app.get('/api/receipt/freelance/:token', (req, res) => {
+  const token = req.params.token;
+  if (!token) return res.status(400).json({ error: 'Token is required' });
+
+  const payment = db.prepare('SELECT fp.*, f.name, f.skill, f.phone, f.bank_account FROM freelance_payments fp JOIN freelancers f ON fp.freelancer_id = f.id WHERE fp.payment_token = ?').get(token);
+  if (!payment) return res.status(404).json({ error: 'Payment not found' });
+
+  // Get matching crew sessions paid with this token
+  const jobs = db.prepare(`
+    SELECT bsc.fee_amount, s.name AS session_name, b.event_date, c.name AS client_name
+    FROM booking_session_crew bsc
+    JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
+    JOIN sessions s ON bs.session_id = s.id
+    JOIN bookings b ON bs.booking_id = b.id
+    JOIN clients c ON b.client_id = c.id
+    WHERE bsc.payment_token = ?
+  `).all(token);
+
+  // Get vendor details
+  const vendorName = db.prepare("SELECT value FROM settings WHERE key = 'vendor_name'").get()?.value || 'Sorehari Photography';
+  const vendorEmail = db.prepare("SELECT value FROM settings WHERE key = 'vendor_email'").get()?.value || 'hello@sorehari.com';
+  const vendorPhone = db.prepare("SELECT value FROM settings WHERE key = 'vendor_phone'").get()?.value || '';
+
+  res.json({
+    payment,
+    jobs,
+    vendor: {
+      name: vendorName,
+      email: vendorEmail,
+      phone: vendorPhone
+    }
+  });
+});
+
 app.get('/booking/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/booking.html'));
 });
