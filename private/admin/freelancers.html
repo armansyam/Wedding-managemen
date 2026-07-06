@@ -123,9 +123,10 @@
         <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-wa-preview')">✕</button>
       </div>
       <pre id="wa-preview-body" style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto"></pre>
-      <div class="modal-actions" style="margin-top:12px">
+      <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
         <button class="btn btn-secondary" onclick="closeModal('modal-wa-preview')">Batal</button>
-        <button class="btn btn-primary" id="wa-preview-confirm" style="background:var(--green)">✅ Kirim & Bayar</button>
+        <button class="btn btn-primary" id="wa-preview-only" style="background:var(--blue); color:#fff; border:none">📱 Hanya Kirim WA (Validasi)</button>
+        <button class="btn btn-primary" id="wa-preview-confirm" style="background:var(--green)">💰 Rilis & Konfirmasi Bayar</button>
       </div>
     </div>
   </div>
@@ -411,14 +412,22 @@ Terima kasih atas kerjasamanya! 🙏`;
     
     // Show preview modal
     document.getElementById('wa-preview-body').textContent = msg;
+
+    // Option A: Only send WhatsApp message for validation (No DB write)
+    document.getElementById('wa-preview-only').onclick = () => {
+      closeModal('modal-wa-preview');
+      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    // Option B: Confirm Payment and release (DB write + WhatsApp notification)
     document.getElementById('wa-preview-confirm').onclick = async () => {
-    closeModal('modal-wa-preview');
-    // Pay
-    await API.post(`/api/freelancers/${freelancerId}/pay-job`, { crew_ids: crewIds });
-    // Auto open wa.me
-    window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
-    viewDetail(freelancerId);
-    load();
+      closeModal('modal-wa-preview');
+      // Pay
+      await API.post(`/api/freelancers/${freelancerId}/pay-job`, { crew_ids: crewIds });
+      // Open WhatsApp
+      window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
+      viewDetail(freelancerId);
+      load();
     };
     openModal('modal-wa-preview');
     }
