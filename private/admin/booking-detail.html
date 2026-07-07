@@ -259,7 +259,7 @@
     const code = `SH-${year}-${String(b.booking_id || b.id).padStart(4, '0')}`;
     document.getElementById('d-code').textContent = code;
     
-    const trackUrl = `${window.location.origin}/track.html?code=${code}`;
+    const trackUrl = `${window.location.origin}/track.html?code=${code}&date=${b.event_date}`;
     document.getElementById('d-track-url').textContent = code;
     document.getElementById('d-track-url').href = trackUrl;
     

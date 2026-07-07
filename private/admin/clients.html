@@ -307,7 +307,7 @@
           const phone = bk.client.phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
           const year = new Date(bk.event_date || Date.now()).getFullYear();
           const bookingCode = `SH-${year}-${String(bookingId).padStart(4,'0')}`;
-          const trackUrl = `${window.location.origin}/track.html?code=${bookingCode}`;
+          const trackUrl = `${window.location.origin}/track.html?code=${bookingCode}&date=${bk.event_date}`;
           const clientName = bk.client_name || 'Kak';
           const msg = `Halo ${clientName}! 👋\n\nPembayaran pelunasan Anda sebesar *${formatIDR(amount)}* telah *DIKONFIRMASI* ✅\n\nTim kami segera memulai proses pengeditan foto & video Anda.\n\n🔖 Kode Booking: *${bookingCode}*\n🔍 Pantau progress pekerjaan di:\n${trackUrl}\n\nTerima kasih atas kepercayaan Anda! 🙏📸`;
           window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');

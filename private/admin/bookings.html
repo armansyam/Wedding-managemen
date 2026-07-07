@@ -256,7 +256,7 @@ Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanj
     if (booking.client_phone) {
     const year = new Date(booking.event_date || booking.created_at || Date.now()).getFullYear();
     const bookingCode = `SH-${year}-${String(booking.booking_id || id).padStart(4,'0')}`;
-    const trackUrl = `${window.location.protocol}//${window.location.host}/track?code=${bookingCode}`;
+    const trackUrl = `${window.location.protocol}//${window.location.host}/track.html?code=${bookingCode}&date=${booking.event_date}`;
     let tpl = templates.wa_dp_confirmed || `Halo Kak {{client_name}}! 👋
 
 DP untuk booking {{client_name}} & {{partner_name}} telah *DIKONFIRMASI* ✅

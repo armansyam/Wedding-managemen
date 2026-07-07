@@ -17,12 +17,15 @@ function parseBookingCode(code) {
   return null;
 }
 
-// GET /api/track?code=SH-2026-0020
+// GET /api/track?code=SH-2026-0020&date=YYYY-MM-DD
 router.get('/', (req, res) => {
-  const { code } = req.query;
+  const { code, date } = req.query;
 
   if (!code || !code.trim()) {
     return res.status(400).json({ error: 'Masukkan kode booking (contoh: SH-2026-0020)' });
+  }
+  if (!date || !date.trim()) {
+    return res.status(400).json({ error: 'Pilih/masukkan tanggal acara pernikahan Anda.' });
   }
 
   const bookingId = parseBookingCode(code);
@@ -46,12 +49,12 @@ router.get('/', (req, res) => {
     FROM bookings b
     LEFT JOIN clients c ON b.client_id = c.id
     LEFT JOIN packages p ON b.package_id = p.id
-    WHERE b.id = ? AND b.status NOT IN ('proposal_sent','pending_verification','cancelled')
-  `).get(bookingId);
+    WHERE b.id = ? AND b.event_date = ? AND b.status NOT IN ('proposal_sent','pending_verification','cancelled')
+  `).get(bookingId, date.trim());
 
   if (!booking) {
     return res.status(404).json({
-      error: 'Data tidak ditemukan. Pastikan kode sudah benar, atau hubungi admin kami.'
+      error: 'Data tidak ditemukan. Pastikan Kode Booking dan Tanggal Acara sudah cocok dan benar.'
     });
   }
 
