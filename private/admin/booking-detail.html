@@ -81,6 +81,12 @@
             <div>
               <h3 style="font-size:14px;margin:0 0 12px 0">Informasi Booking</h3>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+                <div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; background:var(--surface2); padding:6px 10px; border-radius:8px; margin-bottom:6px">
+                  <span style="color:var(--text2)">ID Booking:</span> <strong id="d-code" style="color:var(--accent)"></strong>
+                  <span style="color:var(--text2); margin-left:12px">Link Progress:</span>
+                  <a id="d-track-url" href="#" target="_blank" style="color:var(--text); text-decoration:underline; font-weight:600; font-size:12px"></a>
+                  <button class="btn btn-sm btn-secondary" onclick="window.copyTrackingLink()" style="padding:2px 8px; font-size:11px; height:auto; border-radius:6px; cursor:pointer">📋 Salin</button>
+                </div>
                 <div><span style="color:var(--text2)">Client:</span> <strong id="d-client"></strong></div>
                 <div><span style="color:var(--text2)">Pasangan:</span> <span id="d-partner"></span></div>
                 <div><span style="color:var(--text2)">Paket:</span> <strong id="d-package"></strong></div>
@@ -249,6 +255,19 @@
     document.title = `${b.client_name} — Vendor Management`;
 
     // Info
+    const year = new Date(b.event_date || b.created_at).getFullYear();
+    const code = `SH-${year}-${String(b.booking_id || b.id).padStart(4, '0')}`;
+    document.getElementById('d-code').textContent = code;
+    
+    const trackUrl = `${window.location.origin}/track.html?code=${code}`;
+    document.getElementById('d-track-url').textContent = code;
+    document.getElementById('d-track-url').href = trackUrl;
+    
+    window.copyTrackingLink = () => {
+      navigator.clipboard.writeText(trackUrl);
+      alert('Link tracking progres berhasil disalin!');
+    };
+
     document.getElementById('d-client').textContent = b.client_name;
     document.getElementById('d-partner').textContent = b.partner_name || '-';
     document.getElementById('d-package').textContent = b.package_name || '-';

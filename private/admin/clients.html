@@ -59,21 +59,10 @@
 
   <!-- Modal Konfirmasi Pelunasan -->
   <div class="modal-overlay" id="modal-pelunasan">
-    <div class="modal" style="max-width:400px">
+    <div class="modal" style="max-width:440px">
       <h2 style="font-size:18px">💰 Konfirmasi Pelunasan</h2>
       <p style="font-size:12px;color:var(--text2);margin:8px 0 16px" id="pelunasan-info"></p>
-      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="pul-amount"></div>
-      <div class="form-group"><label>Tanggal</label><input type="date" id="pul-date"></div>
-      <div class="form-group"><label>Metode</label>
-        <select id="pul-method"><option value="transfer">Transfer</option><option value="cash">Cash</option><option value="ewallet">E-Wallet</option></select>
-      </div>
-      <div class="form-group"><label>Catatan</label><input type="text" id="pul-notes"></div>
-      <input type="hidden" id="pul-booking-id">
-      <input type="hidden" id="pul-remaining">
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal('modal-pelunasan')">Batal</button>
-        <button class="btn btn-primary" onclick="savePelunasan()">Konfirmasi</button>
-      </div>
+      <div id="pelunasan-modal-body"></div>
     </div>
   </div>
 
@@ -187,43 +176,144 @@
       window.location.href = `/admin/booking-detail?id=${id}&from=clients`;
     }
 
-    function openPelunasan(bookingId, name, remaining) {
-      document.getElementById('pul-booking-id').value = bookingId;
-      document.getElementById('pul-remaining').value = remaining;
-      document.getElementById('pul-amount').value = remaining;
-      document.getElementById('pul-date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('pul-notes').value = '';
-      document.getElementById('pelunasan-info').textContent = `${name} — Sisa pelunasan: ${formatIDR(remaining)}`;
+    async function openPelunasan(bookingId, name, remaining) {
+      document.getElementById('pelunasan-info').textContent = `Client: ${name}`;
+      const bodyEl = document.getElementById('pelunasan-modal-body');
+      bodyEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">Memeriksa data pembayaran...</div>';
       openModal('modal-pelunasan');
+
+      try {
+        const bk = await API.get(`/api/bookings/${bookingId}`);
+        const pendingPelunasan = bk.payments ? bk.payments.find(p => p.type === 'pelunasan' && p.status === 'pending_verification') : null;
+
+        if (pendingPelunasan) {
+          // Case A: Client already uploaded receipt
+          const receiptUrl = pendingPelunasan.reference ? `/api/uploads/receipts/${pendingPelunasan.reference}` : null;
+          bodyEl.innerHTML = `
+            <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:12px; padding:16px; margin-bottom:16px;">
+              <h3 style="color:#f59e0b; font-size:14px; margin:0 0 8px 0; text-align:center">📄 Bukti Transfer Pelunasan Diterima!</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px; margin-bottom:12px">
+                <div><span style="color:var(--text2)">Nominal:</span> <strong>${formatIDR(pendingPelunasan.amount)}</strong></div>
+                <div><span style="color:var(--text2)">Metode:</span> <strong>${pendingPelunasan.payment_method || '-'}</strong></div>
+                <div><span style="color:var(--text2)">Tanggal Kirim:</span> <strong>${formatDate(pendingPelunasan.payment_date)}</strong></div>
+                <div><span style="color:var(--text2)">Catatan:</span> <strong>${pendingPelunasan.notes || '-'}</strong></div>
+              </div>
+              ${receiptUrl ? `<div style="text-align:center"><label style="font-size:10px; color:var(--text2); display:block; margin-bottom:4px">KLIk BUKTI UNTUK MEMPERBESAR</label><img src="${receiptUrl}" style="max-height:220px; max-width:100%; border-radius:8px; cursor:pointer; border:1px solid var(--border)" onclick="window.open(this.src)"></div>` : ''}
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" onclick="closeModal('modal-pelunasan')">Batal</button>
+              <button class="btn btn-primary" onclick="window.confirmPelunasanDirect(${bookingId}, ${pendingPelunasan.amount})" style="background:var(--green)">✅ Verifikasi & Konfirmasi</button>
+            </div>
+          `;
+        } else {
+          // Case B: No receipt uploaded, render manual input or WA link share
+          const phone = bk.client ? bk.client.phone : '';
+          let waButton = '';
+          if (phone) {
+            waButton = `<button class="btn btn-secondary" onclick="window.sendPelunasanLink(${bookingId})" style="width:100%; margin-bottom:12px; background:#25d366; color:#fff; border:none; display:flex; align-items:center; justify-content:center; gap:8px">💬 Kirim Link Pelunasan ke WA</button>`;
+          }
+          
+          bodyEl.innerHTML = `
+            ${waButton}
+            <div style="border-top:1px dashed var(--border); margin:12px 0; padding-top:12px">
+              <p style="font-size:12px; font-weight:600; color:var(--text2); margin-bottom:12px; text-align:center">Atau Input Pelunasan Manual:</p>
+              <div class="form-group"><label>Jumlah (Rp)</label><input type="text" id="pul-amount" class="input-rupiah" value="${formatRupiahInput(remaining)}"></div>
+              <div class="form-group"><label>Tanggal</label><input type="date" id="pul-date" value="${new Date().toISOString().split('T')[0]}"></div>
+              <div class="form-group"><label>Metode</label>
+                <select id="pul-method" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px"><option>Transfer Bank</option><option>Tunai</option><option>GoPay</option><option>OVO</option></select>
+              </div>
+              <div class="form-group"><label>Catatan</label><input type="text" id="pul-notes" placeholder="Pelunasan manual"></div>
+              <input type="hidden" id="pul-booking-id" value="${bookingId}">
+              <div class="modal-actions" style="margin-top:16px">
+                <button class="btn btn-secondary" onclick="closeModal('modal-pelunasan')">Batal</button>
+                <button class="btn btn-primary" onclick="window.saveManualPelunasan()">Konfirmasi Manual</button>
+              </div>
+            </div>
+          `;
+        }
+      } catch (e) {
+        bodyEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red)">Gagal mengambil data booking</div>';
+      }
     }
 
-    async function savePelunasan() {
-      const id = document.getElementById('pul-booking-id').value;
-      await API.post(`/api/bookings/${id}/payments`, {
-        type: 'pelunasan',
-        amount: parseInt(document.getElementById('pul-amount').value),
-        payment_date: document.getElementById('pul-date').value,
-        payment_method: document.getElementById('pul-method').value,
-        notes: document.getElementById('pul-notes').value || 'Pelunasan',
-      });
-      closeModal('modal-pelunasan');
-
-      // Auto-open WA with tracking link for client
+    window.confirmPelunasanDirect = async function(bookingId, amount) {
+      if (!confirm('Verifikasi dan konfirmasi pembayaran pelunasan ini?')) return;
       try {
-        const bk = await API.get(`/api/bookings/${id}`);
-        if (bk && bk.client_phone) {
-          const phone = bk.client_phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+        await API.post(`/api/bookings/${bookingId}/confirm-pelunasan`);
+        closeModal('modal-pelunasan');
+        alert('Pelunasan berhasil diverifikasi!');
+        
+        // Auto-send WA confirmation to client
+        await window.sendWaConfirmation(bookingId, amount);
+        window.loadClients();
+      } catch (e) {
+        alert('Gagal mengonfirmasi pelunasan: ' + e.message);
+      }
+    };
+
+    window.saveManualPelunasan = async function() {
+      const id = document.getElementById('pul-booking-id').value;
+      const amount = parseRupiah(document.getElementById('pul-amount').value);
+      const date = document.getElementById('pul-date').value;
+      const method = document.getElementById('pul-method').value;
+      const notes = document.getElementById('pul-notes').value || 'Pelunasan manual';
+
+      if (!amount || !date) return alert('Jumlah dan tanggal wajib diisi');
+
+      try {
+        await API.post(`/api/bookings/${id}/payments`, {
+          type: 'pelunasan',
+          amount,
+          payment_date: date,
+          payment_method: method,
+          notes
+        });
+        
+        // Also call confirm-pelunasan endpoint to verify it instantly
+        await API.post(`/api/bookings/${id}/confirm-pelunasan`);
+        
+        closeModal('modal-pelunasan');
+        alert('Pelunasan manual berhasil disimpan!');
+        
+        // Auto-send WA confirmation to client
+        await window.sendWaConfirmation(id, amount);
+        window.loadClients();
+      } catch (e) {
+        alert('Gagal menyimpan pelunasan manual: ' + e.message);
+      }
+    };
+
+    window.sendPelunasanLink = async function(bookingId) {
+      try {
+        const res = await API.post(`/api/bookings/${bookingId}/generate-pelunasan-token`);
+        const bk = await API.get(`/api/bookings/${bookingId}`);
+        const pelunasanUrl = `${window.location.origin}/pelunasan/${res.pelunasan_token}`;
+        const remaining = bk.package_price - (bk.dp_amount || Math.round(bk.package_price * 0.3));
+        const phone = bk.client ? bk.client.phone : '';
+        if (!phone) return alert('No handphone client tidak ada');
+
+        const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+        const msg = `Halo ${bk.client_name}! 👋\n\nDP Anda untuk acara *${formatDate(bk.event_date)}* telah terverifikasi ✅\n\nSilakan lunasi sisa pembayaran sebesar *${formatIDR(remaining)}* melalui link secure upload berikut:\n${pelunasanUrl}\n\nUpload bukti transfer langsung melalui link di atas agar terverifikasi otomatis. Terima kasih! 🙏📸`;
+        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+      } catch (e) {
+        alert('Gagal membuat link pelunasan: ' + e.message);
+      }
+    };
+
+    window.sendWaConfirmation = async function(bookingId, amount) {
+      try {
+        const bk = await API.get(`/api/bookings/${bookingId}`);
+        if (bk && bk.client && bk.client.phone) {
+          const phone = bk.client.phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
           const year = new Date(bk.event_date || Date.now()).getFullYear();
-          const bookingCode = `SH-${year}-${String(id).padStart(4,'0')}`;
-          const trackUrl = `${window.location.protocol}//${window.location.host}/track?code=${bookingCode}`;
+          const bookingCode = `SH-${year}-${String(bookingId).padStart(4,'0')}`;
+          const trackUrl = `${window.location.origin}/track.html?code=${bookingCode}`;
           const clientName = bk.client_name || 'Kak';
-          const msg = `Halo ${clientName}! 👋\n\nPembayaran pelunasan Anda telah *DIKONFIRMASI* ✅\n\nTim kami segera memulai proses pengeditan foto & video Anda.\n\n🔖 Kode Booking: *${bookingCode}*\n🔍 Pantau progress pekerjaan di:\n${trackUrl}\n\nTerima kasih atas kepercayaan Anda! 🙏📸`;
+          const msg = `Halo ${clientName}! 👋\n\nPembayaran pelunasan Anda sebesar *${formatIDR(amount)}* telah *DIKONFIRMASI* ✅\n\nTim kami segera memulai proses pengeditan foto & video Anda.\n\n🔖 Kode Booking: *${bookingCode}*\n🔍 Pantau progress pekerjaan di:\n${trackUrl}\n\nTerima kasih atas kepercayaan Anda! 🙏📸`;
           window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
         }
-      } catch(e) { /* silent fail - don't block reload */ }
-
-      window.loadClients();
-    }
+      } catch(e) {}
+    };
   </script>
 </body>
 </html>
