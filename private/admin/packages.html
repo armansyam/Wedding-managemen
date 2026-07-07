@@ -144,17 +144,19 @@
     function renderSessionCheckboxes(selected) {
     const sel = new Set(selected);
     document.getElementById('pkg-sessions').innerHTML = allSessions.map(s =>
-    `<label><input type="checkbox" class="pkg-session" value="${s.id}" ${sel.has(s.id) ? 'checked' : ''} onchange="window.updateEstimate()"> 🎭 ${s.name}</label>`
+    `<label><input type="checkbox" class="pkg-session" value="${s.id}" ${sel.has(s.id) ? 'checked' : ''} onchange="window.updateEstimate()" style="width:auto"> 🎭 ${s.name}</label>`
     ).join('');
     }
     function renderProductCheckboxes(selected) {
     const sel = {};
     for (const p of selected) sel[p.product_id || p.id] = p.quantity || 1;
     document.getElementById('pkg-products-area').innerHTML = allProducts.map(p =>
-    `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0">
-    <input type="checkbox" class="pkg-product" value="${p.id}" ${sel[p.id] ? 'checked' : ''} onchange="window.updateEstimate()">
-    ${p.category === 'fisik' ? '📦' : '💻'} ${p.name} (${formatIDR(p.unit_cost)}/${p.unit})
-    <input type="number" class="pkg-product-qty" data-id="${p.id}" value="${sel[p.id] || 1}" min="1" style="width:50px;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px" onchange="window.updateEstimate()">
+    `<label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;background:var(--surface)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" class="pkg-product" value="${p.id}" ${sel[p.id] ? 'checked' : ''} onchange="window.updateEstimate()" style="width:auto">
+        <span>${p.category === 'fisik' ? '📦' : '💻'} ${p.name} <span style="color:var(--text2);font-size:11px">(${formatIDR(p.unit_cost)}/${p.unit})</span></span>
+      </div>
+      <input type="number" class="pkg-product-qty" data-id="${p.id}" value="${sel[p.id] || 1}" min="1" style="width:54px;padding:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;text-align:center" onchange="window.updateEstimate()" onclick="event.stopPropagation()">
     </label>`
     ).join('');
     }
