@@ -1,6 +1,6 @@
 {
   "name": "wedding-management",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Sorehari Wedding Vendor Management",
   "main": "server.js",
   "scripts": {
