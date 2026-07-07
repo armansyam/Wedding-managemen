@@ -411,14 +411,16 @@
     async function loadMinKas() {
       try {
         const data = await API.get('/api/settings');
-        const minKasSetting = data.find ? data.find(s => s.key === 'min_kas_operasional') : null;
-        if (minKasSetting) document.getElementById('min-kas-input').value = minKasSetting.value;
-      } catch {}
+        const minKasVal = data.min_kas_operasional || '0';
+        document.getElementById('min-kas-input').value = minKasVal;
+      } catch (e) {
+        console.error('Gagal memuat setting min kas:', e);
+      }
     }
 
     async function saveMinKas() {
       const val = parseInt(document.getElementById('min-kas-input').value) || 0;
-      await API.post('/api/settings', { key: 'min_kas_operasional', value: String(val) });
+      await API.put('/api/settings', { min_kas_operasional: String(val) });
       await loadKas();
       alert('Minimum kas operasional tersimpan: ' + formatIDR(val));
     }
