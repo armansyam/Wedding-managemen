@@ -77,7 +77,7 @@
       <!-- Info + Finance -->
       <div class="detail-header" style="align-items: stretch;">
         <div class="info" style="display:flex; flex-direction:column; gap:16px; justify-content:space-between">
-          <div class="table-wrap" style="padding:16px; margin-bottom:0; height:100%; display:flex; flex-direction:column; justify-content:space-between">
+          <div class="table-wrap" style="padding:16px; margin-bottom:0; flex:1; display:flex; flex-direction:column; justify-content:space-between">
             <div>
               <h3 style="font-size:14px;margin:0 0 12px 0">Informasi Booking</h3>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
@@ -93,9 +93,9 @@
           </div>
           
           <!-- Compact Work Progress Roadmap -->
-          <div id="work-roadmap-section" class="table-wrap" style="padding:16px; margin-bottom:0; display:none">
+          <div id="work-roadmap-section" class="table-wrap" style="padding:16px 16px 20px; margin-bottom:0; display:none">
             <h3 style="font-size:14px;margin:0 0 12px 0">🗺️ Progres Pekerjaan</h3>
-            <div id="work-roadmap" style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0 8px;scrollbar-width:thin"></div>
+            <div id="work-roadmap" style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin"></div>
           </div>
         </div>
         <div class="finance">
@@ -305,7 +305,7 @@
 
         html += `
           <div style="display:flex;align-items:center;flex-shrink:0">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;position:relative">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;width:58px">
               <button
                 onclick="${canClick ? `window.advanceToStage('${stage.key}',${b.booking_id})` : ''}"
                 title="${tooltip}"
@@ -318,11 +318,12 @@
                 "
                 ${canClick ? 'onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'"' : ''}
               >${isDone ? '✓' : stage.icon}</button>
-              <span style="font-size:9px;font-weight:600;color:${isCurrent ? 'var(--accent)' : isDone ? 'var(--green)' : 'var(--text2)'};text-align:center;white-space:nowrap;max-width:52px;line-height:1.2">
-                ${stage.label}${isCurrent ? '\n<span style="font-size:8px;background:var(--accent);color:#fff;border-radius:4px;padding:0 3px">AKTIF</span>' : ''}
+              <span style="font-size:9px;font-weight:700;color:${isCurrent ? 'var(--accent)' : isDone ? 'var(--green)' : 'var(--text2)'};text-align:center;line-height:1.2;display:flex;flex-direction:column;align-items:center;min-height:26px">
+                <span>${stage.label}</span>
+                ${isCurrent ? `<span style="font-size:7px;background:var(--accent);color:#fff;border-radius:4px;padding:0px 4px;margin-top:2px;font-weight:800;letter-spacing:0.05em">AKTIF</span>` : ''}
               </span>
             </div>
-            ${i < WORK_STAGES.length - 1 ? `<div style="width:28px;height:2px;background:${i < currentIdx ? 'var(--green)' : 'var(--border)'};flex-shrink:0;margin-bottom:14px"></div>` : ''}
+            ${i < WORK_STAGES.length - 1 ? `<div style="width:24px;height:2px;background:${i < currentIdx ? 'var(--green)' : 'var(--border)'};flex-shrink:0;margin-bottom:26px"></div>` : ''}
           </div>`;
       });
 
