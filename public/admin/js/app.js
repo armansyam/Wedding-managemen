@@ -94,6 +94,23 @@ function formatIDR(amount) {
   return 'Rp ' + Number(amount).toLocaleString('id-ID');
 }
 
+function parseRupiah(val) {
+  if (!val) return 0;
+  return parseInt(String(val).replace(/\./g, '')) || 0;
+}
+
+function formatRupiahInput(val) {
+  if (val === undefined || val === null) return '';
+  return String(val).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// Global auto-formatter for Rupiah inputs
+document.addEventListener('input', (e) => {
+  if (e.target && (e.target.classList.contains('input-rupiah') || e.target.dataset.type === 'rupiah')) {
+    e.target.value = formatRupiahInput(e.target.value);
+  }
+});
+
 function formatDate(dateStr) {
   if (!dateStr) return '-';
   const date = new Date(dateStr);

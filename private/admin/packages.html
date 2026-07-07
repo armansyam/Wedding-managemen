@@ -46,7 +46,7 @@
       <input type="hidden" id="pkg-id">
       <div class="form-row">
         <div class="form-group"><label>Nama Paket *</label><input type="text" id="pkg-name" placeholder="Silver, Gold, Platinum..."></div>
-        <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="pkg-price" oninput="window.updateEstimate()"></div>
+        <div class="form-group"><label>Harga Jual (Rp)</label><input type="text" id="pkg-price" class="input-rupiah" oninput="window.updateEstimate()"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Deskripsi</label><textarea id="pkg-desc" rows="2" placeholder="Apa saja yang didapat..."></textarea></div>
@@ -129,7 +129,7 @@
     document.getElementById('modal-pkg-title').textContent = 'Tambah Paket';
     document.getElementById('pkg-id').value = '';
     document.getElementById('pkg-name').value = '';
-    document.getElementById('pkg-price').value = '0';
+    document.getElementById('pkg-price').value = formatRupiahInput('0');
     document.getElementById('pkg-desc').value = '';
     document.getElementById('pkg-crew').value = '2';
     renderSessionCheckboxes([]);
@@ -142,7 +142,7 @@
     document.getElementById('modal-pkg-title').textContent = 'Edit Paket';
     document.getElementById('pkg-id').value = pkg.id;
     document.getElementById('pkg-name').value = pkg.name;
-    document.getElementById('pkg-price').value = pkg.price;
+    document.getElementById('pkg-price').value = formatRupiahInput(pkg.price);
     document.getElementById('pkg-desc').value = pkg.description || '';
     document.getElementById('pkg-crew').value = pkg.estimated_crew || 2;
     renderSessionCheckboxes(pkg.sessions);
@@ -199,7 +199,7 @@
     <span>${avgFee ? formatIDR(subtotal) : '—'}</span></div>`);
     }
 
-    const price = parseInt(document.getElementById('pkg-price').value) || 0;
+    const price = parseRupiah(document.getElementById('pkg-price').value);
     const totalModal = modalProduk + modalJasa;
     const margin = price - totalModal;
 
@@ -230,7 +230,7 @@
     const data = {
     name: document.getElementById('pkg-name').value,
     description: document.getElementById('pkg-desc').value,
-    price: parseInt(document.getElementById('pkg-price').value) || 0,
+    price: parseRupiah(document.getElementById('pkg-price').value),
     session_ids,
     product_ids,
     estimated_crew,

@@ -36,7 +36,7 @@
       <div class="form-group"><label>Kategori *</label>
         <select id="f-cat"><option value="fisik">📦 Fisik</option><option value="digital">💻 Digital</option></select>
       </div>
-      <div class="form-group"><label>Harga per Unit (Rp)</label><input type="number" id="f-cost" value="0"></div>
+      <div class="form-group"><label>Harga per Unit (Rp)</label><input type="text" id="f-cost" class="input-rupiah" value="0"></div>
       <div class="form-group"><label>Satuan</label><input type="text" id="f-unit" placeholder="pcs, lembar, hari, sesi"></div>
       <div class="form-group"><label>Deskripsi</label><input type="text" id="f-desc"></div>
       <div class="modal-actions">
@@ -54,7 +54,7 @@
       <div class="form-group"><label>Kategori</label>
         <select id="e-cat"><option value="fisik">📦 Fisik</option><option value="digital">💻 Digital</option></select>
       </div>
-      <div class="form-group"><label>Harga/Unit</label><input type="number" id="e-cost"></div>
+      <div class="form-group"><label>Harga/Unit</label><input type="text" id="e-cost" class="input-rupiah"></div>
       <div class="form-group"><label>Satuan</label><input type="text" id="e-unit"></div>
       <div class="form-group"><label>Deskripsi</label><input type="text" id="e-desc"></div>
       <div class="modal-actions">
@@ -91,7 +91,7 @@
     : '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:30px">Belum ada produk</td></tr>';
     }
     async function save() {
-    const data = { name: document.getElementById('f-name').value, category: document.getElementById('f-cat').value, unit_cost: parseInt(document.getElementById('f-cost').value)||0, unit: document.getElementById('f-unit').value, description: document.getElementById('f-desc').value };
+    const data = { name: document.getElementById('f-name').value, category: document.getElementById('f-cat').value, unit_cost: parseRupiah(document.getElementById('f-cost').value), unit: document.getElementById('f-unit').value, description: document.getElementById('f-desc').value };
     if (!data.name) return alert('Nama wajib diisi');
     await API.post('/api/products', data);
     closeModal('modal-add'); load();
@@ -100,7 +100,7 @@
     document.getElementById('e-id').value = id;
     document.getElementById('e-name').value = name;
     document.getElementById('e-cat').value = cat;
-    document.getElementById('e-cost').value = cost;
+    document.getElementById('e-cost').value = formatRupiahInput(cost);
     document.getElementById('e-unit').value = unit;
     document.getElementById('e-desc').value = desc;
     openModal('modal-edit');
@@ -108,7 +108,7 @@
     async function update() {
     await API.put(`/api/products/${document.getElementById('e-id').value}`, {
     name: document.getElementById('e-name').value, category: document.getElementById('e-cat').value,
-    unit_cost: parseInt(document.getElementById('e-cost').value)||0, unit: document.getElementById('e-unit').value,
+    unit_cost: parseRupiah(document.getElementById('e-cost').value), unit: document.getElementById('e-unit').value,
     description: document.getElementById('e-desc').value,
     });
     closeModal('modal-edit'); load();

@@ -150,7 +150,7 @@
     <!-- MIN KAS SETTING -->
     <div class="min-kas-bar">
       ⚠️ <strong>Minimum Kas Operasional:</strong>
-      <input type="text" id="min-kas-input" placeholder="Rp 0" oninput="this.value = this.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
+      <input type="text" id="min-kas-input" class="input-rupiah" placeholder="Rp 0">
       <button class="btn btn-sm btn-secondary" onclick="saveMinKas()">Simpan</button>
       <span style="color:var(--text2);font-size:11px">Dana minimal yang harus selalu tersedia. Dividen tidak boleh menarik hingga di bawah batas ini.</span>
     </div>
@@ -273,7 +273,7 @@
 
       <div class="form-group">
         <label>Nominal (Rp) *</label>
-        <input type="text" id="div-amount" placeholder="500.000" oninput="this.value = this.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); validateDividenInput()">
+        <input type="text" id="div-amount" class="input-rupiah" placeholder="500.000" oninput="validateDividenInput()">
         <div id="div-amount-error" style="font-size:11px;color:var(--red);margin-top:4px;display:none"></div>
       </div>
       <div class="form-group"><label>Tanggal *</label><input type="date" id="div-date"></div>
@@ -412,15 +412,14 @@
       try {
         const data = await API.get('/api/settings');
         const minKasVal = data.min_kas_operasional || '0';
-        document.getElementById('min-kas-input').value = minKasVal.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        document.getElementById('min-kas-input').value = formatRupiahInput(minKasVal);
       } catch (e) {
         console.error('Gagal memuat setting min kas:', e);
       }
     }
 
     async function saveMinKas() {
-      const rawVal = document.getElementById('min-kas-input').value.replace(/\./g, '');
-      const val = parseInt(rawVal) || 0;
+      const val = parseRupiah(document.getElementById('min-kas-input').value);
       await API.put('/api/settings', { min_kas_operasional: String(val) });
       await loadKas();
       alert('Minimum kas operasional tersimpan: ' + formatIDR(val));
@@ -657,8 +656,7 @@
 
     // ── DIVIDEN ACTIONS ──────────────────────────────────────────
     function validateDividenInput() {
-      const rawVal = document.getElementById('div-amount').value.replace(/\./g, '');
-      const amount = parseInt(rawVal) || 0;
+      const amount = parseRupiah(document.getElementById('div-amount').value);
       const maxDiv = kasData.maxDividen || 0;
       const errEl = document.getElementById('div-amount-error');
       const btn = document.getElementById('btn-tarik-dividen');
@@ -676,8 +674,7 @@
     }
 
     async function tarikDividen() {
-      const rawVal = document.getElementById('div-amount').value.replace(/\./g, '');
-      const amount = parseInt(rawVal) || 0;
+      const amount = parseRupiah(document.getElementById('div-amount').value);
       const date = document.getElementById('div-date').value;
       const desc = document.getElementById('div-desc').value;
       const method = document.getElementById('div-method').value;

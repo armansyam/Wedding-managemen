@@ -71,7 +71,7 @@
         <div id="f-bank-container" style="display:flex; flex-direction:column; margin-bottom:4px;"></div>
         <button type="button" class="btn btn-sm btn-secondary" onclick="window.addBankRow('f-bank-container')" style="font-size:11px; padding:6px 12px; border:1px dashed var(--border); border-radius:8px; background:none; color:var(--text2); display:inline-block; width:fit-content; cursor:pointer;">➕ Tambah Rekening / E-Wallet</button>
       </div>
-      <div class="form-group"><label>Fee Default (Rp)</label><input type="number" id="f-rate" value="0"></div>
+      <div class="form-group"><label>Fee Default (Rp)</label><input type="text" id="f-rate" class="input-rupiah" value="0"></div>
       <div class="form-group"><label>Catatan</label><textarea id="f-notes" rows="2"></textarea></div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('modal-add')">Batal</button>
@@ -98,7 +98,7 @@
         <div id="e-bank-container" style="display:flex; flex-direction:column; margin-bottom:4px;"></div>
         <button type="button" class="btn btn-sm btn-secondary" onclick="window.addBankRow('e-bank-container')" style="font-size:11px; padding:6px 12px; border:1px dashed var(--border); border-radius:8px; background:none; color:var(--text2); display:inline-block; width:fit-content; cursor:pointer;">➕ Tambah Rekening / E-Wallet</button>
       </div>
-      <div class="form-group"><label>Fee Default (Rp)</label><input type="number" id="e-rate"></div>
+      <div class="form-group"><label>Fee Default (Rp)</label><input type="text" id="e-rate" class="input-rupiah"></div>
       <div class="form-group"><label>Catatan</label><textarea id="e-notes" rows="2"></textarea></div>
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
         <h3 style="font-size:14px;margin-bottom:4px">🎭 Fee Per Sesi</h3>
@@ -332,7 +332,7 @@
         skill: document.getElementById('f-skill').value,
         phone: document.getElementById('f-phone').value,
         bank_account: bankJson,
-        rate_default: parseInt(document.getElementById('f-rate').value) || 0,
+        rate_default: parseRupiah(document.getElementById('f-rate').value),
         notes: document.getElementById('f-notes').value,
       };
       if (!data.name) return alert('Nama wajib diisi');
@@ -347,7 +347,7 @@
       document.getElementById('e-name').value = f.name;
       document.getElementById('e-skill').value = f.skill || 'Photographer';
       document.getElementById('e-phone').value = f.phone || '';
-      document.getElementById('e-rate').value = f.rate_default || 0;
+      document.getElementById('e-rate').value = formatRupiahInput(f.rate_default);
       document.getElementById('e-notes').value = f.notes || '';
 
       // Populate dynamic bank accounts
@@ -377,7 +377,7 @@
       ? allSessions.map(s =>
       `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="flex:1;font-size:13px">${s.name}</span>
-      <input type="number" class="fee-sesi" data-sid="${s.id}" value="${feeMap[s.id] || ''}" placeholder="Rp 0" style="width:140px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+      <input type="text" class="fee-sesi input-rupiah" data-sid="${s.id}" value="${feeMap[s.id] ? formatRupiahInput(feeMap[s.id]) : ''}" placeholder="Rp 0" style="width:140px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
       </div>`
       ).join('')
       : '<p style="color:var(--text2);font-size:12px">Belum ada sesi. Buat di Master Sesi dulu.</p>';
@@ -406,13 +406,13 @@
         skill: document.getElementById('e-skill').value,
         phone: document.getElementById('e-phone').value,
         bank_account: bankJson,
-        rate_default: parseInt(document.getElementById('e-rate').value) || 0,
+        rate_default: parseRupiah(document.getElementById('e-rate').value),
         notes: document.getElementById('e-notes').value,
       });
 
       const fees = [...document.querySelectorAll('.fee-sesi')].map(el => ({
         session_id: parseInt(el.dataset.sid),
-        fee_amount: parseInt(el.value) || 0,
+        fee_amount: parseRupiah(el.value),
       })).filter(f => f.fee_amount > 0);
 
       await API.post(`/api/freelancers/${id}/fees`, { fees });
