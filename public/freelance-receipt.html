@@ -167,7 +167,16 @@
         document.getElementById('receipt-token').textContent = `TOKEN: ${data.payment.payment_token.slice(0,8).toUpperCase()}...`;
         document.getElementById('freelancer-name').textContent = data.payment.name;
         document.getElementById('freelancer-skill').textContent = data.payment.skill || 'Freelancer';
-        document.getElementById('freelancer-bank').textContent = data.payment.bank_account || 'Cash / Tunai';
+        let bankText = data.payment.bank_account || 'Cash / Tunai';
+        try {
+          const bankObj = JSON.parse(bankText);
+          if (Array.isArray(bankObj) && bankObj.length > 0) {
+            bankText = bankObj.map(b => `${b.provider} — ${b.number} a/n ${b.holder}`).join(', ');
+          } else if (bankObj && bankObj.provider) {
+            bankText = `${bankObj.provider} — ${bankObj.number} a/n ${bankObj.holder}`;
+          }
+        } catch (e) {}
+        document.getElementById('freelancer-bank').textContent = bankText;
         document.getElementById('payment-method').textContent = data.payment.method === 'job_payment' ? 'Transfer Bank' : (data.payment.method || 'Transfer Bank');
         document.getElementById('total-amount').textContent = formatIDR(data.payment.amount);
         document.getElementById('payment-date').textContent = `Tanggal Rilis: ${formatDate(data.payment.payment_date)}`;
