@@ -183,6 +183,30 @@
             const token = window.location.pathname.split('/').pop();
             let selectedPkg = null;
             (async () => {
+                // Fetch dynamic settings first
+                let settings = { vendor_name: 'Wedding-Management' };
+                try {
+                    const settingsRes = await fetch('/api/settings');
+                    settings = await settingsRes.json();
+                    if (settings.vendor_name) {
+                        document.title = `Booking — ${settings.vendor_name}`;
+                        const headerH1 = document.querySelector('header h1');
+                        if (headerH1) headerH1.textContent = settings.vendor_name;
+
+                        const bankText = document.querySelector('p[style*="Bank BCA"]');
+                        if (bankText) {
+                            bankText.textContent = `Bank BCA · 3420-1111-99 · a.n. ${settings.vendor_name}`;
+                        }
+
+                        const footerText = document.querySelector('footer');
+                        if (footerText) {
+                            footerText.textContent = `© 2026 ${settings.vendor_name}. All rights reserved.`;
+                        }
+                    }
+                } catch(e) {
+                    console.error('Failed to load branding in booking.html:', e);
+                }
+
                 try {
                     const bRes = await fetch(`/api/bookings/public/${token}`);
 

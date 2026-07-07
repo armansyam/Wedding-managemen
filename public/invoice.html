@@ -136,6 +136,26 @@
     const invType = new URLSearchParams(window.location.search).get('type') || 'dp';
 
     (async () => {
+      // Dynamic branding fetch
+      let settings = { vendor_name: 'Wedding-Management', vendor_website: 'wedding-management.com' };
+      try {
+        const settingsRes = await fetch('/api/settings');
+        settings = await settingsRes.json();
+        if (settings.vendor_name) {
+          document.title = `Invoice — ${settings.vendor_name}`;
+          const headH1 = document.querySelector('.inv-header h1');
+          if (headH1) headH1.textContent = settings.vendor_name;
+          
+          const footerP = document.querySelector('.inv-footer p');
+          if (footerP) footerP.textContent = `Terima kasih telah memilih *${settings.vendor_name}* ✨`;
+          
+          const footerWeb = document.querySelector('.inv-footer p[style]');
+          if (footerWeb && settings.vendor_website) footerWeb.textContent = settings.vendor_website;
+        }
+      } catch (err) {
+        console.error('Failed to load branding settings in invoice.html:', err);
+      }
+
       if (!bookingId) return;
       const b = await (await fetch(`/api/bookings/invoice/${bookingId}?type=${invType}`)).json();
       if (b.error) { document.getElementById('invoice').innerHTML = '<p style="padding:40px;text-align:center">Invoice tidak ditemukan</p>'; return; }
@@ -209,12 +229,13 @@
       } else {
         document.getElementById('i-bank').textContent = b.bank_name || 'BCA';
         document.getElementById('i-rek').textContent = b.bank_account || '3420-1111-99';
-        document.getElementById('i-an').textContent = b.bank_holder || 'Sorehari Photography';
+        document.getElementById('i-an').textContent = b.bank_holder || settings.vendor_name || 'Wedding-Management';
       }
 
       // WA button
       document.getElementById('btn-wa').onclick = () => {
-        const msg = `Halo ${b.client_name} 👋\n\nInvoice ${invType === 'dp' ? 'DP' : 'Pelunasan'} dari Sorehari Photography:\n📋 ${b.invoice_number}\n💰 ${invType === 'dp' ? formatIDR(b.dp_amount) : formatIDR(b.remaining_payment)}\n\nSilakan buka link invoice:\n${window.location.href}\n\nTerima kasih! 🙏`;
+        const vName = settings.vendor_name || 'Wedding-Management';
+        const msg = `Halo ${b.client_name} 👋\n\nInvoice ${invType === 'dp' ? 'DP' : 'Pelunasan'} dari ${vName}:\n📋 ${b.invoice_number}\n💰 ${invType === 'dp' ? formatIDR(b.dp_amount) : formatIDR(b.remaining_payment)}\n\nSilakan buka link invoice:\n${window.location.href}\n\nTerima kasih! 🙏`;
         window.open(`https://wa.me/${(b.phone||'').replace(/^0/,'62').replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
       };
     })();

@@ -1,7 +1,7 @@
 {
   "name": "wedding-management",
   "version": "3.0.0",
-  "description": "Sorehari Wedding Vendor Management",
+  "description": "Wedding-Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

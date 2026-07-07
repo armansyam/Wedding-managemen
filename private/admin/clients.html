@@ -554,7 +554,7 @@
 
 Halo ${f.name},
 
-Sorehari akan membayarkan fee untuk job berikut:
+Pihak manajemen akan membayarkan fee untuk job berikut:
 
 ${jobsText}
 
@@ -949,12 +949,18 @@ Terima kasih atas kerjasamanya! 🙏`;
         const res = await API.post(`/api/bookings/${bookingId}/generate-pelunasan-token`);
         const bk = await API.get(`/api/bookings/${bookingId}`);
         const pelunasanUrl = `${window.location.origin}/pelunasan/${res.pelunasan_token}`;
-        const remaining = bk.package_price - (bk.dp_amount || Math.round(bk.package_price * 0.3));
+        const remaining = bk.package_price - (bk.total_paid || 0);
         const phone = bk.client ? bk.client.phone : '';
         if (!phone) return alert('No handphone client tidak ada');
-
         const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
-        const msg = `Halo Kak ${bk.client_name} ✨\n\nSemoga Kakak & pasangan selalu sehat dan dilancarkan segala persiapannya menjelang hari bahagia ya Kak. 😊\n\nMengingat tanggal pernikahan Kakak semakin dekat pada *${formatDate(bk.event_date)}*, kami dari tim Sorehari Photography ingin menginfokan terkait kelengkapan administrasi sisa pembayaran (pelunasan).\n\nRincian sisa pelunasan Kakak:\n💵 Sisa Pembayaran: *${formatIDR(remaining)}*\n\nKakak dapat melakukan pelunasan dan mengunggah bukti transfer secara aman melalui tautan resmi di bawah ini:\n🔗 ${pelunasanUrl}\n\nJika ada hal yang ingin dikoordinasikan atau ditanyakan terkait detail acara, silakan kabari kami ya Kak. Kami tidak sabar mengabadikan momen spesial Kakak nanti!\n\nTerima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, Sorehari Team. 📸`;
+        const defaultPelunasanMsg = `Halo Kak {{client_name}} ✨\n\nSemoga Kakak & pasangan selalu sehat dan dilancarkan segala persiapannya menjelang hari bahagia ya Kak. 😊\n\nMengingat tanggal pernikahan Kakak semakin dekat pada *{{event_date}}*, kami dari tim {{vendor_name}} ingin menginfokan terkait kelengkapan administrasi sisa pembayaran (pelunasan).\n\nRincian sisa pelunasan Kakak:\n💵 Sisa Pembayaran: *{{remaining}}*\n\nKakak dapat melakukan pelunasan dan mengunggah bukti transfer secara aman melalui tautan resmi di bawah ini:\n🔗 {{pelunasan_url}}\n\nJika ada hal yang ingin dikoordinasikan atau ditanyakan terkait detail acara, silakan kabari kami ya Kak. Kami tidak sabar mengabadikan momen spesial Kakak nanti!\n\nTerima kasih banyak atas kepercayaan Kakak bersama kami. 🙏 Warm regards, Admin Team. 📸`;
+        const msg = renderTemplate(templates.wa_pelunasan || defaultPelunasanMsg, {
+          client_name: bk.client_name,
+          event_date: formatDate(bk.event_date),
+          vendor_name: templates.vendor_name || 'Wedding-Management',
+          remaining: formatIDR(remaining),
+          pelunasan_url: pelunasanUrl
+        });
         window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
       } catch (e) {
         alert('Gagal membuat link pelunasan: ' + e.message);

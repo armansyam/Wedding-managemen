@@ -1,4 +1,4 @@
--- Sorehari Wedding Management Database Schema
+-- Wedding-Management Database Schema
 -- SQLite
 
 -- 1. Settings Table

@@ -515,6 +515,45 @@
     completed:   { icon: '🎉', text: 'Pekerjaan telah selesai dengan sempurna! Terima kasih sudah mempercayakan momen spesial Anda kepada Sorehari Photography. Semoga hasilnya memuaskan!' },
   };
 
+  (async () => {
+    try {
+      const res = await fetch('/api/settings');
+      const settings = await res.json();
+      if (settings.vendor_name) {
+        document.title = `Status Pekerjaan — ${settings.vendor_name}`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', `Pantau status pekerjaan foto & video Anda bersama ${settings.vendor_name} menggunakan kode booking.`);
+        
+        const logoText = document.querySelector('.logo-text');
+        if (logoText) logoText.textContent = settings.vendor_name;
+        
+        const footerLink = document.querySelector('footer p a');
+        if (footerLink) {
+          footerLink.textContent = settings.vendor_name;
+        }
+        
+        const tagline = settings.vendor_tagline || 'Photography & Videography';
+        const logoSub = document.querySelector('.logo-sub');
+        if (logoSub) logoSub.textContent = tagline;
+
+        // Replace Sorehari in status messages dynamically
+        Object.keys(STATUS_MESSAGES).forEach(key => {
+          STATUS_MESSAGES[key].text = STATUS_MESSAGES[key].text.replace(/Sorehari Photography/g, settings.vendor_name);
+          STATUS_MESSAGES[key].text = STATUS_MESSAGES[key].text.replace(/Sorehari/g, settings.vendor_name);
+          STATUS_MESSAGES[key].text = STATUS_MESSAGES[key].text.replace(/Tim Sorehari/g, 'Tim ' + settings.vendor_name);
+        });
+
+        // WhatsApp number
+        if (settings.vendor_phone) {
+          const waNum = settings.vendor_phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+          document.getElementById('wa-link').href = `https://wa.me/${waNum}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20status%20pekerjaan%20saya.`;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load dynamic branding settings in track.html:', e);
+    }
+  })();
+
   function formatDate(d) {
     if (!d) return '-';
     return new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });

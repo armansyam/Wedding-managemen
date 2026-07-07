@@ -22,15 +22,15 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'sorehari-secret-change-in-production')) {
+if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'wedding-secret-change-in-production')) {
   console.warn('\x1b[33m%s\x1b[0m', 'WARNING: SESSION_SECRET is using default fallback or not set in production. Please set it in .env!');
 }
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'sorehari-secret-change-in-production',
+  secret: process.env.SESSION_SECRET || 'wedding-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
-  name: 'sorehari.sid',
+  name: 'wedding.sid',
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
@@ -176,9 +176,8 @@ app.get('/api/receipt/freelance/:token', (req, res) => {
     WHERE bsc.payment_token = ?
   `).all(token);
 
-  // Get vendor details
-  const vendorName = db.prepare("SELECT value FROM settings WHERE key = 'vendor_name'").get()?.value || 'Sorehari Photography';
-  const vendorEmail = db.prepare("SELECT value FROM settings WHERE key = 'vendor_email'").get()?.value || 'hello@sorehari.com';
+  const vendorName = db.prepare("SELECT value FROM settings WHERE key = 'vendor_name'").get()?.value || 'Wedding-Management';
+  const vendorEmail = db.prepare("SELECT value FROM settings WHERE key = 'vendor_email'").get()?.value || 'hello@wedding-management.com';
   const vendorPhone = db.prepare("SELECT value FROM settings WHERE key = 'vendor_phone'").get()?.value || '';
 
   res.json({

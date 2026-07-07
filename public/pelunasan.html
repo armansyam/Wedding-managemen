@@ -121,6 +121,23 @@
     let fileBase64 = null;
 
     (async () => {
+      // Fetch settings for dynamic branding
+      try {
+        const settingsRes = await fetch('/api/settings');
+        const settings = await settingsRes.json();
+        if (settings.vendor_name) {
+          document.title = `Pelunasan — ${settings.vendor_name}`;
+          const headH1 = document.querySelector('.header h1');
+          if (headH1) headH1.textContent = settings.vendor_name;
+          const footerEl = document.querySelector('.footer');
+          if (footerEl) footerEl.textContent = `© 2026 ${settings.vendor_name}`;
+          const headP = document.querySelector('.header p');
+          if (headP && settings.vendor_tagline) headP.textContent = settings.vendor_tagline;
+        }
+      } catch(err) {
+        console.error('Failed to load branding settings:', err);
+      }
+
       try {
         const res = await fetch(`/api/bookings/pelunasan/${token}`);
         const data = await res.json();
