@@ -23,10 +23,12 @@ router.get('/public/packages/all', (req, res) => {
 // GET public booking by token (client view) — MUST be before /:id routes
 router.get('/public/:token', (req, res) => {
   const booking = db.prepare(`
-    SELECT b.*, c.name AS client_name, c.partner_name, c.phone AS client_phone,
+    SELECT b.*, COALESCE(c.name, l.name) AS client_name, c.partner_name, 
+           COALESCE(c.phone, l.phone) AS client_phone,
            p.name AS package_name, p.description AS package_description
     FROM bookings b
     LEFT JOIN clients c ON b.client_id = c.id
+    LEFT JOIN leads l ON b.lead_id = l.id
     LEFT JOIN packages p ON b.package_id = p.id
     WHERE b.booking_token = ?
   `).get(req.params.token);
