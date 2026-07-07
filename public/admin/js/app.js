@@ -301,7 +301,7 @@ function initDeveloperWatermark() {
     </div>
     <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:12px">
       <span style="color:#64748b">System Version</span>
-      <strong style="color:#1e293b">v.2.0.0</strong>
+      <strong style="color:#1e293b">v.4.0.0</strong>
     </div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <a href="https://github.com/armansyam" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:var(--primary,#6366F1);color:white;padding:8px 0;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;box-shadow:0 2px 8px rgba(99,102,241,0.2)">
