@@ -5,13 +5,131 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dashboard — Vendor Management</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* ── QUICK ACTIONS ────────────────────────────────────────── */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .action-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s ease;
+    }
+    .action-card:hover {
+      border-color: var(--accent);
+      background: var(--surface);
+      transform: translateY(-1px);
+    }
+    .action-icon {
+      font-size: 20px;
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+    }
+    .action-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .action-title { font-size: 13px; font-weight: 700; color: var(--text1); }
+    .action-desc { font-size: 10px; color: var(--text2); }
+
+    /* ── PIPELINE METER ───────────────────────────────────────── */
+    .pipeline-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+    }
+    .pipeline-bar-group { margin-bottom: 12px; }
+    .pipeline-bar-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; color: var(--text2); }
+    .pipeline-bar-outer { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .pipeline-bar-inner { height: 100%; background: var(--accent); border-radius: 3px; }
+
+    /* ── TOP HEADER KAS WIDGET ────────────────────────────────── */
+    .header-kas-widget {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .header-kas-widget:hover { border-color: var(--accent); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.positif { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.warning { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .status-dot.deficit { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  </style>
 </head>
 <body>
   <div class="sidebar" id="sidebar"></div>
   <div class="main">
     <div class="page-header">
-      <h1>📊 Dashboard</h1>
-      <div style="color:var(--text2);font-size:13px" id="current-month"></div>
+      <div>
+        <h1 style="margin-bottom:4px">📊 Dashboard</h1>
+        <div style="font-size:12px;color:var(--text2)">Ringkasan data operasional & keuangan Sorehari Story</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="header-kas-widget" onclick="window.location.href='/admin/reports'" title="Lihat Laporan Keuangan">
+          <div class="status-dot positif" id="header-kas-dot"></div>
+          <span>Kas Tersedia: <strong id="header-kas-amount">Rp 0</strong></span>
+        </div>
+        <div style="color:var(--text2);font-size:13px;font-weight:600" id="current-month"></div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <a href="/admin/leads" class="action-card">
+        <div class="action-icon">📥</div>
+        <div class="action-text">
+          <span class="action-title">Leads / Inquiry</span>
+          <span class="action-desc">Input / prospek klien baru</span>
+        </div>
+      </a>
+      <a href="/admin/bookings" class="action-card">
+        <div class="action-icon">📋</div>
+        <div class="action-text">
+          <span class="action-title">Booking Baru</span>
+          <span class="action-desc">Catat jadwal acara baru</span>
+        </div>
+      </a>
+      <a href="/admin/reports" class="action-card">
+        <div class="action-icon">📈</div>
+        <div class="action-text">
+          <span class="action-title">Laporan Keuangan</span>
+          <span class="action-desc">Laba rugi, kas, & dividen</span>
+        </div>
+      </a>
+      <a href="/admin/freelancers" class="action-card">
+        <div class="action-icon">💼</div>
+        <div class="action-text">
+          <span class="action-title">Freelancers</span>
+          <span class="action-desc">Gaji & jadwal kerja kru</span>
+        </div>
+      </a>
     </div>
 
     <div class="stats-grid" id="stats"></div>
@@ -19,23 +137,25 @@
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
       <!-- Upcoming Events -->
       <div class="table-wrap">
-        <div class="table-header"><h3>📅 Event Mendatang</h3></div>
+        <div class="table-header"><h3>📅 Event Terdekat (H-30)</h3></div>
         <table><thead><tr><th>Client</th><th>Tanggal</th><th>Venue</th><th>Status</th></tr></thead>
         <tbody id="upcoming-table"></tbody></table>
       </div>
 
-      <!-- Recent Leads -->
-      <div class="table-wrap">
-        <div class="table-header"><h3>📥 Inquiry Terbaru</h3></div>
-        <table><thead><tr><th>Nama</th><th>Status</th></tr></thead>
-        <tbody id="recent-leads"></tbody></table>
+      <!-- Pipeline meters -->
+      <div class="pipeline-container">
+        <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:16px">📌 Status Booking & Prospek</h3>
+        <div id="pipeline-meters"></div>
       </div>
     </div>
 
     <!-- Pending Payments -->
     <div class="table-wrap" style="margin-top:20px">
-      <div class="table-header"><h3>💰 Pembayaran Pending</h3></div>
-      <table><thead><tr><th>Client</th><th>Tanggal Acara</th><th>Total</th><th>Sudah Bayar</th><th>Sisa</th></tr></thead>
+      <div class="table-header">
+        <h3>💰 Tagihan Klien Belum Lunas</h3>
+        <span style="font-size:11px;color:var(--text2);font-weight:600" id="pending-total-label"></span>
+      </div>
+      <table><thead><tr><th>Client</th><th>Tanggal Acara</th><th>Harga Paket</th><th>Sudah Bayar</th><th>Sisa Tagihan ⚠️</th></tr></thead>
       <tbody id="pending-table"></tbody></table>
     </div>
   </div>
@@ -43,7 +163,6 @@
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-
       // Check session first
       fetch('/api/check-session')
         .then(r => { if (!r.ok) window.location.href = '/login'; })
@@ -51,50 +170,114 @@
 
       renderSidebar('dashboard');
       load();
-      });
+    });
 
     async function load() {
       const statsEl = document.getElementById('stats');
       const upcomingEl = document.getElementById('upcoming-table');
-      const recentLeadsEl = document.getElementById('recent-leads');
       const pendingEl = document.getElementById('pending-table');
+      const pipelineEl = document.getElementById('pipeline-meters');
 
       try {
         const d = await API.get('/api/dashboard/summary');
+        const kas = await API.get('/api/reports/kas');
+
         const now = new Date();
         document.getElementById('current-month').textContent = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
+        // Update header kas widget
+        const headerKasAmountEl = document.getElementById('header-kas-amount');
+        const headerKasDotEl = document.getElementById('header-kas-dot');
+        headerKasAmountEl.textContent = formatIDR(kas.kasTersedia);
+        if (kas.kasTersedia < 0) {
+          headerKasDotEl.className = 'status-dot deficit';
+          headerKasAmountEl.style.color = 'var(--red)';
+        } else if (kas.minKas > 0 && kas.kasTersedia < kas.minKas) {
+          headerKasDotEl.className = 'status-dot warning';
+          headerKasAmountEl.style.color = '#f59e0b';
+        } else {
+          headerKasDotEl.className = 'status-dot positif';
+          headerKasAmountEl.style.color = 'var(--green)';
+        }
+
         const m = d?.thisMonth || {};
         const upcoming = Array.isArray(d?.upcoming) ? d.upcoming : [];
-        const recentLeads = Array.isArray(d?.recentLeads) ? d.recentLeads : [];
         const pendingPayments = Array.isArray(d?.pendingPayments) ? d.pendingPayments : [];
+        
+        // Sum client remaining payments for outstanding card
+        const totalOutstanding = pendingPayments.reduce((s, p) => s + (p.remaining_payment || 0), 0);
+        document.getElementById('pending-total-label').textContent = `Total piutang berjalan: ${formatIDR(totalOutstanding)}`;
 
         statsEl.innerHTML = `
-        <div class="stat-card accent"><div class="label">Pemasukan Bulan Ini</div><div class="value">${formatIDR(m.total_income || 0)}</div></div>
-        <div class="stat-card green"><div class="label">Profit</div><div class="value">${formatIDR(m.total_profit || 0)}</div></div>
-        <div class="stat-card yellow"><div class="label">Pending Bayar</div><div class="value">${pendingPayments.length} client</div></div>
-        <div class="stat-card blue"><div class="label">Upcoming</div><div class="value">${upcoming.length} event</div></div>
+        <div class="stat-card accent"><div class="label">Pemasukan Bulan Ini</div><div class="value" style="color:var(--green)">${formatIDR(m.total_income || 0)}</div></div>
+        <div class="stat-card green"><div class="label">Estimasi Profit</div><div class="value">${formatIDR(m.total_profit || 0)}</div></div>
+        <div class="stat-card yellow"><div class="label">Total Piutang Klien</div><div class="value" style="color:var(--red)">${formatIDR(totalOutstanding)}</div></div>
+        <div class="stat-card blue"><div class="label">Event Dekat (H-30)</div><div class="value">${upcoming.length} event</div></div>
         `;
 
         upcomingEl.innerHTML = upcoming.length
-        ? upcoming.map(e => `<tr><td>${e.client_name || '-'}</td><td>${formatDate(e.event_date)}</td><td>${e.venue || '-'}</td><td>${statusBadge(e.status || 'new')}</td></tr>`).join('')
+        ? upcoming.map(e => `<tr><td><strong>${e.client_name || '-'}</strong></td><td>${formatDate(e.event_date)}</td><td>${e.venue || '-'}</td><td>${statusBadge(e.status || 'new')}</td></tr>`).join('')
         : '<tr><td colspan="4" style="color:var(--text2);text-align:center;padding:20px">Tidak ada event mendatang</td></tr>';
 
-        recentLeadsEl.innerHTML = recentLeads.length
-        ? recentLeads.map(l => `<tr><td>${l.name || '-'}</td><td>${statusBadge(l.status || 'new')}</td></tr>`).join('')
-        : '<tr><td colspan="2" style="color:var(--text2);text-align:center;padding:20px">Belum ada inquiry</td></tr>';
-
         pendingEl.innerHTML = pendingPayments.length
-        ? pendingPayments.map(p => `<tr><td>${p.client_name || '-'}</td><td>${formatDate(p.event_date)}</td><td>${formatIDR(p.total_income || 0)}</td><td>${formatIDR(p.total_paid || 0)}</td><td style="color:var(--yellow)">${formatIDR(p.remaining_payment || 0)}</td></tr>`).join('')
+        ? pendingPayments.map(p => `<tr><td><strong>${p.client_name || '-'}</strong></td><td>${formatDate(p.event_date)}</td><td>${formatIDR((p.package_price || 0) + (p.additional_income || 0))}</td><td>${formatIDR(p.total_paid || 0)}</td><td style="color:var(--red);font-weight:700">⚠️ ${formatIDR(p.remaining_payment || 0)}</td></tr>`).join('')
         : '<tr><td colspan="5" style="color:var(--text2);text-align:center;padding:20px">Semua pembayaran lunas ✅</td></tr>';
+
+        // Render pipeline meters
+        const activeBookings = Array.isArray(d?.bookingStatus) ? d.bookingStatus : [];
+        const activeLeads = Array.isArray(d?.pipeline) ? d.pipeline : [];
+
+        const totalB = activeBookings.reduce((s, b) => s + b.count, 0) || 1;
+        const totalL = activeLeads.reduce((s, l) => s + l.count, 0) || 1;
+
+        let metersHtml = '';
+        
+        // Active bookings breakout
+        metersHtml += `<div style="font-size:11px;font-weight:700;margin-bottom:8px;color:var(--text1)">OPERASIONAL EVENT</div>`;
+        activeBookings.forEach(b => {
+          const pct = Math.round((b.count / totalB) * 100);
+          const badgeInfo = statusBadge(b.status); // Get status text safely
+          metersHtml += `
+            <div class="pipeline-bar-group">
+              <div class="pipeline-bar-label">
+                <span>${b.status === 'event_day' ? '📸 Hari H' : b.status === 'in_progress' ? 'Persiapan' : b.status === 'editing' ? '🎞️ Pengeditan' : b.status === 'delivery' ? '📦 Penyerahan' : b.status}</span>
+                <span><strong>${b.count}</strong> (${pct}%)</span>
+              </div>
+              <div class="pipeline-bar-outer">
+                <div class="pipeline-bar-inner" style="width:${pct}%; background:${b.status === 'event_day' ? 'var(--blue)' : b.status === 'editing' ? 'var(--yellow)' : 'var(--accent)'}"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        // Leads pipeline breakout
+        metersHtml += `<div style="font-size:11px;font-weight:700;margin-top:20px;margin-bottom:8px;color:var(--text1)">PROSPEK / INQUIRY</div>`;
+        activeLeads.forEach(l => {
+          const pct = Math.round((l.count / totalL) * 100);
+          metersHtml += `
+            <div class="pipeline-bar-group">
+              <div class="pipeline-bar-label">
+                <span>${l.status === 'new' ? 'Baru' : l.status === 'contacted' ? 'Dihubungi' : l.status === 'interested' ? 'Tertarik' : 'Proposal'}</span>
+                <span><strong>${l.count}</strong> (${pct}%)</span>
+              </div>
+              <div class="pipeline-bar-outer">
+                <div class="pipeline-bar-inner" style="width:${pct}%; background:var(--green)"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        pipelineEl.innerHTML = metersHtml || '<p style="color:var(--text2);font-size:12px">Belum ada data status</p>';
+
       } catch (err) {
         console.error('dashboard load failed', err);
         statsEl.innerHTML = '<div class="stat-card" style="grid-column:1/-1"><div class="label">Error</div><div class="value">Dashboard gagal load</div></div>';
-        upcomingEl.innerHTML = '<tr><td colspan="4" style="color:var(--red);text-align:center;padding:20px">Gagal ambil data</td></tr>';
-        recentLeadsEl.innerHTML = '<tr><td colspan="2" style="color:var(--red);text-align:center;padding:20px">Gagal ambil data</td></tr>';
-        pendingEl.innerHTML = '<tr><td colspan="5" style="color:var(--red);text-align:center;padding:20px">Gagal ambil data</td></tr>';
       }
     }
+  </script>
+</body>
+</html>
+
 
   </script>
 </body>
