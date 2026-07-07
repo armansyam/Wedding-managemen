@@ -151,8 +151,10 @@
 
     <!-- Status Filters -->
     <div class="tab-filters">
-      <button class="tab-btn active" id="tab-active" onclick="window.changeTab('active')">Proyek Aktif</button>
-      <button class="tab-btn" id="tab-completed" onclick="window.changeTab('completed')">Selesai Pekerjaan</button>
+      <button class="tab-btn active" id="tab-persiapan" onclick="window.changeTab('persiapan')">📅 Booking &amp; Persiapan</button>
+      <button class="tab-btn" id="tab-hari-h" onclick="window.changeTab('hari-h')">📸 Hari H</button>
+      <button class="tab-btn" id="tab-on-progress" onclick="window.changeTab('on-progress')">🎞️ Post-Event (On Progress)</button>
+      <button class="tab-btn" id="tab-completed" onclick="window.changeTab('completed')">🏁 Selesai Pekerjaan</button>
       <button class="tab-btn" id="tab-all" onclick="window.changeTab('all')">Semua Client</button>
     </div>
 
@@ -188,7 +190,7 @@
 
   <script src="/admin/js/app.js"></script>
   <script>
-    let currentTab = 'active';
+    let currentTab = 'persiapan';
 
     window.changeTab = function(tab) {
       currentTab = tab;
@@ -207,13 +209,17 @@
         let clients = await API.get('/api/clients/confirmed');
 
         // Apply Tab Filter
-        if (currentTab === 'active') {
-          clients = clients.filter(c => ['confirmed', 'in_progress', 'event_day', 'editing', 'delivery'].includes(c.booking_status));
-          // Sort chronologically (closest event first)
+        if (currentTab === 'persiapan') {
+          clients = clients.filter(c => ['confirmed', 'in_progress'].includes(c.booking_status));
+          clients.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+        } else if (currentTab === 'hari-h') {
+          clients = clients.filter(c => c.booking_status === 'event_day');
+          clients.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+        } else if (currentTab === 'on-progress') {
+          clients = clients.filter(c => ['editing', 'delivery'].includes(c.booking_status));
           clients.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
         } else if (currentTab === 'completed') {
           clients = clients.filter(c => c.booking_status === 'completed');
-          // Sort reverse chronological (newly completed first)
           clients.sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
         } else {
           // All: sort by event date
@@ -248,7 +254,7 @@
             <div style="font-size:18px;font-weight:800;color:var(--accent);margin-top:4px">${pendingPelunasan}</div>
           </div>`;
 
-        // Render Highlight Section (only for "active" or "all" tabs and no active search filter)
+        // Render Highlight Section (only for "persiapan" or "all" tabs and no active search filter)
         const highlightSection = document.getElementById('highlight-section');
         const highlightList = document.getElementById('highlight-list');
         
@@ -280,7 +286,7 @@
           c.event_date >= todayStr
         );
 
-        if ((currentTab === 'active' || currentTab === 'all') && upcomingActive.length > 0 && !search) {
+        if ((currentTab === 'persiapan' || currentTab === 'all') && upcomingActive.length > 0 && !search) {
           highlightSection.style.display = 'block';
           const top3 = upcomingActive.slice(0, 3);
           
