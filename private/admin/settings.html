@@ -85,6 +85,7 @@
             </select>
           </div>
           <div><label>Pajak (%)</label><input type="number" id="s-tax_rate" placeholder="0" min="0" max="100"></div>
+          <div><label>Pengingat Pelunasan H-x Acara (Hari)</label><input type="number" id="s-followup_h_days" placeholder="10" min="1" max="90"></div>
         </div>
       </div>
     </div>
@@ -291,7 +292,7 @@
     // --- Save ---
     const SAVE_KEYS = [
       'vendor_name','vendor_tagline','vendor_email','vendor_phone','vendor_address','vendor_website',
-      'currency','tax_rate',
+      'currency','tax_rate','followup_h_days',
       'inquiry_event_types','inquiry_needs',
       'wa_welcome','wa_booking_proposal','wa_dp_verified','wa_dp_confirmed','wa_invoice','wa_pelunasan'
     ];

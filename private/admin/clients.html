@@ -134,6 +134,27 @@
       gap: 12px;
       margin-bottom: 24px;
     }
+
+    /* Reschedule / Follow-up Warning Styles */
+    @keyframes pulse-warning {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .followup-warning {
+      border: 2px solid #ef4444 !important;
+      background: rgba(239, 68, 68, 0.02) !important;
+      position: relative !important;
+    }
+    .btn-pulse-tagih {
+      background: #dc2626 !important;
+      color: #fff !important;
+      animation: pulse-warning 1.8s infinite !important;
+    }
   </style>
 </head>
 <body>
@@ -244,7 +265,14 @@
 
     window.loadClients = async function() {
         const search = document.getElementById('search').value;
-        let clients = await API.get('/api/clients/confirmed');
+        
+        // Fetch clients and settings in parallel
+        const [clientsRaw, settings] = await Promise.all([
+          API.get('/api/clients/confirmed'),
+          API.get('/api/settings')
+        ]);
+        let clients = clientsRaw;
+        const followupDays = parseInt(settings.followup_h_days) || 10;
 
         // Apply Tab Filter
         if (currentTab === 'persiapan') {
@@ -335,11 +363,34 @@
             const pct = price > 0 ? Math.round((paid/price)*100) : 0;
             const isLunas = price > 0 && paid >= price;
             const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+            
+            // Calculate days left to event date
+            const eventTime = new Date(c.event_date + 'T00:00:00').getTime();
+            const todayTime = new Date(todayStr + 'T00:00:00').getTime();
+            const diffDays = Math.ceil((eventTime - todayTime) / (1000 * 60 * 60 * 24));
+            
+            const isFollowupAlert = !isLunas && diffDays >= 0 && diffDays <= followupDays;
+            
             const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} di ${c.venue || '-'} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
             const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
 
-            return `<div class="client-card" ${isLunas ? 'style="border:2px solid var(--green);position:relative"' : ''}>
-              ${isLunas ? '<div style="position:absolute;top:-1px;right:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:0 0 6px 6px;letter-spacing:1px">✅ LUNAS</div>' : ''}
+            let cardClass = "client-card";
+            let cardStyle = "";
+            let badgeHtml = "";
+            let tagihBtnClass = "btn btn-sm";
+            let tagihBtnStyle = "background:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center";
+
+            if (isLunas) {
+              cardStyle = 'style="border:2px solid var(--green);position:relative"';
+              badgeHtml = '<div style="position:absolute;top:-1px;right:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:0 0 6px 6px;letter-spacing:1px">✅ LUNAS</div>';
+            } else if (isFollowupAlert) {
+              cardClass += " followup-warning";
+              badgeHtml = `<div style="position:absolute;top:-1px;right:16px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:0 0 6px 6px;letter-spacing:1px;animation:pulse-badge 1.5s infinite">⚠️ H-${diffDays} BELUM LUNAS</div>`;
+              tagihBtnClass += " btn-pulse-tagih";
+            }
+
+            return `<div class="${cardClass}" ${cardStyle}>
+              ${badgeHtml}
               <div style="display:flex;justify-content:space-between;align-items:start">
                 <div>
                   <div class="client-name">${c.name}</div>
@@ -362,7 +413,7 @@
               </div>
               <div class="client-actions">
                 <button class="btn btn-sm btn-secondary" onclick="viewDetail(${c.booking_id})">Detail</button>
-                ${!isLunas ? `<a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center">💬 Tagih</a>` : ''}
+                ${!isLunas ? `<a href="${waLink}" target="_blank" class="${tagihBtnClass}" style="${tagihBtnStyle}">💬 Tagih</a>` : ''}
                 ${!isLunas ? `<button class="btn btn-sm btn-primary" onclick="openPelunasan(${c.booking_id},'${c.name}',${remaining})">💰 Pelunasan</button>` : ''}
               </div>
             </div>`;
