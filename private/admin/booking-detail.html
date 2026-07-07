@@ -1,66 +1,249 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <link rel="icon" type="image/png" href="/logo.png">
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Detail Booking — Vendor Management</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
   <style>
-    .detail-header { display:flex; gap:24px; margin-bottom:24px; flex-wrap:wrap; }
-    .detail-header .info { flex:1; min-width:280px; }
-    .detail-header .finance { flex:1; min-width:280px; }
-
-    .timeline { position:relative; padding-left:28px; margin:16px 0; }
-    .timeline::before { content:''; position:absolute; left:10px; top:0; bottom:0; width:2px; background:var(--border); }
-    .timeline-item { position:relative; margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-    .timeline-item::before { content:''; position:absolute; left:-24px; top:20px; width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); }
-    .timeline-item.done::before { background:var(--green); }
-    .timeline-item h3 { font-size:15px; margin:0 0 8px 0; }
-    .timeline-item .meta { font-size:12px; color:var(--text2); display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
-    .timeline-item .meta span { display:flex; align-items:center; gap:4px; }
-
-    .crew-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-    .crew-chip {
-      display:inline-flex; align-items:center; gap:6px;
-      background:var(--surface2); border:1px solid var(--border); border-radius:20px;
-      padding:4px 10px; font-size:12px;
+    .detail-header {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
     }
-    .crew-chip .remove { cursor:pointer; color:var(--red); font-weight:700; margin-left:2px; }
-    .crew-chip .fee { color:var(--green); font-weight:600; }
+
+    .detail-header .info {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .detail-header .finance {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+      margin: 16px 0;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -24px;
+      top: 20px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+    }
+
+    .timeline-item.done::before {
+      background: var(--green);
+    }
+
+    .timeline-item h3 {
+      font-size: 15px;
+      margin: 0 0 8px 0;
+    }
+
+    .timeline-item .meta {
+      font-size: 12px;
+      color: var(--text2);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .timeline-item .meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .crew-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .crew-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .crew-chip .remove {
+      cursor: pointer;
+      color: var(--red);
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    .crew-chip .fee {
+      color: var(--green);
+      font-weight: 600;
+    }
 
     .add-crew-btn {
-      display:inline-flex; align-items:center; gap:4px;
-      background:transparent; border:1px dashed var(--border); border-radius:20px;
-      padding:4px 10px; font-size:12px; color:var(--text2); cursor:pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
     }
-    .add-crew-btn:hover { border-color:var(--accent); color:var(--accent); }
 
-    .session-fee-total { font-size:12px; color:var(--accent); font-weight:600; margin-top:6px; }
+    .add-crew-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
-    .finance-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
-    .finance-panel h3 { font-size:14px; margin:0 0 12px 0; }
-    .finance-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-bottom:1px solid var(--border); }
-    .finance-row:last-child { border-bottom:none; }
-    .finance-row.total { font-weight:700; font-size:15px; }
-    .finance-row.green .value { color:var(--green); }
-    .finance-row.red .value { color:var(--red); }
-    .finance-row .value { font-weight:600; }
+    .session-fee-total {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 6px;
+    }
 
-    .add-session-form { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; align-items:end; }
-    .add-session-form select, .add-session-form input { padding:8px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; }
+    .finance-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
 
-    .crew-picker { position:relative; }
+    .finance-panel h3 {
+      font-size: 14px;
+      margin: 0 0 12px 0;
+    }
+
+    .finance-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .finance-row:last-child {
+      border-bottom: none;
+    }
+
+    .finance-row.total {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .finance-row.green .value {
+      color: var(--green);
+    }
+
+    .finance-row.red .value {
+      color: var(--red);
+    }
+
+    .finance-row .value {
+      font-weight: 600;
+    }
+
+    .add-session-form {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .add-session-form select,
+    .add-session-form input {
+      padding: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .crew-picker {
+      position: relative;
+    }
+
     .crew-dropdown {
-      position:absolute; top:100%; left:0; right:0; z-index:10;
-      background:var(--surface); border:1px solid var(--border); border-radius:8px;
-      max-height:200px; overflow-y:auto; display:none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
     }
-    .crew-dropdown.show { display:block; }
-    .crew-option { padding:8px 12px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; }
-    .crew-option:hover { background:var(--surface2); }
-    .crew-option .fee { color:var(--green); font-size:12px; }
+
+    .crew-dropdown.show {
+      display: block;
+    }
+
+    .crew-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .crew-option:hover {
+      background: var(--surface2);
+    }
+
+    .crew-option .fee {
+      color: var(--green);
+      font-size: 12px;
+    }
   </style>
 </head>
+
 <body>
   <div class="sidebar" id="sidebar"></div>
   <div class="main">
@@ -68,7 +251,8 @@
     <div id="content" style="display:none">
       <div class="page-header">
         <div>
-          <a id="back-link" href="/admin/bookings" style="color:var(--accent);text-decoration:none;font-size:13px">← Kembali ke Bookings</a>
+          <a id="back-link" href="/admin/bookings" style="color:var(--accent);text-decoration:none;font-size:13px">←
+            Kembali ke Bookings</a>
           <h1 id="booking-title" style="margin-top:4px"></h1>
         </div>
         <span id="booking-status"></span>
@@ -77,15 +261,21 @@
       <!-- Info + Finance -->
       <div class="detail-header" style="align-items: stretch;">
         <div class="info" style="display:flex; flex-direction:column; gap:16px; justify-content:space-between">
-          <div class="table-wrap" style="padding:16px; margin-bottom:0; flex:1; display:flex; flex-direction:column; justify-content:space-between">
+          <div class="table-wrap"
+            style="padding:16px; margin-bottom:0; flex:1; display:flex; flex-direction:column; justify-content:space-between">
             <div>
               <h3 style="font-size:14px;margin:0 0 12px 0">Informasi Booking</h3>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
-                <div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; background:var(--surface2); padding:6px 10px; border-radius:8px; margin-bottom:6px">
-                  <span style="color:var(--text2)">ID Booking:</span> <strong id="d-code" style="color:var(--accent)"></strong>
+                <div
+                  style="grid-column:1/-1; display:flex; align-items:center; gap:8px; background:var(--surface2); padding:6px 10px; border-radius:8px; margin-bottom:6px">
+                  <span style="color:var(--text2)">ID Booking:</span> <strong id="d-code"
+                    style="color:var(--accent)"></strong>
                   <span style="color:var(--text2); margin-left:12px">Link Progress:</span>
-                  <a id="d-track-url" href="#" target="_blank" style="color:var(--text); text-decoration:underline; font-weight:600; font-size:12px"></a>
-                  <button class="btn btn-sm btn-secondary" onclick="window.copyTrackingLink()" style="padding:2px 8px; font-size:11px; height:auto; border-radius:6px; cursor:pointer">📋 Salin</button>
+                  <a id="d-track-url" href="#" target="_blank"
+                    style="color:var(--text); text-decoration:underline; font-weight:600; font-size:12px"></a>
+                  <button class="btn btn-sm btn-secondary" onclick="window.copyTrackingLink()"
+                    style="padding:2px 8px; font-size:11px; height:auto; border-radius:6px; cursor:pointer">📋
+                    Salin</button>
                 </div>
                 <div><span style="color:var(--text2)">Client:</span> <strong id="d-client"></strong></div>
                 <div><span style="color:var(--text2)">Pasangan:</span> <span id="d-partner"></span></div>
@@ -93,19 +283,24 @@
                 <div><span style="color:var(--text2)">Harga Paket:</span> <span id="d-price"></span></div>
                 <div><span style="color:var(--text2)">Tanggal:</span> <span id="d-date"></span></div>
                 <div><span style="color:var(--text2)">Venue:</span> <span id="d-venue"></span></div>
-                <div style="grid-column:1/-1"><span style="color:var(--text2)">Catatan:</span> <span id="d-notes"></span></div>
+                <div style="grid-column:1/-1"><span style="color:var(--text2)">Catatan:</span> <span
+                    id="d-notes"></span></div>
               </div>
             </div>
           </div>
-          
+
           <!-- Compact Work Progress Roadmap -->
-          <div id="work-roadmap-section" class="table-wrap" style="padding:16px 16px 20px; margin-bottom:0; display:none">
+          <div id="work-roadmap-section" class="table-wrap"
+            style="padding:16px 16px 20px; margin-bottom:0; display:none">
             <h3 style="font-size:14px;margin:0 0 12px 0">🗺️ Progres Pekerjaan</h3>
-            <div id="work-roadmap" style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin"></div>
+            <div id="work-roadmap"
+              style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin">
+            </div>
           </div>
         </div>
         <div class="finance">
-          <div class="finance-panel" id="finance-panel" style="height:100%; display:flex; flex-direction:column; justify-content:space-between">
+          <div class="finance-panel" id="finance-panel"
+            style="height:100%; display:flex; flex-direction:column; justify-content:space-between">
             <h3>💰 Estimasi Keuangan</h3>
             <div id="finance-rows"></div>
           </div>
@@ -115,7 +310,8 @@
       <!-- Invoice Section -->
       <div style="margin-bottom:24px">
         <h2 style="font-size:16px;margin-bottom:4px">🧾 Invoice</h2>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Klik untuk melihat invoice DP atau pelunasan.</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Klik untuk melihat invoice DP atau pelunasan.
+        </p>
         <div style="display:flex;gap:12px;flex-wrap:wrap" id="invoice-buttons"></div>
       </div>
 
@@ -124,7 +320,8 @@
 
       <!-- Timeline -->
       <h2 style="font-size:16px;margin-bottom:4px">🎭 Timeline Sesi</h2>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Assign kru per sesi → estimasi biaya otomatis dari fee per sesi freelance.</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Assign kru per sesi → estimasi biaya otomatis dari
+        fee per sesi freelance.</p>
       <div id="timeline"></div>
     </div>
   </div>
@@ -143,12 +340,16 @@
 
   <!-- Modal: Invoice Preview -->
   <div class="modal-overlay" id="modal-invoice" style="z-index:200">
-    <div class="modal modal--fixed-height" style="max-width:850px;height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+    <div class="modal modal--fixed-height"
+      style="max-width:850px;height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
         <h3 id="invoice-modal-title" style="font-size:15px;margin:0">Invoice</h3>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" onclick="window.printInvoice()" style="font-size:12px">🖨️ Cetak</button>
-          <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-invoice')" style="font-size:12px">✕ Tutup</button>
+          <button class="btn btn-sm btn-primary" onclick="window.printInvoice()" style="font-size:12px">🖨️
+            Cetak</button>
+          <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-invoice')" style="font-size:12px">✕
+            Tutup</button>
         </div>
       </div>
       <iframe id="invoice-iframe" style="flex:1;border:none;background:#fff;border-radius:0 0 12px 12px"></iframe>
@@ -159,15 +360,17 @@
   <div class="modal-overlay" id="modal-confirm-completed" style="z-index: 210">
     <div class="modal" style="max-width:460px">
       <h2 style="margin-bottom:8px;font-size:16px">🏁 Konfirmasi Selesaikan Booking</h2>
-      <p style="font-size:12px;margin-bottom:16px;color:var(--text2)">Memproses penutupan booking secara permanen. Seluruh administrasi & pembayaran freelance harus tuntas.</p>
-      
+      <p style="font-size:12px;margin-bottom:16px;color:var(--text2)">Memproses penutupan booking secara permanen.
+        Seluruh administrasi & pembayaran freelance harus tuntas.</p>
+
       <!-- Unpaid Crew Status Box -->
       <div id="completed-unpaid-box" style="margin-bottom:16px;padding:12px;border-radius:8px;font-size:13px">
         <!-- Dynamic Content -->
       </div>
-      
+
       <div class="modal-actions" style="display:flex;gap:8px;justify-content:end">
-        <button class="btn btn-secondary" onclick="closeModal('modal-confirm-completed')" style="font-size:12px">Batal</button>
+        <button class="btn btn-secondary" onclick="closeModal('modal-confirm-completed')"
+          style="font-size:12px">Batal</button>
         <button class="btn btn-primary" id="btn-submit-completed" style="font-size:12px">Ya, Selesaikan</button>
       </div>
     </div>
@@ -178,25 +381,32 @@
     <div class="modal" style="max-width:400px; text-align:center">
       <div style="font-size:40px; margin-bottom:12px">💸</div>
       <h2 style="font-size:16px; margin-bottom:6px">Pembayaran Kru Berhasil!</h2>
-      <p style="font-size:12px; color:var(--text2); margin-bottom:16px">Pembayaran fee freelance telah berhasil diverifikasi dan tercatat di sistem.</p>
-      
-      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px; font-size:13px; text-align:left">
+      <p style="font-size:12px; color:var(--text2); margin-bottom:16px">Pembayaran fee freelance telah berhasil
+        diverifikasi dan tercatat di sistem.</p>
+
+      <div
+        style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px; font-size:13px; text-align:left">
         <div><span style="color:var(--text2)">Kru:</span> <strong id="pay-success-name"></strong></div>
-        <div><span style="color:var(--text2)">Fee:</span> <strong id="pay-success-amount" style="color:var(--green)"></strong></div>
+        <div><span style="color:var(--text2)">Fee:</span> <strong id="pay-success-amount"
+            style="color:var(--green)"></strong></div>
         <div><span style="color:var(--text2)">Metode:</span> <span id="pay-success-method">Transfer Bank</span></div>
-        <div style="border-top:1px solid var(--border); margin-top:8px; padding-top:8px; font-size:11px; font-family:monospace; color:var(--text2)" id="pay-success-token"></div>
+        <div
+          style="border-top:1px solid var(--border); margin-top:8px; padding-top:8px; font-size:11px; font-family:monospace; color:var(--text2)"
+          id="pay-success-token"></div>
       </div>
-      
+
       <div style="display:flex; flex-direction:column; gap:8px">
         <button class="btn btn-primary" id="btn-pay-wa" style="width:100%; font-size:12px">💬 Kirim Resi via WA</button>
-        <button class="btn btn-secondary" id="btn-pay-view" style="width:100%; font-size:12px">🔍 Lihat Kuitansi / Resi</button>
-        <button class="btn btn-secondary" onclick="closeModal('modal-payment-success')" style="width:100%; font-size:12px">Tutup</button>
+        <button class="btn btn-secondary" id="btn-pay-view" style="width:100%; font-size:12px">🔍 Lihat Kuitansi /
+          Resi</button>
+        <button class="btn btn-secondary" onclick="closeModal('modal-payment-success')"
+          style="width:100%; font-size:12px">Tutup</button>
       </div>
     </div>
   </div>
 
   <script src="/admin/js/app.js"></script>
-  
+
   <script>
     const bookingId = new URLSearchParams(window.location.search).get('id');
     let bookingData = null;
@@ -204,21 +414,21 @@
 
     const fromCtx = new URLSearchParams(window.location.search).get('from') || 'bookings';
     document.addEventListener('DOMContentLoaded', () => {
-    renderSidebar(fromCtx);
-    // Update back link
-    const backLink = document.getElementById('back-link');
-    if (fromCtx === 'clients') {
-      backLink.href = '/admin/clients';
-      backLink.textContent = '← Kembali ke Clients';
-    }
-    (async () => {
-      templates = await API.get('/api/templates');
-    })();
-    if (!bookingId) {
-      document.getElementById('loading').textContent = 'No booking ID';
-    } else {
-      load();
-    }
+      renderSidebar(fromCtx);
+      // Update back link
+      const backLink = document.getElementById('back-link');
+      if (fromCtx === 'clients') {
+        backLink.href = '/admin/clients';
+        backLink.textContent = '← Kembali ke Clients';
+      }
+      (async () => {
+        templates = await API.get('/api/templates');
+      })();
+      if (!bookingId) {
+        document.getElementById('loading').textContent = 'No booking ID';
+      } else {
+        load();
+      }
     });
 
 
@@ -237,48 +447,48 @@
     // === CREW PICKER ===
 
     async function load() {
-    bookingData = await API.get(`/api/bookings/${bookingId}`);
-    if (bookingData.error) {
-    document.getElementById('loading').textContent = 'Booking not found';
-    return;
-    }
-    render();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
+      bookingData = await API.get(`/api/bookings/${bookingId}`);
+      if (bookingData.error) {
+        document.getElementById('loading').textContent = 'Booking not found';
+        return;
+      }
+      render();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
     }
     async function render() {
-    const b = bookingData;
+      const b = bookingData;
 
-    // Header
-    document.getElementById('booking-title').textContent = b.event_name || b.client_name;
-    document.getElementById('booking-status').innerHTML = statusBadge(b.status);
-    document.title = `${b.client_name} — Vendor Management`;
+      // Header
+      document.getElementById('booking-title').textContent = b.event_name || b.client_name;
+      document.getElementById('booking-status').innerHTML = statusBadge(b.status);
+      document.title = `${b.client_name} — Vendor Management`;
 
-    // Info
-    const year = new Date(b.event_date || b.created_at).getFullYear();
-    const code = `SH-${year}-${String(b.booking_id || b.id).padStart(4, '0')}`;
-    document.getElementById('d-code').textContent = code;
-    
-    const trackUrl = `${window.location.origin}/track.html?code=${code}&date=${b.event_date}`;
-    document.getElementById('d-track-url').textContent = code;
-    document.getElementById('d-track-url').href = trackUrl;
-    
-    window.copyTrackingLink = () => {
-      navigator.clipboard.writeText(trackUrl);
-      alert('Link tracking progres berhasil disalin!');
-    };
+      // Info
+      const year = new Date(b.event_date || b.created_at).getFullYear();
+      const code = `SH-${year}-${String(b.booking_id || b.id).padStart(4, '0')}`;
+      document.getElementById('d-code').textContent = code;
 
-    document.getElementById('d-client').textContent = b.client_name;
-    document.getElementById('d-partner').textContent = b.partner_name || '-';
-    document.getElementById('d-package').textContent = b.package_name || '-';
-    document.getElementById('d-price').textContent = formatIDR(b.package_price);
-    document.getElementById('d-date').textContent = formatDate(b.event_date);
-    document.getElementById('d-venue').textContent = b.venue || '-';
-    document.getElementById('d-notes').textContent = b.notes || '-';
+      const trackUrl = `${window.location.origin}/track.html?code=${code}&date=${b.event_date}`;
+      document.getElementById('d-track-url').textContent = code;
+      document.getElementById('d-track-url').href = trackUrl;
 
-    // Finance
-    const f = b.finance;
-    document.getElementById('finance-rows').innerHTML = `
+      window.copyTrackingLink = () => {
+        navigator.clipboard.writeText(trackUrl);
+        alert('Link tracking progres berhasil disalin!');
+      };
+
+      document.getElementById('d-client').textContent = b.client_name;
+      document.getElementById('d-partner').textContent = b.partner_name || '-';
+      document.getElementById('d-package').textContent = b.package_name || '-';
+      document.getElementById('d-price').textContent = formatIDR(b.package_price);
+      document.getElementById('d-date').textContent = formatDate(b.event_date);
+      document.getElementById('d-venue').textContent = b.venue || '-';
+      document.getElementById('d-notes').textContent = b.notes || '-';
+
+      // Finance
+      const f = b.finance;
+      document.getElementById('finance-rows').innerHTML = `
     <div class="finance-row"><span>Harga Paket</span><span>${formatIDR(b.package_price)}</span></div>
     <div class="finance-row"><span>Pendapatan Tambahan</span><span>${formatIDR(b.additional_income)}</span></div>
     <div class="finance-row total"><span>Total Pendapatan</span><span>${formatIDR(b.total_income)}</span></div>
@@ -294,33 +504,33 @@
     <div class="finance-row"><span>Total Dibayar</span><span>${formatIDR(b.total_paid)}</span></div>
     <div class="finance-row"><span>Sisa Pembayaran</span><span style="color:var(--yellow)">${formatIDR(b.remaining_payment)}</span></div>
     `;
-    // Timeline
-    renderTimeline(b.sessions);
+      // Timeline
+      renderTimeline(b.sessions);
 
-    // Work progress roadmap (shown for confirmed+ bookings)
-    renderWorkRoadmap(b);
+      // Work progress roadmap (shown for confirmed+ bookings)
+      renderWorkRoadmap(b);
 
-    // Invoice buttons
-    renderInvoiceButtons(b);
+      // Invoice buttons
+      renderInvoiceButtons(b);
 
-    // Pelunasan confirm (check if pelunasan receipt exists)
-    renderPelunasanConfirm(b);
+      // Pelunasan confirm (check if pelunasan receipt exists)
+      renderPelunasanConfirm(b);
     }
 
     // ── Compact horizontal work roadmap ───────────────────────────────
     const WORK_STAGES = [
-      { key: 'confirmed',   label: 'Confirmed',    icon: '✅' },
-      { key: 'in_progress', label: 'Persiapan',    icon: '🔄' },
-      { key: 'event_day',   label: 'Hari H',       icon: '📸' },
-      { key: 'editing',     label: 'Pengeditan',   icon: '🎞️' },
-      { key: 'delivery',    label: 'Penyerahan',   icon: '📦' },
-      { key: 'completed',   label: 'Selesai',      icon: '🏁' },
+      { key: 'confirmed', label: 'Confirmed', icon: '✅' },
+      { key: 'in_progress', label: 'Persiapan', icon: '🔄' },
+      { key: 'event_day', label: 'Hari H', icon: '📸' },
+      { key: 'editing', label: 'Pengeditan', icon: '🎞️' },
+      { key: 'delivery', label: 'Penyerahan', icon: '📦' },
+      { key: 'completed', label: 'Selesai', icon: '🏁' },
     ];
-    const POST_PAYMENT_STAGES = ['editing','delivery','completed'];
+    const POST_PAYMENT_STAGES = ['editing', 'delivery', 'completed'];
     async function renderWorkRoadmap(b) {
       const el = document.getElementById('work-roadmap');
       const section = document.getElementById('work-roadmap-section');
-      const skipStatuses = ['proposal_sent','pending_verification','cancelled'];
+      const skipStatuses = ['proposal_sent', 'pending_verification', 'cancelled'];
       if (skipStatuses.includes(b.status)) { section.style.display = 'none'; return; }
       section.style.display = 'block';
 
@@ -329,20 +539,20 @@
 
       let html = '';
       WORK_STAGES.forEach((stage, i) => {
-        const isDone    = i < currentIdx;
+        const isDone = i < currentIdx;
         const isCurrent = i === currentIdx;
-        const isFuture  = i > currentIdx;
+        const isFuture = i > currentIdx;
         const isPostPayment = POST_PAYMENT_STAGES.includes(stage.key);
 
         // Node color
         let nodeBg = 'var(--border)';
         let nodeColor = 'var(--text2)';
-        if (isDone)    { nodeBg = 'var(--green)';  nodeColor = '#fff'; }
+        if (isDone) { nodeBg = 'var(--green)'; nodeColor = '#fff'; }
         if (isCurrent) { nodeBg = 'var(--accent)'; nodeColor = '#fff'; }
 
         // Can move to this stage?
         const canClick = isFuture && (i === currentIdx + 1) && (!isPostPayment || isLunas);
-        const tooltip  = canClick ? '' : (isPostPayment && !isLunas ? 'Pelunasan harus dikonfirmasi dulu' : '');
+        const tooltip = canClick ? '' : (isPostPayment && !isLunas ? 'Pelunasan harus dikonfirmasi dulu' : '');
 
         html += `
           <div style="display:flex;align-items:center;flex-shrink:0">
@@ -370,7 +580,7 @@
 
       el.innerHTML = html;
     }
-    window.advanceToStage = async function(status, id) {
+    window.advanceToStage = async function (status, id) {
       if (status === 'completed') {
         openModal('modal-confirm-completed');
         await window.checkUnpaidCrewForCompletion(id);
@@ -379,10 +589,77 @@
       await window.executeAdvanceToStage(status, id);
     };
 
-    window.checkUnpaidCrewForCompletion = async function(id) {
+    window.toggleSelectAllUnpaid = function (freelancerId, checked) {
+      const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}`);
+      checkboxes.forEach(cb => cb.checked = checked);
+      window.updateBulkPayButton(freelancerId);
+    };
+
+    window.updateBulkPayButton = function (freelancerId) {
+      const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}:checked`);
+      const button = document.getElementById(`btn-pay-bulk-${freelancerId}`);
+      const txt = document.getElementById(`pay-total-txt-${freelancerId}`);
+
+      let total = 0;
+      checkboxes.forEach(cb => {
+        total += parseInt(cb.getAttribute('data-amount') || '0', 10);
+      });
+
+      txt.textContent = formatIDR(total);
+
+      if (checkboxes.length === 0) {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+        button.style.pointerEvents = 'none';
+      } else {
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.pointerEvents = 'auto';
+      }
+    };
+
+    // Unified bulk pay — reads crewIds from checkboxes with class crew-cb-{freelancerId}
+    window.payBulkFromModal = async function (btn) {
+      const freelancerId = parseInt(btn.getAttribute('data-freelancer-id'), 10);
+      const name = btn.getAttribute('data-name');
+      const currentBookingId = parseInt(btn.getAttribute('data-booking-id'), 10);
+
+      // Collect checked sesi
+      const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}:checked`);
+      if (checkboxes.length === 0) { alert('Pilih minimal satu sesi terlebih dahulu.'); return; }
+
+      const crewIds = [];
+      let totalAmount = 0;
+      checkboxes.forEach(cb => {
+        crewIds.push(parseInt(cb.getAttribute('data-id'), 10));
+        totalAmount += parseInt(cb.getAttribute('data-amount') || '0', 10);
+      });
+
+      if (!confirm(`Konfirmasi pembayaran freelance ke ${name} sebesar ${formatIDR(totalAmount)} (${crewIds.length} sesi)?`)) return;
+      try {
+        const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crew_ids: crewIds, method: 'Transfer Bank' })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert('Gagal membayar crew: ' + (data.error || data.message || 'Terjadi kesalahan'));
+          return;
+        }
+        await window.checkUnpaidCrewForCompletion(currentBookingId);
+        await load();
+        await window.showPaymentSuccessModal(freelancerId, data, name, totalAmount, currentBookingId);
+      } catch (err) {
+        console.error('Payment error:', err);
+        alert('Kesalahan jaringan saat memproses pembayaran: ' + err.message);
+      }
+    };
+
+    window.checkUnpaidCrewForCompletion = async function (id) {
       const box = document.getElementById('completed-unpaid-box');
       const submitBtn = document.getElementById('btn-submit-completed');
-      
+
       box.style.background = 'var(--surface2)';
       box.style.border = '1px solid var(--border)';
       box.innerHTML = '<div style="color:var(--text2);text-align:center;padding:12px">Checking database...</div>';
@@ -397,20 +674,54 @@
           box.style.background = '#fef2f2';
           box.style.border = '1px solid #fee2e2';
           box.style.color = '#991b1b';
-          
-          let listHtml = '<ul style="margin:8px 0 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px">';
+
+          // Group unpaid by freelancer
+          const grouped = {};
           unpaid.forEach(u => {
-            listHtml += `
-              <li style="display:flex;justify-content:space-between;align-items:center;background:var(--surface);padding:6px 10px;border-radius:6px;border:1px solid var(--border);color:var(--text)">
-                <div style="font-size:12px">
-                  <strong>${u.freelancer_name}</strong> — <span style="color:var(--text2)">${u.session_name}</span> <span style="color:var(--yellow);font-weight:700">(${formatIDR(u.fee_amount)})</span>
-                </div>
-                <button onclick="window.payFreelancerFromModal(${u.freelancer_id}, ${u.id}, '${u.freelancer_name}', ${u.fee_amount}, ${id})" style="
-                  border:none;background:var(--yellow);color:#000;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;cursor:pointer;outline:none;
-                ">💸 Bayar</button>
-              </li>`;
+            if (!grouped[u.freelancer_id]) {
+              grouped[u.freelancer_id] = {
+                freelancer_id: u.freelancer_id,
+                freelancer_name: u.freelancer_name,
+                jobs: []
+              };
+            }
+            grouped[u.freelancer_id].jobs.push(u);
           });
-          listHtml += '</ul>';
+
+          let listHtml = '<div style="margin:8px 0 0 0;display:flex;flex-direction:column;gap:8px">';
+          for (const [freelancerId, fl] of Object.entries(grouped)) {
+            const totalAmount = fl.jobs.reduce((s, j) => s + j.fee_amount, 0);
+            const safeName = fl.freelancer_name.replace(/"/g, '&quot;');
+            listHtml += `
+               <div style="background:var(--surface);padding:10px;border-radius:6px;border:1px solid var(--border);color:var(--text)">
+                 <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px">
+                   <div style="display:flex;align-items:center;gap:6px">
+                     <input type="checkbox" id="select-all-${freelancerId}" checked onchange="window.toggleSelectAllUnpaid(${freelancerId}, this.checked)">
+                     <label for="select-all-${freelancerId}" style="font-weight:700;font-size:12px;cursor:pointer">${fl.freelancer_name}</label>
+                   </div>
+                   <button
+                     id="btn-pay-bulk-${freelancerId}"
+                     data-freelancer-id="${freelancerId}"
+                     data-name="${safeName}"
+                     data-booking-id="${id}"
+                     onclick="window.payBulkFromModal(this)"
+                     style="border:none;background:var(--yellow);color:#000;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;cursor:pointer;outline:none;"
+                   >💸 Bayar (<span id="pay-total-txt-${freelancerId}">${formatIDR(totalAmount)}</span>)</button>
+                 </div>
+                 <div style="padding-left:18px;display:flex;flex-direction:column;gap:6px">
+                   ${fl.jobs.map(u => `
+                     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                       <div style="display:flex;align-items:center;gap:6px">
+                         <input type="checkbox" class="crew-cb-${freelancerId}" data-id="${parseInt(u.id, 10)}" data-amount="${parseInt(u.fee_amount, 10)}" checked onchange="window.updateBulkPayButton(${freelancerId})">
+                         <span style="color:var(--text2)">${u.session_name}</span>
+                       </div>
+                       <span style="font-weight:600">${formatIDR(u.fee_amount)}</span>
+                     </div>
+                   `).join('')}
+                 </div>
+               </div>`;
+          }
+          listHtml += '</div>';
 
           box.innerHTML = `
             <div style="font-weight:700;display:flex;align-items:center;gap:6px">
@@ -442,7 +753,7 @@
       }
     };
 
-    window.payFreelancer = async function(freelancerId, crewId, name, amount) {
+    window.payFreelancer = async function (freelancerId, crewId, name, amount) {
       if (!confirm(`Konfirmasi pembayaran freelance ke ${name} sebesar ${formatIDR(amount)}?`)) return;
       try {
         const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
@@ -462,7 +773,32 @@
       }
     };
 
-    window.payFreelancerFromModal = async function(freelancerId, crewId, name, amount, bookingId) {
+    window.payMultipleJobs = async function (btn) {
+      const freelancerId = parseInt(btn.getAttribute('data-freelancer-id'), 10);
+      const name = btn.getAttribute('data-name');
+      const crewIds = btn.getAttribute('data-crew-ids').split(',').map(Number);
+      const totalAmount = parseInt(btn.getAttribute('data-total-amount'), 10);
+      if (!confirm(`Konfirmasi pembayaran untuk ${name} sebesar ${formatIDR(totalAmount)} (${crewIds.length} sesi)?`)) return;
+      try {
+        const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crew_ids: crewIds, method: 'Transfer Bank' })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert('Gagal membayar crew: ' + (data.error || 'Terjadi kesalahan'));
+          return;
+        }
+        await load();
+        await window.showPaymentSuccessModal(freelancerId, data, name, totalAmount, bookingId);
+      } catch (err) {
+        console.error('Payment error:', err);
+        alert('Kesalahan jaringan saat memproses pembayaran');
+      }
+    };
+
+    window.payFreelancerFromModal = async function (freelancerId, crewId, name, amount, bookingId) {
       if (!confirm(`Konfirmasi pembayaran freelance ke ${name} sebesar ${formatIDR(amount)}?`)) return;
       try {
         const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
@@ -483,13 +819,13 @@
       }
     };
 
-    window.showPaymentSuccessModal = async function(freelancerId, paymentResult, name, amount, bookingId) {
+    window.showPaymentSuccessModal = async function (freelancerId, paymentResult, name, amount, bookingId) {
       document.getElementById('pay-success-name').textContent = name;
       document.getElementById('pay-success-amount').textContent = formatIDR(amount);
       document.getElementById('pay-success-token').textContent = `TOKEN: ${paymentResult.payment_token ? paymentResult.payment_token.toUpperCase() : '-'}`;
-      
+
       const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${paymentResult.payment_token}`;
-      
+
       document.getElementById('btn-pay-view').onclick = () => {
         window.open(receiptLink, '_blank');
       };
@@ -510,7 +846,7 @@ Sorehari TELAH mentransfer fee untuk job berikut:
 
 ━━━━━━━━━━━━━━━━━━
 💵 *Total: ${formatIDR(amount)}*
-📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+📅 Tanggal: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
 💳 Pembayaran: Transfer Bank
 ━━━━━━━━━━━━━━━━━━
 
@@ -533,7 +869,7 @@ Terima kasih atas kerjasamanya! 🙏`;
       openModal('modal-payment-success');
     };
 
-    window.executeAdvanceToStage = async function(status, id) {
+    window.executeAdvanceToStage = async function (status, id) {
       const errEl = document.getElementById('status-error-roadmap');
       if (errEl) errEl.style.display = 'none';
       try {
@@ -558,17 +894,100 @@ Terima kasih atas kerjasamanya! 🙏`;
         }
         closeModal('modal-confirm-completed');
         await load();
-      } catch(e) { alert('Kesalahan jaringan'); }
+      } catch (e) { alert('Kesalahan jaringan'); }
     };
 
     function renderTimeline(sessions) {
-    const el = document.getElementById('timeline');
-    if (!sessions || !sessions.length) {
-    el.innerHTML = '<p style="color:var(--text2);font-size:13px">Belum ada sesi. Sesi otomatis ditambahkan saat booking dibuat.</p>';
-    return;
-    }
+      const el = document.getElementById('timeline');
+      if (!sessions || !sessions.length) {
+        el.innerHTML = '<p style="color:var(--text2);font-size:13px">Belum ada sesi. Sesi otomatis ditambahkan saat booking dibuat.</p>';
+        return;
+      }
 
-    el.innerHTML = `<div class="timeline">${sessions.map(s => `
+      // Group crew by freelancer
+      const crewByFreelancer = {};
+      for (const s of sessions) {
+        for (const c of s.crew) {
+          if (!crewByFreelancer[c.freelancer_id]) {
+            crewByFreelancer[c.freelancer_id] = {
+              freelancer_id: c.freelancer_id,
+              freelancer_name: c.freelancer_name,
+              skill: c.skill,
+              jobs: []
+            };
+          }
+          crewByFreelancer[c.freelancer_id].jobs.push({
+            crew_id: c.id,
+            session_name: s.session_name,
+            fee_amount: c.fee_amount,
+            is_paid: c.is_paid,
+            session_id: s.id
+          });
+        }
+      }
+
+      // Create consolidated view
+      let html = '<div style="display:flex;flex-direction:column;gap:16px">';
+
+      // If there are freelancers assigned, show consolidated payment view
+      if (Object.keys(crewByFreelancer).length > 0) {
+        html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:8px">';
+        html += '<h3 style="font-size:14px;margin:0 0 12px 0">💰 Pembayaran Freelance (Konsolidasi)</h3>';
+
+        for (const [freelancerId, freelancer] of Object.entries(crewByFreelancer)) {
+          const totalFee = freelancer.jobs.reduce((s, j) => s + j.fee_amount, 0);
+          const paidFee = freelancer.jobs.filter(j => j.is_paid).reduce((s, j) => s + j.fee_amount, 0);
+          const unpaidJobs = freelancer.jobs.filter(j => !j.is_paid);
+          const allPaid = unpaidJobs.length === 0;
+
+          html += `
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:13px">
+                  ${freelancer.skill ? `<span style="color:var(--text2)">[${freelancer.skill}]</span> ` : ''}${freelancer.freelancer_name}
+                </div>
+                <div style="font-size:12px;color:var(--text2);margin-top:4px">
+                  Total: <strong style="color:var(--accent)">${formatIDR(totalFee)}</strong>
+                  ${paidFee > 0 ? ` | Sudah dibayar: <strong style="color:var(--green)">${formatIDR(paidFee)}</strong>` : ''}
+                </div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${allPaid ? `
+                  <span style="color:var(--green);font-weight:700;font-size:11px;background:rgba(34,197,94,0.1);padding:4px 8px;border-radius:6px">✅ Lunas</span>
+                ` : `
+                  <button
+                    data-freelancer-id="${freelancerId}"
+                    data-name="${freelancer.freelancer_name.replace(/"/g, '&quot;')}"
+                    data-crew-ids="${unpaidJobs.map(j => j.crew_id).join(',')}"
+                    data-total-amount="${unpaidJobs.reduce((s, j) => s + j.fee_amount, 0)}"
+                    onclick="window.payMultipleJobs(this)"
+                    style="border:none;background:var(--yellow);color:#000;font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;cursor:pointer;outline:none;"
+                  >💸 Bayar Semua</button>
+                `}
+              </div>
+            </div>
+            
+            <!-- Job list -->
+            <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px">
+              ${freelancer.jobs.map((j, idx) => `
+                <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)">
+                  <span>•</span>
+                  <span>${j.session_name}</span>
+                  <span style="color:var(--accent);font-weight:600">${formatIDR(j.fee_amount)}</span>
+                  ${j.is_paid ? `<span style="color:var(--green);font-weight:700">✅</span>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        }
+        html += '</div>';
+      }
+
+      // Then show detailed timeline by session
+      html += '<div style="display:flex;flex-direction:column;gap:12px">';
+      html += sessions.map(s => `
     <div class="timeline-item ${s.is_done ? 'done' : ''}">
     <div style="display:flex;justify-content:space-between;align-items:start">
     <h3>${s.session_name}</h3>
@@ -604,70 +1023,72 @@ Terima kasih atas kerjasamanya! 🙏`;
 
     ${s.crew.length > 0 ? `<div class="session-fee-total">Subtotal biaya sesi: ${formatIDR(s.total_crew_fee)}</div>` : ''}
     </div>
-    `).join('')}</div>`;
+    `).join('');
+      html += '</div></div>';
+      el.innerHTML = html;
     }
     function openInvoiceModal(type) {
-    const b = bookingData;
-    const url = `/invoice.html?id=${b.booking_id}&type=${type}`;
-    document.getElementById('invoice-iframe').src = url;
-    document.getElementById('invoice-modal-title').textContent = type === 'dp' ? '📋 Invoice DP' : '💰 Invoice Pelunasan';
-    openModal('modal-invoice');
+      const b = bookingData;
+      const url = `/invoice.html?id=${b.booking_id}&type=${type}`;
+      document.getElementById('invoice-iframe').src = url;
+      document.getElementById('invoice-modal-title').textContent = type === 'dp' ? '📋 Invoice DP' : '💰 Invoice Pelunasan';
+      openModal('modal-invoice');
     }
     function printInvoice() {
-    const iframe = document.getElementById('invoice-iframe');
-    iframe.contentWindow.print();
+      const iframe = document.getElementById('invoice-iframe');
+      iframe.contentWindow.print();
     }
     function renderInvoiceButtons(b) {
-    const el = document.getElementById('invoice-buttons');
-    const hasPackage = b.package_id || b.package_price;
-    const dpAmount = b.dp_amount || Math.round(b.package_price * 0.3);
-    const phone = (b.client && b.client.phone) || '';
+      const el = document.getElementById('invoice-buttons');
+      const hasPackage = b.package_id || b.package_price;
+      const dpAmount = b.dp_amount || Math.round(b.package_price * 0.3);
+      const phone = (b.client && b.client.phone) || '';
 
-    const dpPayment = b.payments ? b.payments.find(p => p.type === 'dp' && p.status === 'verified') : null;
-    const dpPaid = !!dpPayment;
-    const pelunasanPayment = b.payments ? b.payments.find(p => p.type === 'pelunasan' && p.status === 'verified') : null;
-    const isLunas = !!pelunasanPayment;
-    let html = '';
+      const dpPayment = b.payments ? b.payments.find(p => p.type === 'dp' && p.status === 'verified') : null;
+      const dpPaid = !!dpPayment;
+      const pelunasanPayment = b.payments ? b.payments.find(p => p.type === 'pelunasan' && p.status === 'verified') : null;
+      const isLunas = !!pelunasanPayment;
+      let html = '';
 
-    // Invoice DP — green check when paid
-    if (dpPaid) {
-    html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onclick="window.openInvoiceModal('dp')">
+      // Invoice DP — green check when paid
+      if (dpPaid) {
+        html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onclick="window.openInvoiceModal('dp')">
     <div style="font-size:20px;margin-bottom:6px">📋 <span style="color:var(--green);font-size:16px">✅</span></div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Invoice DP</div>
     <div style="font-size:12px;color:var(--green)">${hasPackage ? formatIDR(dpAmount) + ' — Dibayar' : 'Pilih paket dulu'}</div>
     <div style="font-size:11px;color:var(--text2);margin-top:6px">Klik untuk buka →</div>
     </div>`;
-    } else {
-    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.openInvoiceModal('dp')">
+      } else {
+        html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.openInvoiceModal('dp')">
     <div style="font-size:20px;margin-bottom:6px">📋</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Invoice DP</div>
     <div style="font-size:12px;color:var(--text2)">${hasPackage ? formatIDR(dpAmount) : 'Pilih paket dulu'}</div>
     <div style="font-size:11px;color:var(--text2);margin-top:6px">Klik untuk buka →</div>
     </div>`;
-    }
+      }
 
-    // Invoice Pelunasan
-    const pelunasanAmount = isLunas ? b.package_price : (b.remaining_payment || 0);
-    if (isLunas) {
-    html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;cursor:pointer;min-width:220px" onclick="window.openInvoiceModal('lunas')">
+      // Invoice Pelunasan
+      const pelunasanAmount = isLunas ? b.package_price : (b.remaining_payment || 0);
+      if (isLunas) {
+        html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;cursor:pointer;min-width:220px" onclick="window.openInvoiceModal('lunas')">
     <div style="font-size:20px;margin-bottom:6px">💰 <span style="color:var(--green);font-size:16px">✅</span></div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Invoice LUNAS</div>
     <div style="font-size:12px;color:var(--green)">✅ Pembayaran Selesai</div>
     <div style="font-size:11px;color:var(--text2);margin-top:6px">Klik untuk buka →</div>
     </div>`;
-    } else if (dpPaid && hasPackage) {
-    html += `<div style="background:var(--surface);border:1px solid var(--yellow);border-radius:12px;padding:16px 20px;cursor:pointer;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--yellow)'" onclick="window.openInvoiceModal('lunas')">
+      } else if (dpPaid && hasPackage) {
+        html += `<div style="background:var(--surface);border:1px solid var(--yellow);border-radius:12px;padding:16px 20px;cursor:pointer;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--yellow)'" onclick="window.openInvoiceModal('lunas')">
     <div style="font-size:20px;margin-bottom:6px">💰</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Invoice Pelunasan</div>
     <div style="font-size:12px;color:var(--yellow)">${formatIDR(pelunasanAmount)}</div>
     <div style="font-size:11px;color:var(--text2);margin-top:6px">Klik untuk buka →</div>
     </div>`;
-    }
+      }
 
-    // WA / Pelunasan card — context-aware
-    if (isLunas) {
-    // Sudah lunas → tampilkan detail pembayaran, bukan WA
-    html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;min-width:220px">
+      // WA / Pelunasan card — context-aware
+      if (isLunas) {
+        // Sudah lunas → tampilkan detail pembayaran, bukan WA
+        html += `<div style="background:var(--surface);border:2px solid var(--green);border-radius:12px;padding:16px 20px;min-width:220px">
     <div style="font-size:20px;margin-bottom:6px">✅</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px;color:var(--green)">Pembayaran Lunas</div>
     <div style="font-size:12px;color:var(--text2)">
@@ -676,30 +1097,30 @@ Terima kasih atas kerjasamanya! 🙏`;
     Sisa: <span style="color:var(--green)">Rp 0</span>
     </div>
     </div>`;
-    } else if (dpPaid && hasPackage && phone) {
-    html += `<div style="background:var(--surface);border:1px solid var(--yellow);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--yellow)'" onclick="window.sendPelunasanWA()">
+      } else if (dpPaid && hasPackage && phone) {
+        html += `<div style="background:var(--surface);border:1px solid var(--yellow);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--yellow)'" onclick="window.sendPelunasanWA()">
     <div style="font-size:20px;margin-bottom:6px">💸</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Kirim Link Pelunasan</div>
     <div style="font-size:12px;color:var(--yellow)">Kirim form pelunasan ke client</div>
     </div>`;
-    } else if (hasPackage && phone) {
-    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='#25d366'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.sendInvoiceWA()">
+      } else if (hasPackage && phone) {
+        html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all .15s;min-width:220px" onmouseover="this.style.borderColor='#25d366'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.sendInvoiceWA()">
     <div style="font-size:20px;margin-bottom:6px">💬</div>
     <div style="font-size:14px;font-weight:700;margin-bottom:2px">Kirim Invoice DP</div>
     <div style="font-size:12px;color:var(--text2)">Kirim link invoice DP ke client</div>
     </div>`;
-    }
+      }
 
-    el.innerHTML = html;
+      el.innerHTML = html;
     }
     function sendInvoiceWA() {
-    const b = bookingData;
-    const phone = (b.client && b.client.phone) || '';
-    if (!phone) { alert('Nomor telepon client tidak tersedia'); return; }
-    const dpAmount = b.dp_amount || Math.round(b.package_price * 0.3);
-    const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
-    const invUrl = `${window.location.origin}/invoice.html?id=${b.booking_id}&type=dp`;
-    let tpl = templates.wa_invoice || `Halo {{client_name}} 👋
+      const b = bookingData;
+      const phone = (b.client && b.client.phone) || '';
+      if (!phone) { alert('Nomor telepon client tidak tersedia'); return; }
+      const dpAmount = b.dp_amount || Math.round(b.package_price * 0.3);
+      const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+      const invUrl = `${window.location.origin}/invoice.html?id=${b.booking_id}&type=dp`;
+      let tpl = templates.wa_invoice || `Halo {{client_name}} 👋
 
 Terima kasih telah memilih *Sorehari Photography* 📸
 
@@ -711,25 +1132,25 @@ Silakan buka link invoice lengkap:
 {{invoice_url}}
 
 Terima kasih 🙏`;
-    const vars = { client_name: b.client_name, vendor_name: templates.vendor_name || 'Sorehari Photography', package_name: b.package_name || '-', dp_amount: formatIDR(dpAmount), invoice_url: invUrl };
-    tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
-      if (!vars[key]) return '';
-      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
-    });
-    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
-    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+      const vars = { client_name: b.client_name, vendor_name: templates.vendor_name || 'Sorehari Photography', package_name: b.package_name || '-', dp_amount: formatIDR(dpAmount), invoice_url: invUrl };
+      tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+        if (!vars[key]) return '';
+        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
+      });
+      const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
+      window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
     }
     async function sendPelunasanWA() {
-    const b = bookingData;
-    const phone = (b.client && b.client.phone) || '';
-    if (!phone) { alert('Nomor telepon client tidak tersedia'); return; }
+      const b = bookingData;
+      const phone = (b.client && b.client.phone) || '';
+      if (!phone) { alert('Nomor telepon client tidak tersedia'); return; }
 
-    const res = await API.post(`/api/bookings/${b.booking_id}/generate-pelunasan-token`);
-    const pelunasanUrl = `${window.location.origin}/pelunasan/${res.pelunasan_token}`;
-    const remaining = b.package_price - (b.dp_amount || Math.round(b.package_price * 0.3));
-    const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+      const res = await API.post(`/api/bookings/${b.booking_id}/generate-pelunasan-token`);
+      const pelunasanUrl = `${window.location.origin}/pelunasan/${res.pelunasan_token}`;
+      const remaining = b.package_price - (b.dp_amount || Math.round(b.package_price * 0.3));
+      const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
 
-    let tpl = templates.wa_pelunasan || `Halo Kak {{client_name}} ✨
+      let tpl = templates.wa_pelunasan || `Halo Kak {{client_name}} ✨
 
 Semoga Kakak & pasangan selalu sehat dan dilancarkan segala persiapannya menjelang hari bahagia ya Kak. 😊
 
@@ -744,22 +1165,22 @@ Kakak dapat melakukan pelunasan dan mengunggah bukti transfer secara aman melalu
 Jika ada hal yang ingin dikoordinasikan atau ditanyakan terkait detail acara, silakan kabari kami ya Kak. Kami tidak sabar mengabadikan momen spesial Kakak nanti!
 
 Terima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, Sorehari Team. 📸`;
-    const vars = { client_name: b.client_name, event_date: formatDate(b.event_date), pelunasan_url: pelunasanUrl, remaining: formatIDR(remaining) };
-    tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
-      if (!vars[key]) return '';
-      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
-    });
-    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
-    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+      const vars = { client_name: b.client_name, event_date: formatDate(b.event_date), pelunasan_url: pelunasanUrl, remaining: formatIDR(remaining) };
+      tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+        if (!vars[key]) return '';
+        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
+      });
+      const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
+      window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
     }
     async function renderPelunasanConfirm(b) {
-    const el = document.getElementById('pelunasan-confirm-section');
-    const pelunasan = b.payments ? b.payments.find(p => p.type === 'pelunasan') : null;
+      const el = document.getElementById('pelunasan-confirm-section');
+      const pelunasan = b.payments ? b.payments.find(p => p.type === 'pelunasan') : null;
 
-    // Already confirmed (verified) — show lunas summary
-    if (pelunasan && pelunasan.status === 'verified') {
-    el.style.display = 'block';
-    el.innerHTML = `
+      // Already confirmed (verified) — show lunas summary
+      if (pelunasan && pelunasan.status === 'verified') {
+        el.style.display = 'block';
+        el.innerHTML = `
     <div class="finance-panel" style="border:2px solid var(--green)">
     <h3 style="color:var(--green)">✅ Pembayaran Lunas</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin:12px 0">
@@ -772,15 +1193,15 @@ Terima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, 
     📅 Dibayar penuh pada: <strong>${pelunasan ? pelunasan.payment_date : '-'}</strong>
     </div>
     </div>`;
-    return;
-    }
+        return;
+      }
 
-    // Pending pelunasan receipt — show confirm form
-    if (!pelunasan) { el.style.display = 'none'; return; }
+      // Pending pelunasan receipt — show confirm form
+      if (!pelunasan) { el.style.display = 'none'; return; }
 
-    const receiptUrl = pelunasan.reference ? `/api/uploads/receipts/${pelunasan.reference}` : null;
-    el.style.display = 'block';
-    el.innerHTML = `
+      const receiptUrl = pelunasan.reference ? `/api/uploads/receipts/${pelunasan.reference}` : null;
+      el.style.display = 'block';
+      el.innerHTML = `
     <div class="finance-panel" style="border:2px solid var(--yellow)">
     <h3 style="color:var(--yellow)">💸 Bukti Pelunasan Diterima!</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin:12px 0">
@@ -794,33 +1215,33 @@ Terima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, 
     </div>`;
     }
     async function confirmPelunasan(id) {
-    if (!confirm('Konfirmasi pelunasan ini? Status booking akan menjadi "Selesai".')) return;
-    await API.post(`/api/bookings/${id}/confirm-pelunasan`);
+      if (!confirm('Konfirmasi pelunasan ini? Status booking akan menjadi "Selesai".')) return;
+      await API.post(`/api/bookings/${id}/confirm-pelunasan`);
 
-    // Auto-send WA confirmation to client
-    const b = bookingData;
-    const phone = (b.client && b.client.phone) || '';
-    if (phone) {
-    const invUrl = `${window.location.origin}/invoice.html?id=${b.booking_id}&type=lunas`;
-    const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
-    const msg = encodeURIComponent(
-    `Halo ${b.client_name} 👋\n\n` +
-    `Pembayaran untuk acara *${formatDate(b.event_date)}* telah *LUNAS* ✅\n\n` +
-    `📋 Paket: ${b.package_name || '-'}\n` +
-    `💰 Total: ${formatIDR(b.package_price)}\n\n` +
-    `Invoice lengkap:\n${invUrl}\n\n` +
-    `Terima kasih atas kepercayaannya! Kami akan mempersiapkan acara terbaik untuk Anda 🙏📸`
-    );
-    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
-    }
+      // Auto-send WA confirmation to client
+      const b = bookingData;
+      const phone = (b.client && b.client.phone) || '';
+      if (phone) {
+        const invUrl = `${window.location.origin}/invoice.html?id=${b.booking_id}&type=lunas`;
+        const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+        const msg = encodeURIComponent(
+          `Halo ${b.client_name} 👋\n\n` +
+          `Pembayaran untuk acara *${formatDate(b.event_date)}* telah *LUNAS* ✅\n\n` +
+          `📋 Paket: ${b.package_name || '-'}\n` +
+          `💰 Total: ${formatIDR(b.package_price)}\n\n` +
+          `Invoice lengkap:\n${invUrl}\n\n` +
+          `Terima kasih atas kepercayaannya! Kami akan mempersiapkan acara terbaik untuk Anda 🙏📸`
+        );
+        window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+      }
 
-    await load();
+      await load();
     }
     async function openCrewPicker(sessionId, sessionName) {
-    document.getElementById('crew-modal-info').textContent = `Sesi: ${sessionName}`;
-    const available = await API.get(`/api/bookings/${bookingId}/sessions/${sessionId}/available-crew`);
+      document.getElementById('crew-modal-info').textContent = `Sesi: ${sessionName}`;
+      const available = await API.get(`/api/bookings/${bookingId}/sessions/${sessionId}/available-crew`);
 
-    document.getElementById('crew-list-available').innerHTML = available.map(f => `
+      document.getElementById('crew-list-available').innerHTML = available.map(f => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)">
     <div>
     <strong style="font-size:13px">${f.name}</strong>
@@ -833,21 +1254,22 @@ Terima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, 
     </div>
     `).join('') || '<p style="color:var(--text2);font-size:12px;padding:16px">Tidak ada freelance aktif</p>';
 
-    openModal('modal-crew');
+      openModal('modal-crew');
     }
     async function assignCrew(sessionId, freelancerId, fee, name) {
-    await API.post(`/api/bookings/${bookingId}/sessions/${sessionId}/crew`, {
-    freelancer_id: freelancerId,
-    fee_amount: fee,
-    });
-    await load();
+      await API.post(`/api/bookings/${bookingId}/sessions/${sessionId}/crew`, {
+        freelancer_id: freelancerId,
+        fee_amount: fee,
+      });
+      await load();
     }
     async function removeCrew(sessionId, crewId) {
-    if (!confirm('Hapus kru dari sesi ini?')) return;
-    await API.del(`/api/bookings/${bookingId}/sessions/${sessionId}/crew/${crewId}`);
-    await load();
+      if (!confirm('Hapus kru dari sesi ini?')) return;
+      await API.del(`/api/bookings/${bookingId}/sessions/${sessionId}/crew/${crewId}`);
+      await load();
     }
 
   </script>
 </body>
+
 </html>
