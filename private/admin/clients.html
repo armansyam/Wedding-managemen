@@ -188,6 +188,44 @@
     </div>
   </div>
 
+  <!-- Modal: Selesaikan Booking (identical to booking-detail.html) -->
+  <div class="modal-overlay" id="modal-confirm-completed" style="z-index: 210">
+    <div class="modal" style="max-width:460px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:16px;margin:0">🏁 Konfirmasi Selesaikan Booking</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-confirm-completed')" style="font-size:12px">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Memproses penutupan booking secara permanen. Seluruh administrasi &amp; pembayaran freelance harus tuntas.</p>
+
+      <div id="completed-unpaid-box" style="padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px"></div>
+
+      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-confirm-completed')" style="font-size:12px">Batal</button>
+        <button class="btn btn-primary" id="btn-submit-completed" style="font-size:12px">Ya, Selesaikan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: WA Preview Freelance Payment (identical to booking-detail.html) -->
+  <div class="modal-overlay" id="modal-wa-pay" style="z-index: 220">
+    <div class="modal" style="max-width:540px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:18px">📲 Preview WA ke Freelance</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-wa-pay')">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:4px">Metode / Rekening Pembayaran</label>
+        <select id="bdet-wa-payment-method" style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:'Montserrat',sans-serif" onchange="window.bdetUpdateWaPreview()"></select>
+      </div>
+      <pre id="bdet-wa-preview-body" style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;line-height:1.6"></pre>
+      <div class="modal-actions" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="closeModal('modal-wa-pay')">Batal</button>
+        <button class="btn btn-primary" id="bdet-wa-only" style="background:var(--blue);color:#fff;border:none">📱 Hanya Kirim WA (Validasi)</button>
+        <button class="btn btn-primary" id="bdet-wa-confirm" style="background:var(--green)">💰 Rilis &amp; Konfirmasi Bayar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/admin/js/app.js"></script>
   <script>
     let currentTab = 'persiapan';
@@ -403,9 +441,10 @@
                       </div>
                     </div>
 
-                    <!-- Right: Quick actions -->
+                     <!-- Right: Quick actions -->
                     <div style="display:flex; gap:4px; flex-shrink:0">
                       <button class="btn btn-sm btn-secondary" onclick="viewDetail(${c.booking_id})" style="padding:4px 8px; font-size:11px">Detail</button>
+                      ${c.booking_status === 'delivery' ? `<button class="btn btn-sm btn-primary" onclick="window.openCompletionModal(${c.booking_id})" style="padding:4px 8px; font-size:11px; background:var(--green)">🏁 Selesai</button>` : ''}
                       ${!isLunas ? `<button class="btn btn-sm btn-primary" onclick="openPelunasan(${c.booking_id},'${c.name}',${remaining})" style="padding:4px 8px; font-size:11px">💰 Bayar</button>` : ''}
                       ${!isLunas && phone ? `<a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366; color:#fff; text-decoration:none; padding:4px 8px; font-size:11px; display:inline-flex; align-items:center">💬</a>` : ''}
                     </div>
@@ -422,6 +461,302 @@
     function viewDetail(id) {
       window.location.href = `/admin/booking-detail?id=${id}&from=clients`;
     }
+
+    // ─── WORKFLOW SELESAIKAN BOOKING & FREELANCE PAYMENTS FROM CLIENT LIST ───
+    let _waPayState = null;
+    let _activeBookingId = null;
+
+    function bdetUpdateWaPreview() {
+      if (!_waPayState) return;
+      const { f, jobsText, total } = _waPayState;
+      const method = (document.getElementById('bdet-wa-payment-method') || {}).value || 'Transfer Bank';
+      const msg = `━━━━━━━━━━━━━━━━━━
+💰 *PEMBAYARAN FEE FREELANCE*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Sorehari akan membayarkan fee untuk job berikut:
+
+${jobsText}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+💳 Pembayaran: ${method}
+━━━━━━━━━━━━━━━━━━
+
+Terima kasih atas kerjasamanya! 🙏`;
+      document.getElementById('bdet-wa-preview-body').textContent = msg;
+    }
+    window.bdetUpdateWaPreview = bdetUpdateWaPreview;
+
+    async function openWaPayModal(freelancerId, crewIds, jobLines, total, afterPayCallback) {
+      const f = await API.get(`/api/freelancers/${freelancerId}`);
+      const jobsText = jobLines.map(j => `• ${j.session_name} (${formatIDR(j.fee_amount)})`).join('\n');
+      _waPayState = { freelancerId, f, crewIds, jobsText, total, afterPayCallback };
+
+      const selectEl = document.getElementById('bdet-wa-payment-method');
+      selectEl.innerHTML = '';
+      let hasAccount = false;
+      if (f.bank_account) {
+        try {
+          const accounts = JSON.parse(f.bank_account);
+          if (Array.isArray(accounts) && accounts.length > 0) {
+            accounts.forEach(acc => {
+              const label = `${acc.provider} (${acc.number} a.n. ${acc.holder})`;
+              selectEl.innerHTML += `<option value="Transfer / E-Wallet (${label})">Transfer / E-Wallet (${label})</option>`;
+            });
+            hasAccount = true;
+          }
+        } catch (e) {}
+      }
+      if (!hasAccount) {
+        const raw = f.bank_account ? f.bank_account : 'Belum diatur';
+        selectEl.innerHTML = `<option value="Transfer / E-Wallet (${raw})">Transfer / E-Wallet (${raw})</option>`;
+      }
+      selectEl.innerHTML += `<option value="Cash / Tunai">Cash / Tunai</option>`;
+
+      bdetUpdateWaPreview();
+
+      document.getElementById('bdet-wa-only').onclick = () => {
+        const method = selectEl.value;
+        const validationMsg = `━━━━━━━━━━━━━━━━━━
+📱 *VALIDASI TAGIHAN FREELANCE*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Mohon dicek & divalidasi untuk rincian job berikut:
+
+${jobsText}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+💳 Pembayaran: ${method}
+━━━━━━━━━━━━━━━━━━
+
+Jika data sudah benar, silakan kabari agar dana bisa segera dirilis. Terima kasih! 🙏`;
+        if (f.phone) {
+          window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
+        }
+        closeModal('modal-wa-pay');
+      };
+
+      document.getElementById('bdet-wa-confirm').onclick = async () => {
+        closeModal('modal-wa-pay');
+        const method = selectEl.value;
+        try {
+          const result = await API.post(`/api/freelancers/${freelancerId}/pay-job`, {
+            crew_ids: crewIds,
+            method
+          });
+          const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
+          const paidMsg = `━━━━━━━━━━━━━━━━━━
+💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Sorehari TELAH mentransfer fee untuk job berikut:
+
+${jobsText}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+💳 Pembayaran: ${method}
+━━━━━━━━━━━━━━━━━━
+
+Resi / Kuitansi Pembayaran Resmi:
+${receiptLink}
+
+Terima kasih atas kerjasamanya! 🙏`;
+          if (f.phone) {
+            window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
+          }
+          if (typeof afterPayCallback === 'function') await afterPayCallback();
+        } catch (err) {
+          console.error('Payment error:', err);
+          alert('Gagal memproses pembayaran: ' + (err.message || 'Terjadi kesalahan'));
+        }
+      };
+
+      openModal('modal-wa-pay');
+    }
+
+    window.payBulkFromModal = async function (btn) {
+      const freelancerId = parseInt(btn.getAttribute('data-freelancer-id'), 10);
+      const currentBookingId = parseInt(btn.getAttribute('data-booking-id'), 10);
+      const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}:checked`);
+      if (checkboxes.length === 0) { alert('Pilih minimal satu sesi terlebih dahulu.'); return; }
+
+      const crewIds = [];
+      const jobLines = [];
+      let total = 0;
+      checkboxes.forEach(cb => {
+        const id = parseInt(cb.getAttribute('data-id'), 10);
+        const fee = parseInt(cb.getAttribute('data-amount') || '0', 10);
+        const sessionName = cb.closest('div').querySelector('span[style]')?.textContent?.trim() || 'Sesi';
+        crewIds.push(id);
+        jobLines.push({ session_name: sessionName, fee_amount: fee });
+        total += fee;
+      });
+
+      await openWaPayModal(freelancerId, crewIds, jobLines, total, async () => {
+        await window.checkUnpaidCrewForCompletion(currentBookingId);
+      });
+    };
+
+    window.toggleSelectAllUnpaid = function (freelancerId, checked) {
+      const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}`);
+      checkboxes.forEach(cb => cb.checked = checked);
+      window.updateBulkPayButton(freelancerId);
+    };
+
+    window.updateBulkPayButton = function (freelancerId) {
+      const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}:checked`);
+      const button = document.getElementById(`btn-pay-bulk-${freelancerId}`);
+      const txt = document.getElementById(`pay-total-txt-${freelancerId}`);
+
+      let total = 0;
+      checkboxes.forEach(cb => {
+        total += parseInt(cb.getAttribute('data-amount') || '0', 10);
+      });
+
+      txt.textContent = formatIDR(total);
+
+      if (checkboxes.length === 0) {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+        button.style.pointerEvents = 'none';
+      } else {
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.pointerEvents = 'auto';
+      }
+    };
+
+    window.openCompletionModal = function (bookingId) {
+      _activeBookingId = bookingId;
+      openModal('modal-confirm-completed');
+      window.checkUnpaidCrewForCompletion(bookingId);
+    };
+
+    window.checkUnpaidCrewForCompletion = async function (id) {
+      const box = document.getElementById('completed-unpaid-box');
+      const submitBtn = document.getElementById('btn-submit-completed');
+
+      box.style.background = 'var(--surface2)';
+      box.style.border = '1px solid var(--border)';
+      box.style.color = 'var(--text)';
+      box.innerHTML = '<div style="color:var(--text2);text-align:center;padding:12px">Checking database...</div>';
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.5';
+      submitBtn.style.pointerEvents = 'none';
+
+      try {
+        const res = await fetch(`/api/bookings/${id}/unpaid-crew`);
+        const unpaid = await res.json();
+        if (unpaid && unpaid.length > 0) {
+          box.style.background = '#fef2f2';
+          box.style.border = '1px solid #fee2e2';
+          box.style.color = '#991b1b';
+
+          // Group unpaid by freelancer
+          const grouped = {};
+          unpaid.forEach(u => {
+            if (!grouped[u.freelancer_id]) {
+              grouped[u.freelancer_id] = {
+                freelancer_id: u.freelancer_id,
+                freelancer_name: u.freelancer_name,
+                jobs: []
+              };
+            }
+            grouped[u.freelancer_id].jobs.push(u);
+          });
+
+          let listHtml = '<div style="margin:8px 0 0 0;display:flex;flex-direction:column;gap:8px">';
+          for (const [freelancerId, fl] of Object.entries(grouped)) {
+            const totalAmount = fl.jobs.reduce((s, j) => s + j.fee_amount, 0);
+            const safeName = fl.freelancer_name.replace(/"/g, '&quot;');
+            listHtml += `
+               <div style="background:var(--surface);padding:10px;border-radius:6px;border:1px solid var(--border);color:var(--text)">
+                 <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px">
+                   <div style="display:flex;align-items:center;gap:6px">
+                     <input type="checkbox" id="select-all-${freelancerId}" checked onchange="window.toggleSelectAllUnpaid(${freelancerId}, this.checked)">
+                     <label for="select-all-${freelancerId}" style="font-weight:700;font-size:12px;cursor:pointer">${fl.freelancer_name}</label>
+                   </div>
+                   <button
+                     id="btn-pay-bulk-${freelancerId}"
+                     data-freelancer-id="${freelancerId}"
+                     data-name="${safeName}"
+                     data-booking-id="${id}"
+                     onclick="window.payBulkFromModal(this)"
+                     style="border:none;background:var(--yellow);color:#000;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;cursor:pointer;outline:none;"
+                   >💸 Bayar (<span id="pay-total-txt-${freelancerId}">${formatIDR(totalAmount)}</span>)</button>
+                 </div>
+                 <div style="padding-left:18px;display:flex;flex-direction:column;gap:6px">
+                   ${fl.jobs.map(u => `
+                     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                       <div style="display:flex;align-items:center;gap:6px">
+                         <input type="checkbox" class="crew-cb-${freelancerId}" data-id="${parseInt(u.id, 10)}" data-amount="${parseInt(u.fee_amount, 10)}" checked onchange="window.updateBulkPayButton(${freelancerId})">
+                         <span style="color:var(--text2)">${u.session_name}</span>
+                       </div>
+                       <span style="font-weight:600">${formatIDR(u.fee_amount)}</span>
+                     </div>
+                   `).join('')}
+                 </div>
+               </div>`;
+          }
+          listHtml += '</div>';
+
+          box.innerHTML = `
+            <div style="font-weight:700;display:flex;align-items:center;gap:6px">
+              <span style="color:#dc2626;font-size:16px">⚠️</span> Ada Pembayaran Freelance Belum Terkirim!
+            </div>
+            <p style="font-size:11px;margin:4px 0 8px 0;color:var(--text2)">Harap selesaikan pembayaran untuk freelancer berikut sebelum menyelesaikan booking ini:</p>
+            ${listHtml}
+          `;
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.5';
+          submitBtn.style.pointerEvents = 'none';
+        } else {
+          box.style.background = '#f0fdf4';
+          box.style.border = '1px solid #bbf7d0';
+          box.style.color = '#166534';
+          box.innerHTML = `
+            <div style="font-weight:700;display:flex;align-items:center;gap:6px">
+              <span style="color:#16a34a;font-size:16px">✅</span> Semua Freelancer Telah Dibayar
+            </div>
+            <p style="font-size:12px;margin:4px 0 0 0;color:#14532d">Seluruh kru untuk booking ini telah dibayar penuh. Anda dapat menyelesaikan pekerjaan ini.</p>
+          `;
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.style.pointerEvents = 'auto';
+          submitBtn.onclick = () => window.executeAdvanceToStage('completed', id);
+        }
+      } catch (err) {
+        box.innerHTML = '<div style="color:var(--red)">Gagal mengambil status pembayaran crew.</div>';
+      }
+    };
+
+    window.executeAdvanceToStage = async function (status, id) {
+      try {
+        const res = await fetch(`/api/bookings/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert('Gagal update status: ' + (data.error || 'Terjadi kesalahan'));
+          return;
+        }
+        closeModal('modal-confirm-completed');
+        window.loadClients();
+      } catch (e) { alert('Kesalahan jaringan'); }
+    };
 
     async function openPelunasan(bookingId, name, remaining) {
       document.getElementById('pelunasan-info').textContent = `Client: ${name}`;
