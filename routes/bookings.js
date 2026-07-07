@@ -315,6 +315,60 @@ router.post('/public/:token/upload-receipt', (req, res) => {
 const { requireAuth } = require('../middleware/auth');
 router.use(requireAuth);
 
+// PUT /api/bookings/:id/reschedule - Update event date and detect freelancer clashes
+router.post('/:id/reschedule', (req, res) => {
+  const { id } = req.params;
+  const { event_date, force } = req.body;
+
+  if (!event_date) return res.status(400).json({ error: 'event_date required' });
+
+  const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
+  if (!booking) return res.status(404).json({ error: 'Booking not found' });
+
+  // Get current assigned crew for this booking
+  const assignedCrew = db.prepare(`
+    SELECT bsc.freelancer_id, f.name AS freelancer_name, s.name AS session_name
+    FROM booking_session_crew bsc
+    JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
+    JOIN sessions s ON bs.session_id = s.id
+    JOIN freelancers f ON bsc.freelancer_id = f.id
+    WHERE bs.booking_id = ?
+  `).all(id);
+
+  // Check if any of these crew members already have jobs on the NEW event date
+  const clashes = [];
+  for (const crew of assignedCrew) {
+    const clash = db.prepare(`
+      SELECT b.id AS booking_id, c.name AS client_name, s.name AS session_name
+      FROM booking_session_crew bsc
+      JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
+      JOIN bookings b ON bs.booking_id = b.id
+      JOIN clients c ON b.client_id = c.id
+      JOIN sessions s ON bs.session_id = s.id
+      WHERE bsc.freelancer_id = ? AND b.event_date = ? AND b.id != ?
+    `).get(crew.freelancer_id, event_date, id);
+
+    if (clash) {
+      clashes.push({
+        freelancer_name: crew.freelancer_name,
+        session_name: crew.session_name,
+        clash_client: clash.client_name,
+        clash_session: clash.session_name
+      });
+    }
+  }
+
+  // If clashes found and not forced, return warning with clashes details
+  if (clashes.length > 0 && !force) {
+    return res.json({ has_clashes: true, clashes });
+  }
+
+  // Perform update
+  db.prepare("UPDATE bookings SET event_date = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(event_date, id);
+
+  res.json({ success: true, message: 'Tanggal acara berhasil diperbarui' });
+});
+
 // POST admin verifies DP and creates client
 router.post('/:id/verify-dp', (req, res) => {
   const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(req.params.id);

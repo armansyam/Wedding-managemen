@@ -281,7 +281,7 @@
                 <div><span style="color:var(--text2)">Pasangan:</span> <span id="d-partner"></span></div>
                 <div><span style="color:var(--text2)">Paket:</span> <strong id="d-package"></strong></div>
                 <div><span style="color:var(--text2)">Harga Paket:</span> <span id="d-price"></span></div>
-                <div><span style="color:var(--text2)">Tanggal:</span> <span id="d-date"></span></div>
+                <div><span style="color:var(--text2)">Tanggal:</span> <strong id="d-date"></strong> <button class="btn btn-sm btn-secondary" onclick="window.openEditDateModal()" style="display:inline-flex; align-items:center; gap:2px; padding:2px 8px; font-size:10px; height:auto; margin-left:6px; cursor:pointer">✏️ Edit</button></div>
                 <div><span style="color:var(--text2)">Venue:</span> <span id="d-venue"></span></div>
                 <div style="grid-column:1/-1"><span style="color:var(--text2)">Catatan:</span> <span
                     id="d-notes"></span></div>
@@ -334,6 +334,26 @@
       <div id="crew-list-available"></div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('modal-crew')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Tanggal Acara (Reschedule) -->
+  <div class="modal-overlay" id="modal-edit-date" style="z-index: 190">
+    <div class="modal" style="max-width:400px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h2 style="font-size:16px;margin:0">📅 Ubah Tanggal Acara</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-edit-date')">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Mengubah tanggal pelaksanaan acara untuk seluruh sesi pada booking ini.</p>
+      <div class="form-group">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:6px">Pilih Tanggal Baru</label>
+        <input type="date" id="input-new-event-date" style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit">
+      </div>
+      <div id="reschedule-clash-warning" style="display:none;margin-top:14px;padding:12px;background:#fff5f5;border:1px solid #fecaca;border-radius:10px;color:#dc2626;font-size:12.5px;max-height:180px;overflow-y:auto"></div>
+      <div class="modal-actions" style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-edit-date')" style="font-size:12px">Batal</button>
+        <button class="btn btn-primary" id="btn-save-new-date" onclick="window.saveNewEventDate()" style="font-size:12px">Simpan Perubahan</button>
       </div>
     </div>
   </div>
@@ -1298,6 +1318,79 @@ Terima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, 
       await API.del(`/api/bookings/${bookingId}/sessions/${sessionId}/crew/${crewId}`);
       await load();
     }
+
+    // ─── RESCHEDULE & DATE EDIT FUNCTIONS ───
+    window.openEditDateModal = function() {
+      const b = bookingData;
+      if (!b) return;
+      document.getElementById('input-new-event-date').value = b.event_date || '';
+      document.getElementById('reschedule-clash-warning').style.display = 'none';
+      openModal('modal-edit-date');
+    };
+
+    window.saveNewEventDate = async function(force = false) {
+      const b = bookingData;
+      if (!b) return;
+      const newDate = document.getElementById('input-new-event-date').value;
+      if (!newDate) { alert('Harap pilih tanggal baru terlebih dahulu.'); return; }
+      if (newDate === b.event_date) { closeModal('modal-edit-date'); return; }
+
+      const saveBtn = document.getElementById('btn-save-new-date');
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.5';
+
+      try {
+        const res = await fetch(`/api/bookings/${b.booking_id}/reschedule`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_date: newDate, force })
+        });
+        const data = await res.json();
+        
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
+
+        if (data.has_clashes) {
+          const warningEl = document.getElementById('reschedule-clash-warning');
+          warningEl.style.display = 'block';
+          
+          let clashHtml = `
+            <div style="font-weight:700;margin-bottom:6px">⚠️ Deteksi Bentrok Jadwal Kru!</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+          `;
+          data.clashes.forEach(c => {
+            clashHtml += `
+              <div style="font-size:11.5px;line-height:1.4">
+                • <strong>${c.freelancer_name}</strong> (${c.session_name}) bentrok dengan client <strong>${c.clash_client}</strong> (${c.clash_session}).
+              </div>
+            `;
+          });
+          clashHtml += `
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:var(--text2);border-top:1px solid #fca5a5;padding-top:6px">
+              Apakah Anda ingin tetap menyimpan perubahan tanggal ini? 
+              <br><span style="color:#b91c1c;font-weight:600">Catatan: Kru yang bentrok harap dikonfirmasi ulang atau diganti.</span>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="window.saveNewEventDate(true)" style="background:#dc2626;color:#fff;border:none;margin-top:8px;font-size:11px;width:100%;height:auto;padding:6px">Ya, Paksa Simpan Tanggal Baru</button>
+          `;
+          warningEl.innerHTML = clashHtml;
+          return;
+        }
+
+        if (!res.ok) {
+          alert('Gagal mengubah tanggal: ' + (data.error || 'Terjadi kesalahan'));
+          return;
+        }
+
+        closeModal('modal-edit-date');
+        alert('Tanggal acara berhasil diperbarui!');
+        await load();
+      } catch (err) {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
+        alert('Kesalahan jaringan saat mengubah tanggal');
+      }
+    };
 
   </script>
 </body>
