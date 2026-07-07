@@ -49,6 +49,16 @@ function autoTransitionBooking(bookingId) {
     }
   }
 
+  // completed -> archived if event_date is older than 30 days
+  if (newStatus === 'completed' && eventDateStr) {
+    const eventTime = new Date(eventDateStr + 'T00:00:00').getTime();
+    const todayTime = new Date(todayStr + 'T00:00:00').getTime();
+    const diffDays = (todayTime - eventTime) / (1000 * 60 * 60 * 24);
+    if (diffDays >= 30) {
+      newStatus = 'archived';
+    }
+  }
+
   if (newStatus !== currentStatus) {
     db.prepare("UPDATE bookings SET status = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(newStatus, bookingId);
   }
