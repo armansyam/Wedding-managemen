@@ -56,6 +56,84 @@
       background: var(--accent);
       color: #000;
     }
+
+    /* Month grouping and compact lists */
+    .month-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 24px 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .client-list-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .client-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      gap: 16px;
+      transition: all 0.2s;
+    }
+    .client-row:hover {
+      border-color: var(--accent);
+      background: rgba(201, 169, 110, 0.03);
+    }
+    
+    /* Calendar Date Badge */
+    .date-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+    .date-badge .day-num {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .date-badge .day-name {
+      font-size: 9px;
+      color: var(--text2);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* Highlight Section for upcoming weddings */
+    .highlight-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
   </style>
 </head>
 <body>
@@ -78,8 +156,14 @@
       <button class="tab-btn" id="tab-all" onclick="window.changeTab('all')">Semua Client</button>
     </div>
 
-    <!-- Client cards -->
-    <div id="clients-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px"></div>
+    <!-- Highlight Section for Upcoming Weddings -->
+    <div id="highlight-section" style="display:none">
+      <div class="highlight-title">🔥 Jadwal Terdekat (Mendatang)</div>
+      <div class="highlight-grid" id="highlight-list"></div>
+    </div>
+
+    <!-- Client list container grouped by month -->
+    <div id="clients-list-container"></div>
   </div>
 
   <!-- Modal Detail -->
@@ -122,11 +206,18 @@
         const search = document.getElementById('search').value;
         let clients = await API.get('/api/clients/confirmed');
 
-        // Apply Tab Filter first
+        // Apply Tab Filter
         if (currentTab === 'active') {
           clients = clients.filter(c => ['confirmed', 'in_progress', 'event_day', 'editing', 'delivery'].includes(c.booking_status));
+          // Sort chronologically (closest event first)
+          clients.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
         } else if (currentTab === 'completed') {
           clients = clients.filter(c => c.booking_status === 'completed');
+          // Sort reverse chronological (newly completed first)
+          clients.sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
+        } else {
+          // All: sort by event date
+          clients.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
         }
 
         if (search) {
@@ -157,71 +248,169 @@
             <div style="font-size:18px;font-weight:800;color:var(--accent);margin-top:4px">${pendingPelunasan}</div>
           </div>`;
 
-        const cardsHtml = clients.map(c => {
-          const paid = c.total_paid || 0;
-          const price = c.package_price || 0;
-          const remaining = price - paid;
-          const pct = price > 0 ? Math.round((paid/price)*100) : 0;
-          const isLunas = price > 0 && paid >= price;
+        // Render Highlight Section (only for "active" or "all" tabs and no active search filter)
+        const highlightSection = document.getElementById('highlight-section');
+        const highlightList = document.getElementById('highlight-list');
+        
+        const statusColors = {
+          confirmed: 'var(--blue)',
+          in_progress: 'var(--accent,#C9A96E)',
+          event_day: '#7c3aed',
+          editing: '#0891b2',
+          delivery: '#059669',
+          completed: 'var(--green)',
+          archived: 'var(--text2)',
+          cancelled: 'var(--red)'
+        };
+        const statusLabels = {
+          confirmed: 'Confirmed',
+          in_progress: 'Persiapan',
+          event_day: '📸 Hari H',
+          editing: '🎞️ Pengeditan',
+          delivery: '📦 Penyerahan',
+          completed: '✅ Selesai',
+          archived: 'Arsip',
+          cancelled: 'Batal'
+        };
 
-          const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
-          const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} di ${c.venue || '-'} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
-          const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
+        const todayStr = new Date().toISOString().split('T')[0];
+        const upcomingActive = clients.filter(c => 
+          c.booking_status !== 'completed' && 
+          c.booking_status !== 'cancelled' && 
+          c.event_date >= todayStr
+        );
 
-          const statusColors = {
-            confirmed: 'var(--blue)',
-            in_progress: 'var(--accent,#C9A96E)',
-            event_day: '#7c3aed',
-            editing: '#0891b2',
-            delivery: '#059669',
-            completed: 'var(--green)',
-            archived: 'var(--text2)',
-            cancelled: 'var(--red)'
-          };
-          const statusLabels = {
-            confirmed: 'Confirmed',
-            in_progress: 'Persiapan',
-            event_day: '📸 Hari H',
-            editing: '🎞️ Pengeditan',
-            delivery: '📦 Penyerahan',
-            completed: '✅ Selesai',
-            archived: 'Arsip',
-            cancelled: 'Batal'
-          };
-          const badgeColor = statusColors[c.booking_status] || 'var(--text2)';
-          const badgeLabel = statusLabels[c.booking_status] || c.booking_status;
+        if ((currentTab === 'active' || currentTab === 'all') && upcomingActive.length > 0 && !search) {
+          highlightSection.style.display = 'block';
+          const top3 = upcomingActive.slice(0, 3);
+          
+          highlightList.innerHTML = top3.map(c => {
+            const paid = c.total_paid || 0;
+            const price = c.package_price || 0;
+            const remaining = price - paid;
+            const pct = price > 0 ? Math.round((paid/price)*100) : 0;
+            const isLunas = price > 0 && paid >= price;
+            const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+            const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} di ${c.venue || '-'} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
+            const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
 
-          return `<div class="client-card" ${isLunas ? 'style="border:2px solid var(--green);position:relative"' : ''}>
-            ${isLunas ? '<div style="position:absolute;top:-1px;right:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:0 0 6px 6px;letter-spacing:1px">✅ LUNAS</div>' : ''}
-            <div style="display:flex;justify-content:space-between;align-items:start">
-              <div>
-                <div class="client-name">${c.name}</div>
-                <div class="client-partner">${c.partner_name ? '♡ ' + c.partner_name : ''}</div>
+            return `<div class="client-card" ${isLunas ? 'style="border:2px solid var(--green);position:relative"' : ''}>
+              ${isLunas ? '<div style="position:absolute;top:-1px;right:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:0 0 6px 6px;letter-spacing:1px">✅ LUNAS</div>' : ''}
+              <div style="display:flex;justify-content:space-between;align-items:start">
+                <div>
+                  <div class="client-name">${c.name}</div>
+                  <div class="client-partner">${c.partner_name ? '♡ ' + c.partner_name : ''}</div>
+                </div>
+                <span class="badge" style="background:${statusColors[c.booking_status]};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${statusLabels[c.booking_status]}</span>
               </div>
-              <span class="badge" style="background:${badgeColor};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${badgeLabel}</span>
-            </div>
-            <div class="client-meta">
-              <span>📅 ${formatDate(c.event_date)}</span>
-              <span>📍 ${c.venue || '-'}</span>
-              <span>🏷️ ${c.package_name || '-'}</span>
-            </div>
-            <div class="client-finance">
-              <div class="item"><div class="label">Harga Paket</div><div class="val">${formatIDR(price)}</div></div>
-              <div class="item"><div class="label">Dibayar</div><div class="val" style="color:var(--green)">${formatIDR(paid)}</div></div>
-              <div class="item"><div class="label">Sisa</div><div class="val" style="color:${isLunas ? 'var(--green)' : 'var(--red)'}">${formatIDR(Math.max(0,remaining))}</div></div>
-            </div>
-            <div class="progress-bar">
-              <div class="fill" style="width:${pct}%;background:${isLunas ? 'var(--green)' : 'var(--blue)'}"></div>
-            </div>
-            <div class="client-actions">
-              <button class="btn btn-sm btn-secondary" onclick="viewDetail(${c.booking_id})">Detail</button>
-              ${!isLunas ? `<a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center">💬 Tagih</a>` : ''}
-              ${!isLunas ? `<button class="btn btn-sm btn-primary" onclick="openPelunasan(${c.booking_id},'${c.name}',${remaining})">💰 Pelunasan</button>` : ''}
-            </div>
-          </div>`;
-        }).join('');
+              <div class="client-meta">
+                <span>📅 ${formatDate(c.event_date)}</span>
+                <span>📍 ${c.venue || '-'}</span>
+                <span>🏷️ ${c.package_name || '-'}</span>
+              </div>
+              <div class="client-finance">
+                <div class="item"><div class="label">Harga Paket</div><div class="val">${formatIDR(price)}</div></div>
+                <div class="item"><div class="label">Dibayar</div><div class="val" style="color:var(--green)">${formatIDR(paid)}</div></div>
+                <div class="item"><div class="label">Sisa</div><div class="val" style="color:${isLunas ? 'var(--green)' : 'var(--red)'}">${formatIDR(Math.max(0,remaining))}</div></div>
+              </div>
+              <div class="progress-bar">
+                <div class="fill" style="width:${pct}%;background:${isLunas ? 'var(--green)' : 'var(--blue)'}"></div>
+              </div>
+              <div class="client-actions">
+                <button class="btn btn-sm btn-secondary" onclick="viewDetail(${c.booking_id})">Detail</button>
+                ${!isLunas ? `<a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center">💬 Tagih</a>` : ''}
+                ${!isLunas ? `<button class="btn btn-sm btn-primary" onclick="openPelunasan(${c.booking_id},'${c.name}',${remaining})">💰 Pelunasan</button>` : ''}
+              </div>
+            </div>`;
+          }).join('');
+        } else {
+          highlightSection.style.display = 'none';
+        }
 
-        document.getElementById('clients-list').innerHTML = cardsHtml || '<div style="text-align:center;color:var(--text2);padding:40px;grid-column:1/-1">Belum ada client aktif</div>';
+        // Render Month-Grouped Compact List
+        const listContainer = document.getElementById('clients-list-container');
+        if (clients.length === 0) {
+          listContainer.innerHTML = '<div style="text-align:center;color:var(--text2);padding:40px">Belum ada client</div>';
+          return;
+        }
+
+        // Group clients by Month-Year
+        const groups = {};
+        clients.forEach(c => {
+          if (!c.event_date) return;
+          const dt = new Date(c.event_date + 'T00:00:00');
+          const key = dt.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(c);
+        });
+
+        let containerHtml = '';
+        for (const [monthYear, list] of Object.entries(groups)) {
+          containerHtml += `
+            <div class="month-header">
+              <span>📅</span> ${monthYear} <span style="font-size:11px;color:var(--text2);font-weight:normal">(${list.length} acara)</span>
+            </div>
+            <div class="client-list-compact">
+              ${list.map(c => {
+                const paid = c.total_paid || 0;
+                const price = c.package_price || 0;
+                const remaining = price - paid;
+                const isLunas = price > 0 && paid >= price;
+                
+                const dt = new Date(c.event_date + 'T00:00:00');
+                const dayNum = dt.getDate();
+                const dayName = dt.toLocaleDateString('id-ID', { weekday: 'short' });
+
+                const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+                const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nTerima kasih! 🙏`;
+                const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
+
+                return `
+                  <div class="client-row" style="${isLunas ? 'border-left: 4px solid var(--green)' : ''}">
+                    <!-- Left: Date Badge -->
+                    <div class="date-badge">
+                      <span class="day-num">${dayNum}</span>
+                      <span class="day-name">${dayName}</span>
+                    </div>
+
+                    <!-- Middle: Info -->
+                    <div style="flex:1; min-width:0">
+                      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+                        <strong style="font-size:14px; color:var(--text); cursor:pointer" onclick="viewDetail(${c.booking_id})">${c.name}</strong>
+                        ${c.partner_name ? `<span style="font-size:12px; color:var(--text2)">♡ ${c.partner_name}</span>` : ''}
+                      </div>
+                      <div style="font-size:11px; color:var(--text2); margin-top:2px; display:flex; gap:10px; flex-wrap:wrap">
+                        <span>📍 ${c.venue || '-'}</span>
+                        <span>🏷️ ${c.package_name || '-'}</span>
+                      </div>
+                    </div>
+
+                    <!-- Right-Center: Status and Payment Info -->
+                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0">
+                      <span class="badge" style="background:${statusColors[c.booking_status]}; color:#fff; font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px">${statusLabels[c.booking_status]}</span>
+                      
+                      <div style="text-align:right; font-size:11px; line-height:1.3; min-width:90px">
+                        <div style="color:var(--text2)">Sisa Pelunasan</div>
+                        <div style="font-weight:700; color:${isLunas ? 'var(--green)' : 'var(--red)'}">
+                          ${isLunas ? 'Lunas ✅' : formatIDR(remaining)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right: Quick actions -->
+                    <div style="display:flex; gap:4px; flex-shrink:0">
+                      <button class="btn btn-sm btn-secondary" onclick="viewDetail(${c.booking_id})" style="padding:4px 8px; font-size:11px">Detail</button>
+                      ${!isLunas ? `<button class="btn btn-sm btn-primary" onclick="openPelunasan(${c.booking_id},'${c.name}',${remaining})" style="padding:4px 8px; font-size:11px">💰 Bayar</button>` : ''}
+                      ${!isLunas && phone ? `<a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#25D366; color:#fff; text-decoration:none; padding:4px 8px; font-size:11px; display:inline-flex; align-items:center">💬</a>` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        listContainer.innerHTML = containerHtml;
     };
 
     function viewDetail(id) {
