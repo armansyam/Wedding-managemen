@@ -2,12 +2,12 @@ const db = require('../db');
 
 // Default vendor settings
 const defaultSettings = [
-  ['vendor_name', 'Sorehari Photography'],
-  ['vendor_tagline', 'Masuk Kotor, Keluar Kinclong ✨'],
-  ['vendor_email', 'hello@sorehari.com'],
+  ['vendor_name', 'Wedding Vendor'],
+  ['vendor_tagline', 'Your Story, Beautifully Captured ✨'],
+  ['vendor_email', 'hello@weddingvendor.com'],
   ['vendor_phone', '0823333333420'],
-  ['vendor_address', 'Makassar, Sulawesi Selatan'],
-  ['vendor_website', 'sorehari.com'],
+  ['vendor_address', 'Your Address, City'],
+  ['vendor_website', 'weddingvendor.com'],
   ['currency', 'IDR'],
   ['tax_rate', '0'],
 ];

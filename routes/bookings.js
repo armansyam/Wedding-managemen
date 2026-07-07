@@ -168,7 +168,7 @@ router.get('/invoice/:id', (req, res) => {
     sessions,
     bank_name: settings.bank_name || 'BCA',
     bank_account: settings.bank_account || '3420-1111-99',
-    bank_holder: settings.bank_holder || 'Sorehari Photography',
+    bank_holder: settings.bank_holder || 'Wedding Vendor',
   });
 });
 

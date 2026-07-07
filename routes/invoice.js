@@ -33,7 +33,7 @@ router.get('/:id/invoice', (req, res) => {
 
   // Header
   doc.fontSize(22).font('Helvetica-Bold').fillColor(dark)
-     .text(settings?.vendor_name || 'Sorehari Photography', 50, 50);
+     .text(settings?.vendor_name || 'Wedding Vendor', 50, 50);
   doc.fontSize(9).font('Helvetica').fillColor(muted)
      .text(settings?.vendor_email || '', 50, 76);
   if (settings?.vendor_phone) {
@@ -107,14 +107,14 @@ router.get('/:id/invoice', (req, res) => {
   doc.fontSize(11).font('Helvetica-Bold').fillColor(accent).text('Transfer ke:', 65, y);
   y += 18;
   doc.fontSize(10).font('Helvetica').fillColor(dark);
-  doc.text(settings?.bank_info || 'Bank BCA - 3420-1111-99 - a.n. Sorehari Photography', 65, y);
+  doc.text(settings?.bank_info || 'Bank BCA - 3420-1111-99 - a.n. Wedding Vendor', 65, y);
   y += 16;
   doc.fontSize(9).font('Helvetica').fillColor(muted).text('Kirim bukti transfer ke admin setelah pembayaran.', 65, y);
 
   // Footer
   doc.fontSize(8).font('Helvetica').fillColor(muted)
      .text('Terima kasih atas kepercayaan Anda.', 50, 720, { align: 'center' })
-     .text(settings?.vendor_name || 'Sorehari Photography', 50, 732, { align: 'center' });
+     .text(settings?.vendor_name || 'Wedding Vendor', 50, 732, { align: 'center' });
 
   doc.end();
 });

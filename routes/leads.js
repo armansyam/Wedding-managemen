@@ -116,7 +116,7 @@ router.post('/:id/convert', (req, res) => {
   const bookingLink = `${req.protocol}://${req.headers.host}/booking/${bookingToken}`;
 
   // Get vendor name for template
-  const vendorName = db.prepare("SELECT value FROM settings WHERE key = 'vendor_name'").get()?.value || 'Sorehari Photography';
+  const vendorName = db.prepare("SELECT value FROM settings WHERE key = 'vendor_name'").get()?.value || 'Wedding Vendor';
 
   // Build wa.me message from template
   const rawTemplate = db.prepare("SELECT value FROM settings WHERE key = 'wa_booking_proposal'").get()?.value;

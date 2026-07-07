@@ -194,8 +194,8 @@ function renderSidebar(activePage) {
 
   let html = `
     <div class="sidebar-title" style="display:flex; align-items:center; justify-content:center; padding: 0 14px 20px;">
-      <img src="/logo.png" id="sidebar-logo" style="max-height:80px; max-width:100%; object-fit:contain; object-position:center;" onerror="this.style.display='none'; document.getElementById('sidebar-text-title').style.display='block';">
-      <span id="sidebar-text-title" style="display:none">Sorehari 📸</span>
+      <img src="/logo.png" id="sidebar-logo" style="max-height:80px; max-width:100%; object-fit:contain; object-position:center;" onerror="this.onerror=null; this.src='/ams-logo.png';">
+      <span id="sidebar-text-title" style="display:none">Loading...</span>
     </div>
     <div class="tab-sidebar">
   `;
@@ -224,6 +224,20 @@ function renderSidebar(activePage) {
   `;
 
   sidebarEl.innerHTML = html;
+
+  // Fetch settings dynamically to set vendor name title fallback
+  fetch('/api/settings')
+    .then(res => res.json())
+    .then(settings => {
+      const textTitleEl = document.getElementById('sidebar-text-title');
+      if (textTitleEl) {
+        textTitleEl.textContent = (settings.vendor_name || 'Wedding Vendor') + ' 📸';
+      }
+    })
+    .catch(err => {
+      const textTitleEl = document.getElementById('sidebar-text-title');
+      if (textTitleEl) textTitleEl.textContent = 'Wedding Vendor 📸';
+    });
 
   const themeToggleBtn = sidebarEl.querySelector('#theme-toggle-btn');
   if (themeToggleBtn) {
