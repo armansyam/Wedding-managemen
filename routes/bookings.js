@@ -408,7 +408,7 @@ router.get('/', (req, res) => {
 // GET /api/bookings/:id/unpaid-crew
 router.get('/:id/unpaid-crew', (req, res) => {
   const unpaid = db.prepare(`
-    SELECT bsc.id, bsc.fee_amount, f.name AS freelancer_name, s.name AS session_name
+    SELECT bsc.id, bsc.freelancer_id, bsc.fee_amount, f.name AS freelancer_name, s.name AS session_name
     FROM booking_session_crew bsc
     JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
     JOIN freelancers f ON bsc.freelancer_id = f.id
@@ -563,7 +563,7 @@ router.put('/:id/status', (req, res) => {
   // Freelance payment gate: 'completed' status requires all assigned crew to be paid
   if (status === 'completed') {
     const unpaid = db.prepare(`
-      SELECT bsc.id, bsc.fee_amount, f.name AS freelancer_name, s.name AS session_name
+      SELECT bsc.id, bsc.freelancer_id, bsc.fee_amount, f.name AS freelancer_name, s.name AS session_name
       FROM booking_session_crew bsc
       JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
       JOIN freelancers f ON bsc.freelancer_id = f.id
