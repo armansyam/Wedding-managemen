@@ -377,30 +377,22 @@
   </div>
 
   <!-- Modal: Bukti Pembayaran Freelance (Receipt) -->
-  <div class="modal-overlay" id="modal-payment-success" style="z-index: 220">
-    <div class="modal" style="max-width:400px; text-align:center">
-      <div style="font-size:40px; margin-bottom:12px">💸</div>
-      <h2 style="font-size:16px; margin-bottom:6px">Pembayaran Kru Berhasil!</h2>
-      <p style="font-size:12px; color:var(--text2); margin-bottom:16px">Pembayaran fee freelance telah berhasil
-        diverifikasi dan tercatat di sistem.</p>
-
-      <div
-        style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px; font-size:13px; text-align:left">
-        <div><span style="color:var(--text2)">Kru:</span> <strong id="pay-success-name"></strong></div>
-        <div><span style="color:var(--text2)">Fee:</span> <strong id="pay-success-amount"
-            style="color:var(--green)"></strong></div>
-        <div><span style="color:var(--text2)">Metode:</span> <span id="pay-success-method">Transfer Bank</span></div>
-        <div
-          style="border-top:1px solid var(--border); margin-top:8px; padding-top:8px; font-size:11px; font-family:monospace; color:var(--text2)"
-          id="pay-success-token"></div>
+  <!-- Modal WA Preview Freelance Payment (identical to freelancers sidebar) -->
+  <div class="modal-overlay" id="modal-wa-pay" style="z-index: 220">
+    <div class="modal" style="max-width:540px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:18px">📲 Preview WA ke Freelance</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-wa-pay')">✕</button>
       </div>
-
-      <div style="display:flex; flex-direction:column; gap:8px">
-        <button class="btn btn-primary" id="btn-pay-wa" style="width:100%; font-size:12px">💬 Kirim Resi via WA</button>
-        <button class="btn btn-secondary" id="btn-pay-view" style="width:100%; font-size:12px">🔍 Lihat Kuitansi /
-          Resi</button>
-        <button class="btn btn-secondary" onclick="closeModal('modal-payment-success')"
-          style="width:100%; font-size:12px">Tutup</button>
+      <div class="form-group" style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text2);display:block;margin-bottom:4px">Metode / Rekening Pembayaran</label>
+        <select id="bdet-wa-payment-method" style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:'Montserrat',sans-serif" onchange="window.bdetUpdateWaPreview()"></select>
+      </div>
+      <pre id="bdet-wa-preview-body" style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;line-height:1.6"></pre>
+      <div class="modal-actions" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="closeModal('modal-wa-pay')">Batal</button>
+        <button class="btn btn-primary" id="bdet-wa-only" style="background:var(--blue);color:#fff;border:none">📱 Hanya Kirim WA (Validasi)</button>
+        <button class="btn btn-primary" id="bdet-wa-confirm" style="background:var(--green)">💰 Rilis &amp; Konfirmasi Bayar</button>
       </div>
     </div>
   </div>
@@ -618,42 +610,189 @@
       }
     };
 
-    // Unified bulk pay — reads crewIds from checkboxes with class crew-cb-{freelancerId}
+    // ─── CENTRAL WA PAY MODAL ─────────────────────────────────────────────────
+    // All payment buttons (per-chip, bulk table, modal) funnel through here.
+    // crewIds: array of booking_session_crew.id
+    // jobsLabel: array of {session_name, fee_amount} for preview text
+    // afterPayCallback: async function() called after successful payment (optional)
+    let _waPayState = null; // holds { freelancerId, f, crewIds, jobsText, total, afterPayCallback }
+
+    function bdetUpdateWaPreview() {
+      if (!_waPayState) return;
+      const { f, jobsText, total } = _waPayState;
+      const method = (document.getElementById('bdet-wa-payment-method') || {}).value || 'Transfer Bank';
+      const msg = `━━━━━━━━━━━━━━━━━━
+💰 *PEMBAYARAN FEE FREELANCE*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Sorehari akan membayarkan fee untuk job berikut:
+
+${jobsText}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+💳 Pembayaran: ${method}
+━━━━━━━━━━━━━━━━━━
+
+Terima kasih atas kerjasamanya! 🙏`;
+      document.getElementById('bdet-wa-preview-body').textContent = msg;
+    }
+    window.bdetUpdateWaPreview = bdetUpdateWaPreview;
+
+    async function openWaPayModal(freelancerId, crewIds, jobLines, total, afterPayCallback) {
+      // jobLines: array of { session_name, fee_amount }
+      const f = await API.get(`/api/freelancers/${freelancerId}`);
+      const jobsText = jobLines.map(j => `• ${j.session_name} (${formatIDR(j.fee_amount)})`).join('\n');
+      _waPayState = { freelancerId, f, crewIds, jobsText, total, afterPayCallback };
+
+      // Populate payment method dropdown from freelancer bank accounts
+      const selectEl = document.getElementById('bdet-wa-payment-method');
+      selectEl.innerHTML = '';
+      let hasAccount = false;
+      if (f.bank_account) {
+        try {
+          const accounts = JSON.parse(f.bank_account);
+          if (Array.isArray(accounts) && accounts.length > 0) {
+            accounts.forEach(acc => {
+              const label = `${acc.provider} (${acc.number} a.n. ${acc.holder})`;
+              selectEl.innerHTML += `<option value="Transfer / E-Wallet (${label})">Transfer / E-Wallet (${label})</option>`;
+            });
+            hasAccount = true;
+          }
+        } catch (e) {}
+      }
+      if (!hasAccount) {
+        const raw = f.bank_account ? f.bank_account : 'Belum diatur';
+        selectEl.innerHTML = `<option value="Transfer / E-Wallet (${raw})">Transfer / E-Wallet (${raw})</option>`;
+      }
+      selectEl.innerHTML += `<option value="Cash / Tunai">Cash / Tunai</option>`;
+
+      bdetUpdateWaPreview();
+
+      // Button: Hanya Kirim WA (validasi — no DB write)
+      document.getElementById('bdet-wa-only').onclick = () => {
+        const method = selectEl.value;
+        const validationMsg = `━━━━━━━━━━━━━━━━━━
+📱 *VALIDASI TAGIHAN FREELANCE*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Mohon dicek & divalidasi untuk rincian job berikut:
+
+${jobsText}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+💳 Pembayaran: ${method}
+━━━━━━━━━━━━━━━━━━
+
+Jika data sudah benar, silakan kabari agar dana bisa segera dirilis. Terima kasih! 🙏`;
+        if (f.phone) {
+          window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
+        }
+        closeModal('modal-wa-pay');
+      };
+
+      // Button: Rilis & Konfirmasi Bayar (DB write + WA receipt)
+      document.getElementById('bdet-wa-confirm').onclick = async () => {
+        closeModal('modal-wa-pay');
+        const method = selectEl.value;
+        try {
+          const result = await API.post(`/api/freelancers/${freelancerId}/pay-job`, {
+            crew_ids: crewIds,
+            method
+          });
+          const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
+          const paidMsg = `━━━━━━━━━━━━━━━━━━
+💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
+━━━━━━━━━━━━━━━━━━
+
+Halo ${f.name},
+
+Sorehari TELAH mentransfer fee untuk job berikut:
+
+${jobsText}
+
+━━━━━━━━━━━━━━━━━━
+💵 *Total: ${formatIDR(total)}*
+📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+💳 Pembayaran: ${method}
+━━━━━━━━━━━━━━━━━━
+
+Resi / Kuitansi Pembayaran Resmi:
+${receiptLink}
+
+Terima kasih atas kerjasamanya! 🙏`;
+          if (f.phone) {
+            window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
+          }
+          // Reload & run callback
+          await load();
+          if (typeof afterPayCallback === 'function') await afterPayCallback();
+        } catch (err) {
+          console.error('Payment error:', err);
+          alert('Gagal memproses pembayaran: ' + (err.message || 'Terjadi kesalahan'));
+        }
+      };
+
+      openModal('modal-wa-pay');
+    }
+
+    // ─── per-chip "💸 Bayar" button (in session detail row) ──────────────────
+    window.payFreelancer = async function (freelancerId, crewId, name, amount) {
+      await openWaPayModal(
+        freelancerId,
+        [crewId],
+        [{ session_name: name, fee_amount: amount }],
+        amount,
+        null
+      );
+    };
+
+    // ─── "💸 Bayar" button in consolidated payment table at bottom ───────────
+    window.payMultipleJobs = async function (btn) {
+      const freelancerId = parseInt(btn.getAttribute('data-freelancer-id'), 10);
+      const crewIds = btn.getAttribute('data-crew-ids').split(',').map(Number);
+      const total = parseInt(btn.getAttribute('data-total-amount'), 10);
+      // Build job lines from adjacent session info stored in timeline data
+      const jobLines = crewIds.map(id => {
+        // find in bookingData.sessions
+        for (const s of (bookingData.sessions || [])) {
+          for (const c of s.crew) {
+            if (c.id === id) return { session_name: s.session_name, fee_amount: c.fee_amount };
+          }
+        }
+        return { session_name: 'Sesi', fee_amount: 0 };
+      });
+      await openWaPayModal(freelancerId, crewIds, jobLines, total, null);
+    };
+
+    // ─── "💸 Bayar" bulk button inside the "Selesaikan Booking" modal ────────
     window.payBulkFromModal = async function (btn) {
       const freelancerId = parseInt(btn.getAttribute('data-freelancer-id'), 10);
-      const name = btn.getAttribute('data-name');
       const currentBookingId = parseInt(btn.getAttribute('data-booking-id'), 10);
-
-      // Collect checked sesi
       const checkboxes = document.querySelectorAll(`.crew-cb-${freelancerId}:checked`);
       if (checkboxes.length === 0) { alert('Pilih minimal satu sesi terlebih dahulu.'); return; }
 
       const crewIds = [];
-      let totalAmount = 0;
+      const jobLines = [];
+      let total = 0;
       checkboxes.forEach(cb => {
-        crewIds.push(parseInt(cb.getAttribute('data-id'), 10));
-        totalAmount += parseInt(cb.getAttribute('data-amount') || '0', 10);
+        const id = parseInt(cb.getAttribute('data-id'), 10);
+        const fee = parseInt(cb.getAttribute('data-amount') || '0', 10);
+        const sessionName = cb.closest('div').querySelector('span[style]')?.textContent?.trim() || 'Sesi';
+        crewIds.push(id);
+        jobLines.push({ session_name: sessionName, fee_amount: fee });
+        total += fee;
       });
 
-      if (!confirm(`Konfirmasi pembayaran freelance ke ${name} sebesar ${formatIDR(totalAmount)} (${crewIds.length} sesi)?`)) return;
-      try {
-        const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crew_ids: crewIds, method: 'Transfer Bank' })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          alert('Gagal membayar crew: ' + (data.error || data.message || 'Terjadi kesalahan'));
-          return;
-        }
+      await openWaPayModal(freelancerId, crewIds, jobLines, total, async () => {
         await window.checkUnpaidCrewForCompletion(currentBookingId);
-        await load();
-        await window.showPaymentSuccessModal(freelancerId, data, name, totalAmount, currentBookingId);
-      } catch (err) {
-        console.error('Payment error:', err);
-        alert('Kesalahan jaringan saat memproses pembayaran: ' + err.message);
-      }
+      });
     };
 
     window.checkUnpaidCrewForCompletion = async function (id) {
@@ -753,121 +892,8 @@
       }
     };
 
-    window.payFreelancer = async function (freelancerId, crewId, name, amount) {
-      if (!confirm(`Konfirmasi pembayaran freelance ke ${name} sebesar ${formatIDR(amount)}?`)) return;
-      try {
-        const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crew_ids: [crewId], method: 'Transfer Bank' })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          alert('Gagal membayar crew: ' + (data.error || 'Terjadi kesalahan'));
-          return;
-        }
-        await load();
-        await window.showPaymentSuccessModal(freelancerId, data, name, amount, bookingId);
-      } catch (err) {
-        alert('Kesalahan jaringan saat memproses pembayaran');
-      }
-    };
 
-    window.payMultipleJobs = async function (btn) {
-      const freelancerId = parseInt(btn.getAttribute('data-freelancer-id'), 10);
-      const name = btn.getAttribute('data-name');
-      const crewIds = btn.getAttribute('data-crew-ids').split(',').map(Number);
-      const totalAmount = parseInt(btn.getAttribute('data-total-amount'), 10);
-      if (!confirm(`Konfirmasi pembayaran untuk ${name} sebesar ${formatIDR(totalAmount)} (${crewIds.length} sesi)?`)) return;
-      try {
-        const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crew_ids: crewIds, method: 'Transfer Bank' })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          alert('Gagal membayar crew: ' + (data.error || 'Terjadi kesalahan'));
-          return;
-        }
-        await load();
-        await window.showPaymentSuccessModal(freelancerId, data, name, totalAmount, bookingId);
-      } catch (err) {
-        console.error('Payment error:', err);
-        alert('Kesalahan jaringan saat memproses pembayaran');
-      }
-    };
 
-    window.payFreelancerFromModal = async function (freelancerId, crewId, name, amount, bookingId) {
-      if (!confirm(`Konfirmasi pembayaran freelance ke ${name} sebesar ${formatIDR(amount)}?`)) return;
-      try {
-        const res = await fetch(`/api/freelancers/${freelancerId}/pay-job`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crew_ids: [crewId], method: 'Transfer Bank' })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          alert('Gagal membayar crew: ' + (data.error || 'Terjadi kesalahan'));
-          return;
-        }
-        await window.checkUnpaidCrewForCompletion(bookingId);
-        await load();
-        await window.showPaymentSuccessModal(freelancerId, data, name, amount, bookingId);
-      } catch (err) {
-        alert('Kesalahan jaringan saat memproses pembayaran');
-      }
-    };
-
-    window.showPaymentSuccessModal = async function (freelancerId, paymentResult, name, amount, bookingId) {
-      document.getElementById('pay-success-name').textContent = name;
-      document.getElementById('pay-success-amount').textContent = formatIDR(amount);
-      document.getElementById('pay-success-token').textContent = `TOKEN: ${paymentResult.payment_token ? paymentResult.payment_token.toUpperCase() : '-'}`;
-
-      const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${paymentResult.payment_token}`;
-
-      document.getElementById('btn-pay-view').onclick = () => {
-        window.open(receiptLink, '_blank');
-      };
-
-      try {
-        const f = await API.get(`/api/freelancers/${freelancerId}`);
-        if (f && f.phone) {
-          const paidMsg = `━━━━━━━━━━━━━━━━━━
-💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
-━━━━━━━━━━━━━━━━━━
-
-Halo ${f.name},
-
-Sorehari TELAH mentransfer fee untuk job berikut:
-
-- Sesi: ${name}
-- Booking: ${bookingData ? bookingData.client_name : 'Sorehari Photography'}
-
-━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(amount)}*
-📅 Tanggal: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-💳 Pembayaran: Transfer Bank
-━━━━━━━━━━━━━━━━━━
-
-Resi / Kuitansi Pembayaran Resmi:
-${receiptLink}
-
-Terima kasih atas kerjasamanya! 🙏`;
-
-          document.getElementById('btn-pay-wa').style.display = 'block';
-          document.getElementById('btn-pay-wa').onclick = () => {
-            window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
-          };
-        } else {
-          document.getElementById('btn-pay-wa').style.display = 'none';
-        }
-      } catch (err) {
-        document.getElementById('btn-pay-wa').style.display = 'none';
-      }
-
-      openModal('modal-payment-success');
-    };
 
     window.executeAdvanceToStage = async function (status, id) {
       const errEl = document.getElementById('status-error-roadmap');
