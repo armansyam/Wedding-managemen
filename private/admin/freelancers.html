@@ -30,7 +30,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px" id="stats-row"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px" id="stats-row"></div>
 
     <!-- Table -->
     <div class="table-wrap">
@@ -167,7 +167,7 @@
     const url = search ? `/api/freelancers?search=${search}` : '/api/freelancers';
     const list = await API.get(url);
 
-    const totalEarned = list.reduce((s, f) => s + (f.total_earned || 0), 0);
+    const totalActiveFee = list.reduce((s, f) => s + (f.total_active_fee || 0), 0);
     const totalPaid = list.reduce((s, f) => s + (f.total_paid_freelance || 0), 0);
     const totalRemaining = list.reduce((s, f) => s + (f.remaining_to_pay || 0), 0);
     const unpaidCount = list.filter(f => (f.remaining_to_pay || 0) > 0).length;
@@ -177,13 +177,18 @@
     <div class="stat-label">Total Freelance</div>
     <div class="stat-value">${list.length} orang</div>
     </div>
-    <div class="stat-card" title="Total fee yang sudah dilunasi dari semua booking aktif">
-    <div class="stat-label">✅ Total Terlunasi</div>
-    <div class="stat-value" style="color:var(--green)">${formatIDR(totalPaid)}</div>
-    <div style="font-size:10px;color:var(--text2);margin-top:2px">Fee sudah dibayarkan</div>
+    <div class="stat-card" title="Total fee kru dari semua booking yang sedang berjalan (Confirmed, Persiapan, Hari H)">
+    <div class="stat-label">💰 Total Fee Booking Aktif</div>
+    <div class="stat-value">${formatIDR(totalActiveFee)}</div>
+    <div style="font-size:10px;color:var(--text2);margin-top:2px">Budget kru booking berjalan</div>
     </div>
-    <div class="stat-card" title="Total fee yang belum dibayar — segera selesaikan">
-    <div class="stat-label">⏳ Total Belum Dibayar</div>
+    <div class="stat-card" title="Dari total fee aktif, sudah dibayarkan sebesar ini">
+    <div class="stat-label">✅ Sudah Dibayarkan</div>
+    <div class="stat-value" style="color:var(--green)">${formatIDR(totalPaid)}</div>
+    <div style="font-size:10px;color:var(--text2);margin-top:2px">${totalActiveFee > 0 ? Math.round(totalPaid/totalActiveFee*100) : 0}% dari total fee aktif</div>
+    </div>
+    <div class="stat-card" title="Sisa fee yang belum dibayarkan ke kru dari booking aktif">
+    <div class="stat-label">⏳ Belum Dibayarkan</div>
     <div class="stat-value" style="color:${totalRemaining > 0 ? 'var(--red)' : 'var(--green)'}">${formatIDR(totalRemaining)}</div>
     <div style="font-size:10px;color:var(--text2);margin-top:2px">${unpaidCount} freelancer belum lunas</div>
     </div>
@@ -191,7 +196,7 @@
 
     document.getElementById('freelancers-table').innerHTML = list.length
     ? list.map(f => {
-    const earned = f.total_earned || 0;
+    const activeFee = f.total_active_fee || 0;
     const paid = f.total_paid_freelance || 0;
     const remaining = f.remaining_to_pay || 0;
     const isLunas = remaining <= 0;

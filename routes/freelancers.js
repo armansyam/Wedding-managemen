@@ -27,17 +27,17 @@ router.get('/', (req, res) => {
   const { active, search } = req.query;
   let sql = `
     SELECT f.*,
-      COALESCE(earn.total_earned, 0) AS total_earned,
+      COALESCE(earn.total_active_fee, 0) AS total_active_fee,
       COALESCE(pay.total_paid, 0) AS total_paid_freelance,
-      COALESCE(earn.total_earned, 0) - COALESCE(pay.total_paid, 0) AS remaining_to_pay,
+      COALESCE(earn.total_active_fee, 0) - COALESCE(pay.total_paid, 0) AS remaining_to_pay,
       COALESCE(un.unpaid_count, 0) AS unpaid_count
     FROM freelancers f
     LEFT JOIN (
-      SELECT bsc.freelancer_id, SUM(bsc.fee_amount) AS total_earned
+      SELECT bsc.freelancer_id, SUM(bsc.fee_amount) AS total_active_fee
       FROM booking_session_crew bsc
       JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
       JOIN bookings b ON bs.booking_id = b.id
-      WHERE b.status IN ('confirmed','in_progress','event_day','completed')
+      WHERE b.status IN ('confirmed','in_progress','event_day')
       GROUP BY bsc.freelancer_id
     ) earn ON earn.freelancer_id = f.id
     LEFT JOIN (
@@ -45,7 +45,7 @@ router.get('/', (req, res) => {
       FROM booking_session_crew bsc
       JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
       JOIN bookings b ON bs.booking_id = b.id
-      WHERE bsc.is_paid = 1 AND b.status IN ('confirmed','in_progress','event_day','completed')
+      WHERE bsc.is_paid = 1 AND b.status IN ('confirmed','in_progress','event_day')
       GROUP BY bsc.freelancer_id
     ) pay ON pay.freelancer_id = f.id
     LEFT JOIN (
@@ -53,7 +53,7 @@ router.get('/', (req, res) => {
       FROM booking_session_crew bsc
       JOIN booking_sessions bs ON bsc.booking_session_id = bs.id
       JOIN bookings b ON bs.booking_id = b.id
-      WHERE bsc.is_paid = 0 AND b.status IN ('confirmed','in_progress','event_day','completed')
+      WHERE bsc.is_paid = 0 AND b.status IN ('confirmed','in_progress','event_day')
       GROUP BY bsc.freelancer_id
     ) un ON un.freelancer_id = f.id
   `;
