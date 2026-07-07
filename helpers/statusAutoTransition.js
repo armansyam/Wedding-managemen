@@ -11,7 +11,7 @@ const db = require('../db');
  * @param {number} bookingId 
  */
 function autoTransitionBooking(bookingId) {
-  const booking = db.prepare('SELECT id, status, event_date, package_price FROM bookings WHERE id = ?').get(bookingId);
+  const booking = db.prepare('SELECT id, status, event_date, package_price, updated_at FROM bookings WHERE id = ?').get(bookingId);
   if (!booking) return;
 
   const currentStatus = booking.status;
@@ -49,12 +49,13 @@ function autoTransitionBooking(bookingId) {
     }
   }
 
-  // completed -> archived if event_date is older than 30 days
-  if (newStatus === 'completed' && eventDateStr) {
-    const eventTime = new Date(eventDateStr + 'T00:00:00').getTime();
-    const todayTime = new Date(todayStr + 'T00:00:00').getTime();
-    const diffDays = (todayTime - eventTime) / (1000 * 60 * 60 * 24);
-    if (diffDays >= 30) {
+  // completed -> archived if status has been 'completed' for more than 14 days (calculated from updated_at)
+  if (newStatus === 'completed' && booking.updated_at) {
+    // booking.updated_at is in 'YYYY-MM-DD HH:MM:SS' format (localtime)
+    const updatedTime = new Date(booking.updated_at.replace(' ', 'T')).getTime();
+    const nowTime = new Date().getTime();
+    const diffDays = (nowTime - updatedTime) / (1000 * 60 * 60 * 24);
+    if (diffDays >= 14) {
       newStatus = 'archived';
     }
   }
