@@ -184,6 +184,7 @@ function renderSidebar(activePage) {
     { id: 'products', label: '🏷️ Products', url: '/admin/products' },
     { id: 'calendar', label: '📅 Calendar', url: '/admin/calendar' },
     { id: 'reports', label: '📈 Laporan Keuangan', url: '/admin/reports' },
+    { id: 'analytics', label: '📊 Analisis Bisnis', url: '/admin/analytics' },
     { id: 'settings', label: '⚙️ Settings', url: '/admin/settings' },
     { id: 'archive', label: '🗄️ Archive', url: '/admin/archive' }
   ];

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Analisis Bisnis — Sorehari</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* ── CUSTOM VISUALIZATIONS ────────────────────────────────── */
+    .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .insights-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 24px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+    }
+    .insights-card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); margin-bottom: 16px; font-weight: 700; }
+    
+    /* Radial Ring */
+    .radial-container { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 12px 0; }
+    .radial-svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+    .radial-bg { fill: none; stroke: var(--surface); stroke-width: 12px; }
+    .radial-fill {
+      fill: none; stroke: var(--accent); stroke-width: 12px;
+      stroke-linecap: round; stroke-dasharray: 377; stroke-dashoffset: 377;
+      transition: stroke-dashoffset 1s ease-out;
+    }
+    .radial-center { font-size: 24px; font-weight: 800; fill: var(--text1); text-anchor: middle; dominant-baseline: central; }
+    
+    /* Funnel Charts */
+    .funnel-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .funnel-stage {
+      display: flex; align-items: center; position: relative; height: 32px;
+      border-radius: 6px; overflow: hidden; background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .funnel-stage-fill { height: 100%; position: absolute; left: 0; top: 0; background: linear-gradient(90deg, var(--accent) 0%, rgba(var(--accent-rgb), 0.2) 100%); opacity: 0.15; transition: width 0.8s ease-out; }
+    .funnel-stage-text { position: relative; z-index: 2; display: flex; justify-content: space-between; width: 100%; padding: 0 12px; font-size: 12px; font-weight: 600; }
+    
+    /* Monthly Seasonality Columns */
+    .season-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 10px; margin-top: 10px; position: relative; }
+    .season-col-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+    .season-bar {
+      width: 60%; max-width: 24px; border-radius: 6px 6px 0 0; min-height: 4px;
+      background: linear-gradient(180deg, var(--accent) 0%, rgba(var(--accent-rgb), 0.2) 100%);
+      transition: height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative; cursor: pointer;
+    }
+    .season-bar:hover { background: var(--accent); }
+    .season-bar::before {
+      content: attr(data-val); position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; color: var(--text1); opacity: 0; transition: opacity 0.2s;
+    }
+    .season-bar:hover::before { opacity: 1; }
+    .season-label { font-size: 10px; font-weight: 600; color: var(--text2); margin-top: 8px; text-transform: uppercase; }
+
+    /* Sources List */
+    .source-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+    .source-label { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .source-bar-outer { flex: 1; height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden; margin: 0 16px; border: 1px solid var(--border); }
+    .source-bar-inner { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.8s ease-out; }
+
+    /* Table matrix */
+    .matrix-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .matrix-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); }
+    .matrix-table td { font-size: 13px; padding: 12px; border-bottom: 1px solid var(--border); }
+    .matrix-table tr:last-child td { border-bottom: none; }
+    .matrix-table tr:hover td { background: var(--surface); }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 style="margin-bottom:4px">📊 Analisis Bisnis (Insights)</h1>
+        <div style="font-size:12px;color:var(--text2)">Pola konversi prospek, tren pesanan, dan profitabilitas produk</div>
+      </div>
+      <!-- Filter -->
+      <div style="display:flex;align-items:center;gap:12px">
+        <select id="filter-year" onchange="loadInsights()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+          <option value="2027">Tahun 2027</option>
+          <option value="2026" selected>Tahun 2026</option>
+          <option value="2025">Tahun 2025</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- INSIGHTS GRID 1: CONVERSION & SOURCES -->
+    <div class="insights-grid">
+      <!-- Deal Success Rate & conversion funnel -->
+      <div class="insights-card">
+        <h3>🎯 Tingkat Closing Prospek (Conversion)</h3>
+        <div class="radial-container">
+          <svg class="radial-svg" viewBox="0 0 130 130">
+            <circle class="radial-bg" cx="65" cy="65" r="50"></circle>
+            <circle class="radial-fill" id="conversion-circle" cx="65" cy="65" r="50"></circle>
+            <text class="radial-center" id="conversion-rate-text" x="65" y="65">0%</text>
+          </svg>
+          <div class="funnel-list" id="funnel-breakdown"></div>
+        </div>
+      </div>
+
+      <!-- Marketing Channels -->
+      <div class="insights-card">
+        <h3>📣 Asal Sumber Prospek Terbesar</h3>
+        <div id="sources-list" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS GRID 2: SEASONALITY & PACKAGES -->
+    <div class="insights-grid" style="grid-template-columns: 1fr;">
+      <!-- Seasonality bar chart -->
+      <div class="insights-card">
+        <h3>📅 Tren Kepadatan Acara (Peak Season)</h3>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:12px">Jumlah booking selesai dan aktif per bulan di tahun terpilih</div>
+        <div class="season-chart" id="seasonality-chart"></div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS GRID 3: PACKAGE PROFITABILITY -->
+    <div class="insights-card" style="margin-bottom:24px">
+      <h3>📦 Efisiensi &amp; Margin Keuntungan Paket</h3>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:12px">Modal jasa dihitung otomatis berdasarkan estimasi jumlah kru dikali fee rata-rata sesi.</div>
+      <div class="table-wrap" style="margin-bottom:0">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Nama Paket</th>
+              <th>Harga Jual</th>
+              <th>Estimasi Modal</th>
+              <th>Margin Profit</th>
+              <th>Margin (%)</th>
+              <th style="text-align:center">Booking Deal</th>
+            </tr>
+          </thead>
+          <tbody id="package-matrix"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSidebar('analytics');
+      loadInsights();
+    });
+
+    async function loadInsights() {
+      const year = document.getElementById('filter-year').value;
+      try {
+        const d = await API.get(`/api/analytics/insights?year=${year}`);
+
+        // 1. Render Radial Circle & Funnel
+        const rate = d.conversion.rate || 0;
+        const circle = document.getElementById('conversion-circle');
+        document.getElementById('conversion-rate-text').textContent = `${rate}%`;
+        
+        // svg circle circumference is 2 * PI * r = 2 * 3.14159 * 50 = 314
+        const offset = 314 - (314 * rate) / 100;
+        circle.style.strokeDashoffset = offset;
+
+        const total = d.conversion.total || 0;
+        const booked = d.conversion.booked || 0;
+        const newL = d.conversion.newLeads || 0;
+        const contact = d.conversion.contacted || 0;
+        const interest = d.conversion.interested || 0;
+        const lost = d.conversion.lost || 0;
+
+        document.getElementById('funnel-breakdown').innerHTML = `
+          <div class="funnel-stage">
+            <div class="funnel-stage-fill" style="width:100%"></div>
+            <div class="funnel-stage-text"><span>Total Leads</span><span>${total} orang</span></div>
+          </div>
+          <div class="funnel-stage">
+            <div class="funnel-stage-fill" style="width:${total > 0 ? ((contact+interest+booked)/total)*100 : 0}%"></div>
+            <div class="funnel-stage-text"><span>Dihubungi / Follow up</span><span>${contact + interest + booked} orang</span></div>
+          </div>
+          <div class="funnel-stage">
+            <div class="funnel-stage-fill" style="width:${total > 0 ? ((interest+booked)/total)*100 : 0}%"></div>
+            <div class="funnel-stage-text"><span>Tertarik / Nego</span><span>${interest + booked} orang</span></div>
+          </div>
+          <div class="funnel-stage" style="border-color:var(--green)">
+            <div class="funnel-stage-fill" style="width:${total > 0 ? (booked/total)*100 : 0}%; background:var(--green); opacity:0.2"></div>
+            <div class="funnel-stage-text" style="color:var(--green)"><span>🔥 Booked / DEAL!</span><span>${booked} client (${rate}%)</span></div>
+          </div>
+        `;
+
+        // 2. Render Sources List
+        const maxSource = Math.max(...d.sources.map(s => s.count), 1);
+        document.getElementById('sources-list').innerHTML = d.sources.length
+          ? d.sources.map(s => {
+              const pct = Math.round((s.count / total) * 100) || 0;
+              const barWidth = Math.round((s.count / maxSource) * 100);
+              let icon = '📢';
+              if (s.source_name.toLowerCase().includes('instagram') || s.source_name.toLowerCase().includes('ig')) icon = '📸';
+              else if (s.source_name.toLowerCase().includes('whatsapp') || s.source_name.toLowerCase().includes('wa')) icon = '💬';
+              else if (s.source_name.toLowerCase().includes('tiktok')) icon = '🎵';
+              else if (s.source_name.toLowerCase().includes('website')) icon = '🌐';
+              else if (s.source_name.toLowerCase().includes('teman') || s.source_name.toLowerCase().includes('rekomendasi')) icon = '🤝';
+
+              return `
+                <div class="source-row">
+                  <span class="source-label">${icon} ${s.source_name}</span>
+                  <div class="source-bar-outer"><div class="source-bar-inner" style="width:${barWidth}%"></div></div>
+                  <span style="font-weight:700;width:80px;text-align:right">${s.count} (${pct}%)</span>
+                </div>
+              `;
+            }).join('')
+          : '<p style="color:var(--text2);text-align:center;padding:20px">Belum ada data sumber leads</p>';
+
+        // 3. Render Monthly Seasonality Columns
+        const maxMonthCount = Math.max(...d.monthlyTrends.data.map(m => m.count), 1);
+        document.getElementById('seasonality-chart').innerHTML = d.monthlyTrends.data.map(m => {
+          const heightPct = Math.round((m.count / maxMonthCount) * 100) || 2;
+          return `
+            <div class="season-col-group">
+              <div class="season-bar" data-val="${m.count} event" style="height:${heightPct}%"></div>
+              <span class="season-label">${m.monthName}</span>
+            </div>
+          `;
+        }).join('');
+
+        // 4. Render Packages Performance matrix
+        document.getElementById('package-matrix').innerHTML = d.packages.length
+          ? d.packages.map(p => `
+              <tr>
+                <td><strong>${p.name}</strong></td>
+                <td>${formatIDR(p.price)}</td>
+                <td style="color:var(--text2);font-size:12px">
+                  Produk: ${formatIDR(p.productCost)}<br>Kru: ${formatIDR(p.crewCost)}
+                </td>
+                <td style="font-weight:700;color:${p.marginAmount >= 0 ? 'var(--green)' : 'var(--red)'}">
+                  ${formatIDR(p.marginAmount)}
+                </td>
+                <td>
+                  <span class="badge ${p.marginPercent >= 40 ? 'badge-confirmed' : p.marginPercent >= 20 ? 'badge-progress' : 'badge-cancelled'}">
+                    ${p.marginPercent}%
+                  </span>
+                </td>
+                <td style="text-align:center;font-weight:800;color:var(--accent)">${p.bookingsCount}x</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Belum ada data paket</td></tr>';
+
+      } catch (err) {
+        console.error('Failed to load insights', err);
+      }
+    }
+  </script>
+</body>
+</html>

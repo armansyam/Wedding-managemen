@@ -75,6 +75,7 @@ app.use('/api/archive', requireAuth, require('./routes/archive'));
 app.use('/api/track', require('./routes/track'));
 app.use('/api/reports', requireAuth, require('./routes/reports'));
 app.use('/api/dividends', requireAuth, require('./routes/dividends'));
+app.use('/api/analytics', requireAuth, require('./routes/analytics'));
 
 app.use('/api/uploads/receipts', requireAuth, express.static(path.join(__dirname, 'private/uploads/receipts')));
 
