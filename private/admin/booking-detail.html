@@ -505,7 +505,7 @@
     <div class="finance-row"><span>Sisa Pembayaran</span><span style="color:var(--yellow)">${formatIDR(b.remaining_payment)}</span></div>
     `;
       // Timeline
-      renderTimeline(b.sessions);
+      renderTimeline(b.sessions, b.status);
 
       // Work progress roadmap (shown for confirmed+ bookings)
       renderWorkRoadmap(b);
@@ -897,96 +897,15 @@ Terima kasih atas kerjasamanya! 🙏`;
       } catch (e) { alert('Kesalahan jaringan'); }
     };
 
-    function renderTimeline(sessions) {
+    function renderTimeline(sessions, bookingStatus) {
       const el = document.getElementById('timeline');
       if (!sessions || !sessions.length) {
         el.innerHTML = '<p style="color:var(--text2);font-size:13px">Belum ada sesi. Sesi otomatis ditambahkan saat booking dibuat.</p>';
         return;
       }
 
-      // Group crew by freelancer
-      const crewByFreelancer = {};
-      for (const s of sessions) {
-        for (const c of s.crew) {
-          if (!crewByFreelancer[c.freelancer_id]) {
-            crewByFreelancer[c.freelancer_id] = {
-              freelancer_id: c.freelancer_id,
-              freelancer_name: c.freelancer_name,
-              skill: c.skill,
-              jobs: []
-            };
-          }
-          crewByFreelancer[c.freelancer_id].jobs.push({
-            crew_id: c.id,
-            session_name: s.session_name,
-            fee_amount: c.fee_amount,
-            is_paid: c.is_paid,
-            session_id: s.id
-          });
-        }
-      }
-
-      // Create consolidated view
-      let html = '<div style="display:flex;flex-direction:column;gap:16px">';
-
-      // If there are freelancers assigned, show consolidated payment view
-      if (Object.keys(crewByFreelancer).length > 0) {
-        html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:8px">';
-        html += '<h3 style="font-size:14px;margin:0 0 12px 0">💰 Pembayaran Freelance (Konsolidasi)</h3>';
-
-        for (const [freelancerId, freelancer] of Object.entries(crewByFreelancer)) {
-          const totalFee = freelancer.jobs.reduce((s, j) => s + j.fee_amount, 0);
-          const paidFee = freelancer.jobs.filter(j => j.is_paid).reduce((s, j) => s + j.fee_amount, 0);
-          const unpaidJobs = freelancer.jobs.filter(j => !j.is_paid);
-          const allPaid = unpaidJobs.length === 0;
-
-          html += `
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="flex:1">
-                <div style="font-weight:700;font-size:13px">
-                  ${freelancer.skill ? `<span style="color:var(--text2)">[${freelancer.skill}]</span> ` : ''}${freelancer.freelancer_name}
-                </div>
-                <div style="font-size:12px;color:var(--text2);margin-top:4px">
-                  Total: <strong style="color:var(--accent)">${formatIDR(totalFee)}</strong>
-                  ${paidFee > 0 ? ` | Sudah dibayar: <strong style="color:var(--green)">${formatIDR(paidFee)}</strong>` : ''}
-                </div>
-              </div>
-              <div style="display:flex;gap:6px">
-                ${allPaid ? `
-                  <span style="color:var(--green);font-weight:700;font-size:11px;background:rgba(34,197,94,0.1);padding:4px 8px;border-radius:6px">✅ Lunas</span>
-                ` : `
-                  <button
-                    data-freelancer-id="${freelancerId}"
-                    data-name="${freelancer.freelancer_name.replace(/"/g, '&quot;')}"
-                    data-crew-ids="${unpaidJobs.map(j => j.crew_id).join(',')}"
-                    data-total-amount="${unpaidJobs.reduce((s, j) => s + j.fee_amount, 0)}"
-                    onclick="window.payMultipleJobs(this)"
-                    style="border:none;background:var(--yellow);color:#000;font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;cursor:pointer;outline:none;"
-                  >💸 Bayar Semua</button>
-                `}
-              </div>
-            </div>
-            
-            <!-- Job list -->
-            <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px">
-              ${freelancer.jobs.map((j, idx) => `
-                <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)">
-                  <span>•</span>
-                  <span>${j.session_name}</span>
-                  <span style="color:var(--accent);font-weight:600">${formatIDR(j.fee_amount)}</span>
-                  ${j.is_paid ? `<span style="color:var(--green);font-weight:700">✅</span>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-        }
-        html += '</div>';
-      }
-
-      // Then show detailed timeline by session
-      html += '<div style="display:flex;flex-direction:column;gap:12px">';
+      // === SESSIONS DETAIL (always visible) ===
+      let html = '<div style="display:flex;flex-direction:column;gap:12px">';
       html += sessions.map(s => `
     <div class="timeline-item ${s.is_done ? 'done' : ''}">
     <div style="display:flex;justify-content:space-between;align-items:start">
@@ -1024,7 +943,92 @@ Terima kasih atas kerjasamanya! 🙏`;
     ${s.crew.length > 0 ? `<div class="session-fee-total">Subtotal biaya sesi: ${formatIDR(s.total_crew_fee)}</div>` : ''}
     </div>
     `).join('');
-      html += '</div></div>';
+      html += '</div>';
+
+      // === CONSOLIDATED FREELANCE PAYMENT (only shown at delivery/completed stage) ===
+      const showPayment = ['delivery', 'completed'].includes(bookingStatus);
+      if (showPayment) {
+        // Group crew by freelancer across all sessions
+        const crewByFreelancer = {};
+        for (const s of sessions) {
+          for (const c of s.crew) {
+            if (!crewByFreelancer[c.freelancer_id]) {
+              crewByFreelancer[c.freelancer_id] = {
+                freelancer_id: c.freelancer_id,
+                freelancer_name: c.freelancer_name,
+                skill: c.skill,
+                jobs: []
+              };
+            }
+            crewByFreelancer[c.freelancer_id].jobs.push({
+              crew_id: c.id,
+              session_name: s.session_name,
+              fee_amount: c.fee_amount,
+              is_paid: c.is_paid
+            });
+          }
+        }
+
+        if (Object.keys(crewByFreelancer).length > 0) {
+          const allDone = Object.values(crewByFreelancer).every(f => f.jobs.every(j => j.is_paid));
+          html += `
+          <div style="margin-top:20px;background:var(--surface);border:1px solid ${allDone ? 'var(--green)' : 'var(--border)'};border-radius:var(--radius);overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface2)">
+              <span style="font-size:13px;font-weight:700">💸 Pembayaran Freelance</span>
+              ${allDone
+                ? '<span style="font-size:11px;color:var(--green);font-weight:700">✅ Semua Lunas</span>'
+                : '<span style="font-size:11px;color:var(--yellow)">Ada yang belum dibayar</span>'}
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead>
+                <tr style="color:var(--text2);text-align:left">
+                  <th style="padding:6px 16px;font-weight:500">Freelancer</th>
+                  <th style="padding:6px 8px;font-weight:500">Sesi</th>
+                  <th style="padding:6px 8px;font-weight:500;text-align:right">Total Fee</th>
+                  <th style="padding:6px 8px;font-weight:500;text-align:right">Dibayar</th>
+                  <th style="padding:6px 16px;font-weight:500"></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.values(crewByFreelancer).map(freelancer => {
+                  const totalFee = freelancer.jobs.reduce((s, j) => s + j.fee_amount, 0);
+                  const paidFee = freelancer.jobs.filter(j => j.is_paid).reduce((s, j) => s + j.fee_amount, 0);
+                  const unpaidJobs = freelancer.jobs.filter(j => !j.is_paid);
+                  const allPaid = unpaidJobs.length === 0;
+                  const safeName = freelancer.freelancer_name.replace(/"/g, '&quot;');
+                  const sessionSummary = freelancer.jobs.map(j => j.session_name).join(', ');
+                  return `
+                  <tr style="border-top:1px solid var(--border)">
+                    <td style="padding:8px 16px;font-weight:600">
+                      ${freelancer.skill ? `<span style="color:var(--text2);font-size:10px;margin-right:4px">[${freelancer.skill}]</span>` : ''}
+                      ${freelancer.freelancer_name}
+                    </td>
+                    <td style="padding:8px;color:var(--text2);font-size:11px;max-width:200px">${sessionSummary}</td>
+                    <td style="padding:8px;text-align:right;color:var(--accent);font-weight:600">${formatIDR(totalFee)}</td>
+                    <td style="padding:8px;text-align:right;color:${allPaid ? 'var(--green)' : 'var(--text2)'}">
+                      ${allPaid ? '<strong>✅ Lunas</strong>' : formatIDR(paidFee)}
+                    </td>
+                    <td style="padding:8px 16px;text-align:right">
+                      ${allPaid ? '' : `
+                        <button
+                          data-freelancer-id="${freelancer.freelancer_id}"
+                          data-name="${safeName}"
+                          data-crew-ids="${unpaidJobs.map(j => j.crew_id).join(',')}"
+                          data-total-amount="${unpaidJobs.reduce((s, j) => s + j.fee_amount, 0)}"
+                          onclick="window.payMultipleJobs(this)"
+                          style="border:none;background:var(--yellow);color:#000;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;cursor:pointer;white-space:nowrap"
+                        >💸 Bayar</button>
+                      `}
+                    </td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`;
+        }
+      }
+
+      html += '</div>';
       el.innerHTML = html;
     }
     function openInvoiceModal(type) {
