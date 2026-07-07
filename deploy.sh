@@ -11,6 +11,17 @@ if [ ! -d ".git" ]; then
   exit 1
 fi
 
+# Ensure database directory exists
+echo "Ensuring database directory exists..."
+mkdir -p db/data
+
+# Ensure .env file exists
+if [ ! -f .env ]; then
+  echo "Creating .env from .env.example..."
+  cp .env.example .env
+  echo "Please edit the .env file with your configurations."
+fi
+
 git fetch --all --tags
 
 if git rev-parse --verify "${BRANCH}" >/dev/null 2>&1; then
@@ -39,9 +50,11 @@ fi
 
 if command -v pm2 >/dev/null 2>&1; then
   if pm2 describe "${APP_NAME}" >/dev/null 2>&1; then
-    pm2 restart "${APP_NAME}" --update-env
+    echo "Restarting application using PM2 ecosystem..."
+    pm2 restart ecosystem.config.js --update-env
   else
-    pm2 start server.js --name "${APP_NAME}"
+    echo "Starting application using PM2 ecosystem..."
+    pm2 start ecosystem.config.js
   fi
   pm2 save
 else

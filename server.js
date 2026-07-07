@@ -42,7 +42,7 @@ app.use(session({
 
 const loginAttempts = new Map();
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASS_PLAIN = process.env.ADMIN_PASSWORD || 'sorehari2026';
+const ADMIN_PASS_PLAIN = process.env.ADMIN_PASSWORD || 'sorehari';
 
 const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS 
   ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
