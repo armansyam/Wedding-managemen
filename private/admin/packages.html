@@ -46,9 +46,16 @@
       <input type="hidden" id="pkg-id">
       <div class="form-row">
         <div class="form-group"><label>Nama Paket *</label><input type="text" id="pkg-name" placeholder="Silver, Gold, Platinum..."></div>
-        <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="pkg-price" value="0"></div>
+        <div class="form-group"><label>Harga Jual (Rp)</label><input type="number" id="pkg-price" oninput="window.updateEstimate()"></div>
       </div>
-      <div class="form-group"><label>Deskripsi</label><textarea id="pkg-desc" rows="2" placeholder="Apa saja yang didapat..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Deskripsi</label><textarea id="pkg-desc" rows="2" placeholder="Apa saja yang didapat..."></textarea></div>
+        <div class="form-group" style="max-width:160px">
+          <label>👥 Estimasi Kru Turun</label>
+          <input type="number" id="pkg-crew" min="1" max="20" value="2" style="text-align:center" oninput="window.updateEstimate()">
+          <small style="color:var(--text2);font-size:11px">Minimal kru yang turun per sesi</small>
+        </div>
+      </div>
 
       <!-- Sessions -->
       <div class="form-group">
@@ -106,7 +113,7 @@
     </div>
     <div class="modal-section">
     <div class="modal-row"><span>📦 Modal Produk</span><span>${formatIDR(p.modal_produk)}</span></div>
-    <div class="modal-row"><span>👥 Modal Jasa (AVG × 2 crew)</span><span>${formatIDR(p.modal_jasa)}</span></div>
+    <div class="modal-row"><span>👥 Modal Jasa (AVG × ${p.estimated_crew || 2} kru)</span><span>${formatIDR(p.modal_jasa)}</span></div>
     <div class="modal-row total"><span>Total Modal</span><span>${formatIDR(p.total_modal)}</span></div>
     <div class="modal-row"><span>Harga Jual</span><span>${formatIDR(p.price)}</span></div>
     <div class="modal-row ${p.margin < 0 ? 'negative' : ''}"><span>Margin</span><span class="margin">${formatIDR(p.margin)}</span></div>
@@ -124,6 +131,7 @@
     document.getElementById('pkg-name').value = '';
     document.getElementById('pkg-price').value = '0';
     document.getElementById('pkg-desc').value = '';
+    document.getElementById('pkg-crew').value = '2';
     renderSessionCheckboxes([]);
     renderProductCheckboxes([]);
     updateEstimate();
@@ -136,6 +144,7 @@
     document.getElementById('pkg-name').value = pkg.name;
     document.getElementById('pkg-price').value = pkg.price;
     document.getElementById('pkg-desc').value = pkg.description || '';
+    document.getElementById('pkg-crew').value = pkg.estimated_crew || 2;
     renderSessionCheckboxes(pkg.sessions);
     renderProductCheckboxes(pkg.products);
     updateEstimate();
@@ -166,6 +175,7 @@
     const qty = document.querySelector(`.pkg-product-qty[data-id="${c.value}"]`);
     return { product_id: parseInt(c.value), quantity: parseInt(qty.value) || 1 };
     });
+    const crewCount = parseInt(document.getElementById('pkg-crew').value) || 2;
 
     // Modal produk
     let modalProduk = 0;
@@ -174,23 +184,39 @@
     if (prod) modalProduk += prod.unit_cost * cp.quantity;
     }
 
-    // Modal jasa (AVG fee × 2 crew)
+    // Modal jasa (AVG fee from session_fees × crew)
     let modalJasa = 0;
-    const detailSesi = [];
-    // We'll calculate on save via API, but show estimate client-side too
+    const sesiRows = [];
     for (const sid of checkedSessions) {
-    // placeholder: will be calculated server-side
-    detailSesi.push({ session_id: sid, name: allSessions.find(s => s.id === sid)?.name || '?' });
+    const s = allSessions.find(s => s.id === sid);
+    if (!s) continue;
+    // use preloaded avg_fee if available, else placeholder
+    const avgFee = s.avg_fee || 0;
+    const subtotal = Math.round(avgFee * crewCount);
+    modalJasa += subtotal;
+    sesiRows.push(`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0">
+    <span style="color:var(--text2)">🎭 ${s.name} (${crewCount} kru × ${formatIDR(avgFee)})</span>
+    <span>${avgFee ? formatIDR(subtotal) : '—'}</span></div>`);
     }
 
     const price = parseInt(document.getElementById('pkg-price').value) || 0;
+    const totalModal = modalProduk + modalJasa;
+    const margin = price - totalModal;
 
     document.getElementById('estimate-detail').innerHTML = `
-    <div class="modal-row"><span>📦 Modal Produk</span><span>${formatIDR(modalProduk)}</span></div>
-    <div class="modal-row"><span>🎭 Sesi dipilih: ${checkedSessions.length}</span><span>${detailSesi.map(d => d.name).join(', ') || '-'}</span></div>
-    <div class="modal-row" style="color:var(--text2);font-size:11px"><span>Modal Jasa</span><span>Dihitung server (AVG fee × 2 crew)</span></div>
-    <div class="modal-row"><span>Harga Jual</span><span>${formatIDR(price)}</span></div>
-    <div class="modal-row" style="color:var(--text2);font-size:11px"><span>Modal jasa & margin</span><span>akan akurat setelah disimpan</span></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">
+    <span>📦 Modal Produk</span><span>${formatIDR(modalProduk)}</span></div>
+    <div style="margin:4px 0;padding:4px 0;border-top:1px dashed var(--border)">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:4px">👥 Modal Jasa Kru (${crewCount} orang estimasi):</div>
+    ${sesiRows.length ? sesiRows.join('') : '<div style="color:var(--text2);font-size:12px">— Pilih sesi terlebih dahulu —</div>'}
+    ${!sesiRows.some(r => r.includes('—</span>')) && modalJasa > 0 ? '' : '<div style="font-size:11px;color:var(--text2);margin-top:4px">*Fee rata-rata dari data freelancer. Diperbarui setelah disimpan.</div>'}
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-top:1px solid var(--border);font-weight:700;color:var(--accent)">
+    <span>Total Modal</span><span>${formatIDR(totalModal)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">
+    <span>Harga Jual</span><span>${formatIDR(price)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;font-weight:600;color:${margin >= 0 ? 'var(--green)' : 'var(--red)'}">
+    <span>Margin</span><span>${formatIDR(margin)}</span></div>
     `;
     }
     async function savePkg() {
@@ -199,6 +225,7 @@
     const qty = document.querySelector(`.pkg-product-qty[data-id="${c.value}"]`);
     return { product_id: parseInt(c.value), quantity: parseInt(qty.value) || 1 };
     });
+    const estimated_crew = parseInt(document.getElementById('pkg-crew').value) || 2;
 
     const data = {
     name: document.getElementById('pkg-name').value,
@@ -206,6 +233,7 @@
     price: parseInt(document.getElementById('pkg-price').value) || 0,
     session_ids,
     product_ids,
+    estimated_crew,
     };
     if (!data.name) return alert('Nama paket wajib diisi');
 

@@ -5,6 +5,11 @@ const db = require('../db');
 // GET all sessions
 router.get('/', (req, res) => {
   const rows = db.prepare('SELECT * FROM sessions ORDER BY default_order ASC').all();
+  // Attach avg_fee from freelancer_fees for estimations
+  for (const s of rows) {
+    const fee = db.prepare('SELECT COALESCE(AVG(fee_amount), 0) AS avg_fee FROM freelancer_fees WHERE session_id = ?').get(s.id);
+    s.avg_fee = Math.round(fee.avg_fee);
+  }
   res.json(rows);
 });
 

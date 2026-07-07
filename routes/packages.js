@@ -23,7 +23,8 @@ router.get('/', (req, res) => {
     // Calculate modal
     const modalProducts = pkg.products.reduce((sum, p) => sum + p.subtotal, 0);
 
-    // AVG fee per session × 2 crew
+    // AVG fee per session × estimated_crew
+    const crewCount = pkg.estimated_crew || 2;
     let modalJasa = 0;
     const sesiDetails = [];
     for (const s of pkg.sessions) {
@@ -31,7 +32,7 @@ router.get('/', (req, res) => {
         SELECT COALESCE(AVG(fee_amount), 200000) AS avg_fee
         FROM freelancer_fees WHERE session_id = ?
       `).get(s.id);
-      const subtotal = Math.round(avg.avg_fee * 2); // 2 crew
+      const subtotal = Math.round(avg.avg_fee * crewCount);
       modalJasa += subtotal;
       sesiDetails.push({ session_id: s.id, name: s.name, avg_fee: avg.avg_fee, subtotal });
     }
@@ -58,10 +59,10 @@ router.get('/:id', (req, res) => {
 
 // POST create package
 router.post('/', (req, res) => {
-  const { name, description, price, session_ids, product_ids } = req.body;
+  const { name, description, price, session_ids, product_ids, estimated_crew } = req.body;
   if (!name) return res.status(400).json({ error: 'name required' });
 
-  const result = db.prepare('INSERT INTO packages (name, description, price) VALUES (?, ?, ?)').run(name, description || null, price || 0);
+  const result = db.prepare('INSERT INTO packages (name, description, price, estimated_crew) VALUES (?, ?, ?, ?)').run(name, description || null, price || 0, estimated_crew || 2);
   const pkgId = result.lastInsertRowid;
 
   // Save sessions
@@ -81,9 +82,9 @@ router.post('/', (req, res) => {
 
 // PUT update package
 router.put('/:id', (req, res) => {
-  const { name, description, price, session_ids, product_ids } = req.body;
-  db.prepare("UPDATE packages SET name = ?, description = ?, price = ?, updated_at = datetime('now','localtime') WHERE id = ?")
-    .run(name, description || null, price || 0, req.params.id);
+  const { name, description, price, session_ids, product_ids, estimated_crew } = req.body;
+  db.prepare("UPDATE packages SET name = ?, description = ?, price = ?, estimated_crew = ?, updated_at = datetime('now','localtime') WHERE id = ?")
+    .run(name, description || null, price || 0, estimated_crew || 2, req.params.id);
 
   // Replace sessions
   if (Array.isArray(session_ids)) {
@@ -110,7 +111,8 @@ router.delete('/:id', (req, res) => {
 
 // POST calculate estimate
 router.post('/calculate-estimate', (req, res) => {
-  const { product_ids, session_ids } = req.body;
+  const { product_ids, session_ids, estimated_crew } = req.body;
+  const crewCount = estimated_crew || 2;
 
   // Modal produk
   let modalProduk = 0;
@@ -121,13 +123,13 @@ router.post('/calculate-estimate', (req, res) => {
     }
   }
 
-  // Modal jasa (AVG fee × 2 crew per sesi)
+  // Modal jasa (AVG fee × estimated_crew per sesi)
   let modalJasa = 0;
   const detail = [];
   if (Array.isArray(session_ids)) {
     for (const sid of session_ids) {
       const avg = db.prepare('SELECT COALESCE(AVG(fee_amount), 200000) AS avg_fee, s.name FROM freelancer_fees ff JOIN sessions s ON ff.session_id = s.id WHERE ff.session_id = ?').get(sid);
-      const subtotal = Math.round(avg.avg_fee * 2);
+      const subtotal = Math.round(avg.avg_fee * crewCount);
       modalJasa += subtotal;
       detail.push({ session_id: sid, name: avg.name, avg_fee: avg.avg_fee, subtotal });
     }

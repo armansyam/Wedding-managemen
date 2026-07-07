@@ -9,6 +9,6 @@ try { db.prepare("ALTER TABLE freelancers ADD COLUMN bank_account TEXT").run(); 
 try { db.prepare("ALTER TABLE booking_session_crew ADD COLUMN is_paid INTEGER DEFAULT 0").run(); console.log('+ is_paid'); } catch { console.log('~ is_paid exists'); }
 try { db.prepare("ALTER TABLE booking_session_crew ADD COLUMN paid_at TEXT").run(); console.log('+ paid_at'); } catch { console.log('~ paid_at exists'); }
 try { db.prepare("ALTER TABLE freelance_payments ADD COLUMN payment_token TEXT").run(); console.log('+ payment_token (freelance_payments)'); } catch { console.log('~ payment_token exists'); }
-try { db.prepare("ALTER TABLE booking_session_crew ADD COLUMN payment_token TEXT").run(); console.log('+ payment_token (booking_session_crew)'); } catch { console.log('~ payment_token crew exists'); }
+try { db.prepare("ALTER TABLE packages ADD COLUMN estimated_crew INTEGER DEFAULT 2").run(); console.log('+ estimated_crew'); } catch { console.log('~ estimated_crew exists'); }
 
 console.log('Migration done');
