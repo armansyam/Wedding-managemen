@@ -560,8 +560,22 @@
     // Roadmap steps
     const stepsHtml = ALL_STAGES.map((s, i) => {
       const cfg = STAGE_CONFIG[s] || { label: s, sub: '', icon: '●', doneIcon: '✓' };
-      const state = i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'future';
-      const nodeContent = i < currentIdx ? `<span style="font-size:16px;font-weight:700">✓</span>` : cfg.icon;
+      
+      let state = 'future';
+      if (data.status === 'completed') {
+        state = 'done';
+      } else {
+        state = i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'future';
+      }
+
+      // Completed step gets a checkered flag when done, others get checkmark
+      let nodeContent = cfg.icon;
+      if (state === 'done') {
+        nodeContent = s === 'completed' 
+          ? `<span style="font-size:16px;font-weight:700">🏁</span>` 
+          : `<span style="font-size:16px;font-weight:700">✓</span>`;
+      }
+      
       const activeChip  = state === 'active' ? `<span class="active-chip">Berlangsung</span>` : '';
 
       return `<div class="road-step ${state}">
