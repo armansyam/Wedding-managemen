@@ -243,6 +243,23 @@
                     class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 placeholder-slate-300 transition resize-none"></textarea>
             </div>
 
+            <!-- Dari mana mengetahui Sorehari -->
+            <div class="animate-slide-up delay-5">
+                <label class="block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-2">
+                    Dari mana kamu mengetahui Sorehari?
+                </label>
+                <select id="source"
+                    class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 transition appearance-none"
+                    style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 16px center;">
+                    <option value="Instagram" selected>Instagram</option>
+                    <option value="TikTok">TikTok</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Website">Website</option>
+                    <option value="Rekomendasi Teman">Rekomendasi Teman</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+
             <!-- Submit Button -->
             <div class="animate-slide-up delay-5 pt-2">
                 <button type="submit" id="submit-btn"
@@ -331,7 +348,7 @@
                         venue: lokasi,
                         package_interest: jenis,
                         message: catatan + (kebutuhan.length ? '\nKebutuhan: ' + kebutuhan.join(', ') : ''),
-                        source: 'inquiry_form',
+                        source: document.getElementById('source').value,
                     })
                 });
 

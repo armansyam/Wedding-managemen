@@ -63,7 +63,7 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
-  const fields = ['name', 'email', 'phone', 'partner_name', 'wedding_date', 'venue', 'package_interest', 'message', 'status', 'notes'];
+  const fields = ['name', 'email', 'phone', 'partner_name', 'wedding_date', 'venue', 'package_interest', 'message', 'status', 'notes', 'source'];
   const updates = [];
   const params = [];
   for (const f of fields) {
