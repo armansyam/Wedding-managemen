@@ -166,6 +166,7 @@ function renderSidebar(activePage) {
     { id: 'sessions', label: '⏰ Sessions', url: '/admin/sessions' },
     { id: 'products', label: '🏷️ Products', url: '/admin/products' },
     { id: 'calendar', label: '📅 Calendar', url: '/admin/calendar' },
+    { id: 'reports', label: '📈 Laporan Keuangan', url: '/admin/reports' },
     { id: 'settings', label: '⚙️ Settings', url: '/admin/settings' },
     { id: 'archive', label: '🗄️ Archive', url: '/admin/archive' }
   ];

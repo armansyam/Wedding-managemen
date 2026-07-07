@@ -11,4 +11,17 @@ try { db.prepare("ALTER TABLE booking_session_crew ADD COLUMN paid_at TEXT").run
 try { db.prepare("ALTER TABLE freelance_payments ADD COLUMN payment_token TEXT").run(); console.log('+ payment_token (freelance_payments)'); } catch { console.log('~ payment_token exists'); }
 try { db.prepare("ALTER TABLE packages ADD COLUMN estimated_crew INTEGER DEFAULT 2").run(); console.log('+ estimated_crew'); } catch { console.log('~ estimated_crew exists'); }
 
+// Migration: create dividends table
+try {
+  db.prepare(`CREATE TABLE IF NOT EXISTS dividends (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    description TEXT,
+    method TEXT DEFAULT 'Transfer',
+    created_at TEXT DEFAULT (datetime('now','localtime'))
+  )`).run();
+  console.log('+ dividends table');
+} catch { console.log('~ dividends exists'); }
+
 console.log('Migration done');

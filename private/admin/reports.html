@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Laporan Keuangan — Sorehari</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* ── KAS HERO ─────────────────────────────────────────────── */
+    .kas-hero {
+      background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kas-hero::before {
+      content: '💵';
+      position: absolute;
+      right: 28px;
+      top: 20px;
+      font-size: 64px;
+      opacity: 0.08;
+    }
+    .kas-amount {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin: 8px 0 4px;
+    }
+    .kas-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .kas-status.positif { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .kas-status.minus { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .kas-status.warning { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+    .kas-breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .kas-item { }
+    .kas-item .ki-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .kas-item .ki-value { font-size: 16px; font-weight: 700; }
+
+    /* ── SECTION TABS ────────────────────────────────────────── */
+    .report-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 18px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text2); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── PERIOD FILTER ───────────────────────────────────────── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 16px; flex-wrap: wrap;
+    }
+    .filter-bar label { font-size: 12px; color: var(--text2); font-weight: 600; }
+    .filter-bar select, .filter-bar input {
+      padding: 6px 12px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit;
+    }
+
+    /* ── REPORT SECTIONS ─────────────────────────────────────── */
+    .report-section { display: none; }
+    .report-section.active { display: block; }
+
+    /* ── PL TABLE ────────────────────────────────────────────── */
+    .pl-table { width: 100%; border-collapse: collapse; }
+    .pl-table tr { border-bottom: 1px solid var(--border); }
+    .pl-table td { padding: 10px 12px; font-size: 13px; }
+    .pl-table td:last-child { text-align: right; font-weight: 600; }
+    .pl-table .pl-header td { font-size: 11px; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px; padding: 16px 12px 6px; font-weight: 700; }
+    .pl-table .pl-total td { font-size: 15px; font-weight: 800; border-top: 2px solid var(--border); background: var(--surface2); }
+    .pl-table .pl-subtotal td { font-weight: 700; color: var(--text2); font-size: 12px; }
+    .pl-table .pl-laba td { font-size: 18px; font-weight: 800; background: var(--surface2); border-radius: 8px; }
+
+    /* ── MINI CHART ──────────────────────────────────────────── */
+    .chart-bar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 12px; }
+    .chart-bar-group { flex: 1; display: flex; align-items: flex-end; gap: 2px; flex-direction: column; }
+    .chart-col { display: flex; align-items: flex-end; gap: 2px; width: 100%; height: 80px; }
+    .chart-bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 3px; transition: height 0.4s; }
+
+    /* ── CARD GRID ───────────────────────────────────────────── */
+    .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .report-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+    .report-card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 12px; }
+    .report-card .rc-value { font-size: 28px; font-weight: 800; }
+
+    /* ── DIVIDEN MODAL ───────────────────────────────────────── */
+    .dividen-limit-bar {
+      height: 8px; background: var(--surface); border-radius: 4px; margin-top: 8px; overflow: hidden;
+    }
+    .dividen-limit-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.3s; }
+
+    /* ── TABLE ROWS ──────────────────────────────────────────── */
+    .tbl-row { display: grid; padding: 10px 14px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; }
+    .tbl-row:hover { background: var(--surface2); }
+    .tbl-row:last-child { border-bottom: none; }
+    .tbl-header { font-size: 10px; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px; font-weight: 700; padding: 8px 14px; border-bottom: 2px solid var(--border); }
+
+    /* ── SETTINGS BAR ────────────────────────────────────────── */
+    .min-kas-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; font-size: 13px;
+    }
+    .min-kas-bar input {
+      padding: 4px 10px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 13px; width: 160px; font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <h1>📈 Laporan Keuangan</h1>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="window.print()" style="font-size:12px">🖨️ Print</button>
+        <button class="btn btn-primary" onclick="openModal('modal-dividen')">💸 Tarik Dividen</button>
+      </div>
+    </div>
+
+    <!-- KAS HERO -->
+    <div class="kas-hero" id="kas-hero">
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">💵 Kas Tersedia</div>
+      <div class="kas-amount" id="kas-amount">—</div>
+      <div id="kas-status-badge"></div>
+      <div class="kas-breakdown" id="kas-breakdown"></div>
+    </div>
+
+    <!-- MIN KAS SETTING -->
+    <div class="min-kas-bar">
+      ⚠️ <strong>Minimum Kas Operasional:</strong>
+      <input type="number" id="min-kas-input" placeholder="Rp 0" min="0" step="100000">
+      <button class="btn btn-sm btn-secondary" onclick="saveMinKas()">Simpan</button>
+      <span style="color:var(--text2);font-size:11px">Dana minimal yang harus selalu tersedia. Dividen tidak boleh menarik hingga di bawah batas ini.</span>
+    </div>
+
+    <!-- TABS -->
+    <div class="report-tabs">
+      <button class="tab-btn active" onclick="switchTab('pl')">📊 Laba Rugi</button>
+      <button class="tab-btn" onclick="switchTab('cashflow')">💸 Arus Kas</button>
+      <button class="tab-btn" onclick="switchTab('receivables')">📋 Piutang</button>
+      <button class="tab-btn" onclick="switchTab('payables')">👥 Kewajiban Kru</button>
+      <button class="tab-btn" onclick="switchTab('packages')">📦 Performa Paket</button>
+      <button class="tab-btn" onclick="switchTab('dividen')">💰 Riwayat Dividen</button>
+    </div>
+
+    <!-- PERIOD FILTER -->
+    <div class="filter-bar" id="filter-bar">
+      <label>Filter Periode:</label>
+      <select id="filter-type" onchange="onFilterChange()">
+        <option value="all">Semua Waktu</option>
+        <option value="month" selected>Per Bulan</option>
+        <option value="year">Per Tahun</option>
+      </select>
+      <input type="month" id="filter-month" value="" onchange="loadCurrentTab()">
+      <input type="number" id="filter-year" value="" min="2020" max="2035" placeholder="2026" style="display:none;width:90px" onchange="loadCurrentTab()">
+      <button class="btn btn-sm btn-secondary" onclick="resetFilter()">Reset</button>
+    </div>
+
+    <!-- SECTION: LABA RUGI -->
+    <div class="report-section active" id="section-pl">
+      <div class="report-grid" id="pl-summary-cards"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <h2 style="font-size:15px;margin:0">Laporan Laba Rugi</h2>
+          <span id="pl-period-label" style="font-size:12px;color:var(--text2)"></span>
+        </div>
+        <div style="padding:8px 0"><table class="pl-table" id="pl-table"></table></div>
+      </div>
+    </div>
+
+    <!-- SECTION: ARUS KAS -->
+    <div class="report-section" id="section-cashflow">
+      <div class="report-grid" id="cf-summary-cards"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <h2 style="font-size:15px;margin:0">Arus Kas — Detail Transaksi</h2>
+        </div>
+        <div id="cf-content" style="padding:8px 0"></div>
+      </div>
+    </div>
+
+    <!-- SECTION: PIUTANG -->
+    <div class="report-section" id="section-receivables">
+      <div id="rec-summary" style="margin-bottom:16px"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <h2 style="font-size:15px;margin:0">Piutang Belum Lunas</h2>
+        </div>
+        <div id="rec-content"></div>
+      </div>
+    </div>
+
+    <!-- SECTION: KEWAJIBAN KRU -->
+    <div class="report-section" id="section-payables">
+      <div id="pay-summary" style="margin-bottom:16px"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <h2 style="font-size:15px;margin:0">Kewajiban Pembayaran Kru Aktif</h2>
+        </div>
+        <div id="pay-content"></div>
+      </div>
+    </div>
+
+    <!-- SECTION: PERFORMA PAKET -->
+    <div class="report-section" id="section-packages">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <h2 style="font-size:15px;margin:0">Performa Paket</h2>
+        </div>
+        <div id="pkg-content"></div>
+      </div>
+    </div>
+
+    <!-- SECTION: RIWAYAT DIVIDEN -->
+    <div class="report-section" id="section-dividen">
+      <div id="div-summary" style="margin-bottom:16px"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <h2 style="font-size:15px;margin:0">Riwayat Penarikan Dividen</h2>
+        </div>
+        <div id="div-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TARIK DIVIDEN -->
+  <div class="modal-overlay" id="modal-dividen" style="z-index:200">
+    <div class="modal" style="max-width:440px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:18px">💸 Tarik Dividen</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-dividen')">✕</button>
+      </div>
+
+      <!-- KAS INFO -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="color:var(--text2)">Kas Tersedia</span>
+          <span id="modal-kas-tersedia" style="font-weight:700">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="color:var(--text2)">⚠️ Min. Operasional</span>
+          <span id="modal-min-kas" style="color:#f59e0b;font-weight:600">—</span>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;display:flex;justify-content:space-between">
+          <span style="font-weight:700">Maks. Bisa Ditarik</span>
+          <span id="modal-max-dividen" style="font-weight:800;color:var(--green)">—</span>
+        </div>
+        <div class="dividen-limit-bar"><div class="dividen-limit-fill" id="dividen-fill" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px" id="dividen-fill-label"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Nominal (Rp) *</label>
+        <input type="number" id="div-amount" placeholder="500000" min="1" oninput="validateDividenInput()">
+        <div id="div-amount-error" style="font-size:11px;color:var(--red);margin-top:4px;display:none"></div>
+      </div>
+      <div class="form-group"><label>Tanggal *</label><input type="date" id="div-date"></div>
+      <div class="form-group"><label>Keterangan</label><input type="text" id="div-desc" placeholder="Dividen bulan Juli 2026..."></div>
+      <div class="form-group">
+        <label>Metode</label>
+        <select id="div-method" style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px">
+          <option>Transfer Bank</option>
+          <option>Tunai</option>
+          <option>GoPay</option>
+          <option>OVO</option>
+          <option>Dana</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('modal-dividen')">Batal</button>
+        <button class="btn btn-primary" id="btn-tarik-dividen" onclick="tarikDividen()">💸 Tarik Dividen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSidebar('reports');
+      // default filter: current month
+      const now = new Date();
+      document.getElementById('filter-month').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      document.getElementById('filter-year').value = now.getFullYear();
+      loadAll();
+    });
+
+    let currentTab = 'pl';
+    let kasData = {};
+
+    function getFilterParams() {
+      const type = document.getElementById('filter-type').value;
+      if (type === 'month') return `?month=${document.getElementById('filter-month').value}`;
+      if (type === 'year') return `?year=${document.getElementById('filter-year').value}`;
+      return '';
+    }
+
+    function onFilterChange() {
+      const type = document.getElementById('filter-type').value;
+      document.getElementById('filter-month').style.display = type === 'month' ? '' : 'none';
+      document.getElementById('filter-year').style.display = type === 'year' ? '' : 'none';
+      loadCurrentTab();
+    }
+
+    function resetFilter() {
+      document.getElementById('filter-type').value = 'month';
+      const now = new Date();
+      document.getElementById('filter-month').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      document.getElementById('filter-year').value = now.getFullYear();
+      document.getElementById('filter-month').style.display = '';
+      document.getElementById('filter-year').style.display = 'none';
+      loadCurrentTab();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        const tabs = ['pl','cashflow','receivables','payables','packages','dividen'];
+        b.classList.toggle('active', tabs[i] === tab);
+      });
+      document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+      document.getElementById(`section-${tab}`).classList.add('active');
+      // hide filter for sections that don't use period
+      const noFilter = ['receivables','payables','packages','dividen'];
+      document.getElementById('filter-bar').style.display = noFilter.includes(tab) ? 'none' : 'flex';
+      loadCurrentTab();
+    }
+
+    function loadCurrentTab() {
+      if (currentTab === 'pl') loadPL();
+      else if (currentTab === 'cashflow') loadCashflow();
+      else if (currentTab === 'receivables') loadReceivables();
+      else if (currentTab === 'payables') loadPayables();
+      else if (currentTab === 'packages') loadPackages();
+      else if (currentTab === 'dividen') loadDividen();
+    }
+
+    async function loadAll() {
+      await loadKas();
+      await loadMinKas();
+      loadCurrentTab();
+    }
+
+    // ── KAS ────────────────────────────────────────────────────────
+    async function loadKas() {
+      kasData = await API.get('/api/reports/kas');
+      const { kasTersedia, totalMasuk, totalKeluar, totalDividen, minKas, maxDividen } = kasData;
+
+      document.getElementById('kas-amount').textContent = formatIDR(kasTersedia);
+      document.getElementById('kas-amount').style.color = kasTersedia < 0 ? 'var(--red)' : kasTersedia < minKas ? '#f59e0b' : 'var(--green)';
+
+      let statusText, statusClass;
+      if (kasTersedia < 0) { statusText = '🔴 DEFISIT — Kas negatif!'; statusClass = 'minus'; }
+      else if (minKas > 0 && kasTersedia < minKas) { statusText = '⚠️ DI BAWAH MINIMUM OPERASIONAL'; statusClass = 'warning'; }
+      else { statusText = '✅ KAS POSITIF'; statusClass = 'positif'; }
+      document.getElementById('kas-status-badge').innerHTML = `<span class="kas-status ${statusClass}">${statusText}</span>`;
+
+      document.getElementById('kas-breakdown').innerHTML = `
+        <div class="kas-item">
+          <div class="ki-label">💚 Total Masuk</div>
+          <div class="ki-value" style="color:var(--green)">${formatIDR(totalMasuk)}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">Semua pembayaran klien</div>
+        </div>
+        <div class="kas-item">
+          <div class="ki-label">🔴 Total Keluar</div>
+          <div class="ki-value" style="color:var(--red)">${formatIDR(totalKeluar)}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">Fee kru terbayar</div>
+        </div>
+        <div class="kas-item">
+          <div class="ki-label">💸 Dividen Ditarik</div>
+          <div class="ki-value" style="color:#f59e0b">${formatIDR(totalDividen)}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">Penarikan owner</div>
+        </div>
+        <div class="kas-item">
+          <div class="ki-label">⚠️ Min. Operasional</div>
+          <div class="ki-value" style="color:var(--text2)">${formatIDR(minKas)}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">Dana dicadangkan</div>
+        </div>
+      `;
+
+      // Update modal fields
+      document.getElementById('modal-kas-tersedia').textContent = formatIDR(kasTersedia);
+      document.getElementById('modal-min-kas').textContent = formatIDR(minKas);
+      document.getElementById('modal-max-dividen').textContent = formatIDR(maxDividen);
+      const pct = kasTersedia > 0 ? Math.min(100, Math.round((maxDividen / kasTersedia) * 100)) : 0;
+      document.getElementById('dividen-fill').style.width = pct + '%';
+      document.getElementById('dividen-fill-label').textContent = `${pct}% dari kas dapat ditarik (setelah min. operasional)`;
+    }
+
+    async function loadMinKas() {
+      try {
+        const data = await API.get('/api/settings');
+        const minKasSetting = data.find ? data.find(s => s.key === 'min_kas_operasional') : null;
+        if (minKasSetting) document.getElementById('min-kas-input').value = minKasSetting.value;
+      } catch {}
+    }
+
+    async function saveMinKas() {
+      const val = parseInt(document.getElementById('min-kas-input').value) || 0;
+      await API.post('/api/settings', { key: 'min_kas_operasional', value: String(val) });
+      await loadKas();
+      alert('Minimum kas operasional tersimpan: ' + formatIDR(val));
+    }
+
+    // ── LABA RUGI ─────────────────────────────────────────────────
+    async function loadPL() {
+      const params = getFilterParams();
+      const d = await API.get('/api/reports/pl' + params);
+
+      const dp = d.pendapatan.find(p => p.type === 'dp')?.total || 0;
+      const pelunasan = d.pendapatan.find(p => p.type === 'pelunasan')?.total || 0;
+
+      const periodLabel = document.getElementById('filter-type').value === 'month'
+        ? `Bulan: ${document.getElementById('filter-month').value}`
+        : document.getElementById('filter-type').value === 'year'
+          ? `Tahun: ${document.getElementById('filter-year').value}`
+          : 'Semua Waktu';
+      document.getElementById('pl-period-label').textContent = periodLabel;
+
+      document.getElementById('pl-summary-cards').innerHTML = `
+        <div class="report-card">
+          <h3>📥 Total Pendapatan</h3>
+          <div class="rc-value" style="color:var(--green)">${formatIDR(d.totalPendapatan)}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:8px">
+            DP: ${formatIDR(dp)} &nbsp;|&nbsp; Pelunasan: ${formatIDR(pelunasan)}
+          </div>
+        </div>
+        <div class="report-card">
+          <h3>📤 Total Beban</h3>
+          <div class="rc-value" style="color:var(--red)">${formatIDR(d.biaya.total)}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:8px">
+            Kru: ${formatIDR(d.biaya.kru)} &nbsp;|&nbsp; Produk: ${formatIDR(d.biaya.produk)}
+          </div>
+        </div>
+        <div class="report-card" style="grid-column:span 2">
+          <h3>💰 Laba Bersih</h3>
+          <div style="display:flex;align-items:baseline;gap:16px">
+            <div class="rc-value" style="color:${d.labaBersih >= 0 ? 'var(--green)' : 'var(--red)'}">${formatIDR(d.labaBersih)}</div>
+            <div style="font-size:24px;font-weight:800;color:${d.labaBersih >= 0 ? 'var(--green)' : 'var(--red)'}">
+              ${d.margin}% margin
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('pl-table').innerHTML = `
+        <tr class="pl-header"><td colspan="2">📥 PENDAPATAN</td></tr>
+        <tr><td style="padding-left:28px">Down Payment (DP)</td><td>${formatIDR(dp)}</td></tr>
+        <tr><td style="padding-left:28px">Pelunasan</td><td>${formatIDR(pelunasan)}</td></tr>
+        <tr class="pl-subtotal"><td>Total Pendapatan</td><td style="color:var(--green)">${formatIDR(d.totalPendapatan)}</td></tr>
+
+        <tr class="pl-header"><td colspan="2">📤 BEBAN / BIAYA</td></tr>
+        <tr><td style="padding-left:28px">Fee Kru Freelancer</td><td style="color:var(--red)">${formatIDR(d.biaya.kru)}</td></tr>
+        <tr><td style="padding-left:28px">Modal Produk (Album, Flashdisk, dll)</td><td style="color:var(--red)">${formatIDR(d.biaya.produk)}</td></tr>
+        <tr class="pl-subtotal"><td>Total Beban</td><td style="color:var(--red)">${formatIDR(d.biaya.total)}</td></tr>
+
+        <tr class="pl-header"><td colspan="2">💸 DIVIDEN</td></tr>
+        <tr><td style="padding-left:28px">Penarikan Dividen Owner</td><td style="color:#f59e0b">${formatIDR(d.dividen)}</td></tr>
+
+        <tr class="pl-total">
+          <td>💰 LABA BERSIH</td>
+          <td style="color:${d.labaBersih >= 0 ? 'var(--green)' : 'var(--red)'};font-size:18px">${formatIDR(d.labaBersih)} <span style="font-size:13px">(${d.margin}%)</span></td>
+        </tr>
+      `;
+    }
+
+    // ── ARUS KAS ─────────────────────────────────────────────────
+    async function loadCashflow() {
+      const params = getFilterParams();
+      const d = await API.get('/api/reports/cashflow' + params);
+
+      document.getElementById('cf-summary-cards').innerHTML = `
+        <div class="report-card">
+          <h3>💚 Kas Masuk</h3>
+          <div class="rc-value" style="color:var(--green)">${formatIDR(d.totalIn)}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:6px">${d.incoming.length} transaksi masuk</div>
+        </div>
+        <div class="report-card">
+          <h3>🔴 Kas Keluar</h3>
+          <div class="rc-value" style="color:var(--red)">${formatIDR(d.totalOut)}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:6px">${d.outgoing.length} transaksi keluar</div>
+        </div>
+      `;
+
+      const inRows = d.incoming.map(r => `
+        <div class="tbl-row" style="grid-template-columns:90px 1fr 120px 110px">
+          <span style="color:var(--text2);font-size:11px">${formatDate(r.date)}</span>
+          <span>💚 <strong>${r.client_name}</strong> <span style="font-size:11px;color:var(--text2)">(${r.type === 'dp' ? 'Down Payment' : 'Pelunasan'})</span></span>
+          <span style="color:var(--text2);font-size:11px">${r.method || '-'}</span>
+          <span style="text-align:right;font-weight:700;color:var(--green)">+${formatIDR(r.amount)}</span>
+        </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--text2);font-size:12px">Tidak ada kas masuk di periode ini</div>';
+
+      const outRows = d.outgoing.map(r => `
+        <div class="tbl-row" style="grid-template-columns:90px 1fr 120px 110px">
+          <span style="color:var(--text2);font-size:11px">${formatDate(r.date)}</span>
+          <span>🔴 <strong>${r.freelancer_name}</strong> <span style="font-size:11px;color:var(--text2)">(${r.skill || 'Freelancer'})</span></span>
+          <span style="color:var(--text2);font-size:11px">Fee Kru</span>
+          <span style="text-align:right;font-weight:700;color:var(--red)">−${formatIDR(r.amount)}</span>
+        </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--text2);font-size:12px">Tidak ada kas keluar di periode ini</div>';
+
+      document.getElementById('cf-content').innerHTML = `
+        <div style="padding:12px 14px;font-size:12px;font-weight:700;color:var(--green);border-bottom:1px solid var(--border);background:rgba(34,197,94,0.05)">KAS MASUK</div>
+        <div class="tbl-header" style="grid-template-columns:90px 1fr 120px 110px;display:grid">Tanggal &nbsp; Keterangan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Metode &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Nominal</div>
+        ${inRows}
+        <div style="padding:12px 14px;font-size:12px;font-weight:700;color:var(--red);border-bottom:1px solid var(--border);background:rgba(239,68,68,0.05);margin-top:8px">KAS KELUAR</div>
+        ${outRows}
+        <div style="padding:14px 16px;background:var(--surface2);display:flex;justify-content:space-between;font-weight:700;border-top:2px solid var(--border)">
+          <span>Net Cash Flow Periode Ini</span>
+          <span style="color:${d.netFlow >= 0 ? 'var(--green)' : 'var(--red)'}">
+            ${d.netFlow >= 0 ? '+' : ''}${formatIDR(d.netFlow)}
+          </span>
+        </div>
+      `;
+    }
+
+    // ── PIUTANG ──────────────────────────────────────────────────
+    async function loadReceivables() {
+      const d = await API.get('/api/reports/receivables');
+      document.getElementById('rec-summary').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div class="stat-card"><div class="stat-label">📋 Booking Belum Lunas</div><div class="stat-value">${d.count} booking</div></div>
+          <div class="stat-card"><div class="stat-label">💰 Total Piutang</div><div class="stat-value" style="color:var(--red)">${formatIDR(d.total)}</div></div>
+          <div class="stat-card"><div class="stat-label">📅 Paling Dekat</div><div class="stat-value" style="font-size:16px">${d.rows[0]?.event_date ? formatDate(d.rows[0].event_date) : '—'}</div></div>
+        </div>`;
+      if (!d.rows.length) {
+        document.getElementById('rec-content').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text2)">✅ Tidak ada piutang — semua booking sudah lunas!</div>';
+        return;
+      }
+      document.getElementById('rec-content').innerHTML = `
+        <div class="tbl-header" style="display:grid;grid-template-columns:1fr 120px 100px 110px 110px;padding:8px 14px">
+          Klien / Paket &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tanggal Acara &nbsp;&nbsp; Status &nbsp;&nbsp; Sudah Bayar &nbsp; Sisa
+        </div>
+        ${d.rows.map(r => `
+          <div class="tbl-row" style="grid-template-columns:1fr 120px 100px 110px 110px">
+            <div><strong>${r.client_name}</strong><br><span style="font-size:11px;color:var(--text2)">${r.package_name || 'Custom'}</span></div>
+            <span style="font-size:12px">${formatDate(r.event_date)}</span>
+            <span>${statusBadge(r.status)}</span>
+            <span style="color:var(--green);font-weight:600">${formatIDR(r.total_paid)}</span>
+            <span style="color:var(--red);font-weight:700">⚠️ ${formatIDR(r.outstanding)}</span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:flex-end;padding:12px 16px;font-weight:700;border-top:2px solid var(--border);font-size:15px">
+          Total Piutang: <span style="color:var(--red);margin-left:12px">${formatIDR(d.total)}</span>
+        </div>`;
+    }
+
+    // ── KEWAJIBAN KRU ────────────────────────────────────────────
+    async function loadPayables() {
+      const d = await API.get('/api/reports/payables');
+      document.getElementById('pay-summary').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div class="stat-card"><div class="stat-label">👥 Freelancer Belum Dibayar</div><div class="stat-value">${d.count} orang</div></div>
+          <div class="stat-card"><div class="stat-label">💸 Total Kewajiban</div><div class="stat-value" style="color:var(--red)">${formatIDR(d.total)}</div></div>
+          <div class="stat-card"><div class="stat-label">📌 Status Kas</div><div class="stat-value" style="font-size:14px;color:${kasData.kasTersedia >= d.total ? 'var(--green)' : 'var(--red)'}">
+            ${kasData.kasTersedia >= d.total ? '✅ Cukup untuk bayar' : '⚠️ Kas kurang'}
+          </div></div>
+        </div>`;
+      if (!d.rows.length) {
+        document.getElementById('pay-content').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text2)">✅ Semua kru sudah terbayar!</div>';
+        return;
+      }
+      document.getElementById('pay-content').innerHTML = `
+        <div class="tbl-header" style="display:grid;grid-template-columns:1fr 100px 80px 110px;padding:8px 14px">Freelancer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Skill &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Job &nbsp;&nbsp;&nbsp;&nbsp; Belum Dibayar</div>
+        ${d.rows.map(r => `
+          <div class="tbl-row" style="grid-template-columns:1fr 100px 80px 110px">
+            <div>
+              <strong>${r.name}</strong>
+              ${r.phone ? `<br><span style="font-size:11px;color:var(--blue)">${r.phone}</span>` : ''}
+            </div>
+            <span style="font-size:12px;color:var(--text2)">${r.skill || '-'}</span>
+            <span style="font-size:12px;text-align:center">${r.unpaid_jobs} sesi</span>
+            <span style="color:var(--red);font-weight:700;text-align:right">⚠️ ${formatIDR(r.total_unpaid)}</span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:flex-end;padding:12px 16px;font-weight:700;border-top:2px solid var(--border);font-size:15px">
+          Total Kewajiban: <span style="color:var(--red);margin-left:12px">${formatIDR(d.total)}</span>
+        </div>`;
+    }
+
+    // ── PERFORMA PAKET ───────────────────────────────────────────
+    async function loadPackages() {
+      const d = await API.get('/api/reports/packages');
+      const maxRev = Math.max(...d.map(p => p.total_revenue), 1);
+      document.getElementById('pkg-content').innerHTML = !d.length
+        ? '<div style="padding:30px;text-align:center;color:var(--text2)">Belum ada data paket</div>'
+        : `<div class="tbl-header" style="display:grid;grid-template-columns:1fr 80px 80px 110px 110px;padding:8px 14px">
+            Paket &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Booking &nbsp; Selesai &nbsp; Harga Paket &nbsp; Revenue
+           </div>
+           ${d.map(p => `
+            <div class="tbl-row" style="grid-template-columns:1fr 80px 80px 110px 110px">
+              <div>
+                <strong>${p.name}</strong>
+                <div style="height:4px;background:var(--surface);border-radius:2px;margin-top:6px;max-width:200px">
+                  <div style="height:4px;border-radius:2px;background:var(--accent);width:${Math.round((p.total_revenue/maxRev)*100)}%"></div>
+                </div>
+              </div>
+              <span style="text-align:center;font-weight:600">${p.jumlah_booking}</span>
+              <span style="text-align:center;color:var(--green)">${p.selesai}</span>
+              <span style="text-align:right">${formatIDR(p.harga_paket)}</span>
+              <span style="text-align:right;font-weight:700;color:var(--green)">${formatIDR(p.total_revenue)}</span>
+            </div>`).join('')}`;
+    }
+
+    // ── DIVIDEN ──────────────────────────────────────────────────
+    async function loadDividen() {
+      const d = await API.get('/api/dividends');
+      document.getElementById('div-summary').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div class="stat-card"><div class="stat-label">📊 Total Penarikan</div><div class="stat-value">${d.rows.length}x</div></div>
+          <div class="stat-card"><div class="stat-label">💸 Total Dividen</div><div class="stat-value" style="color:#f59e0b">${formatIDR(d.totalTarik)}</div></div>
+          <div class="stat-card"><div class="stat-label">💵 Kas Setelah Dividen</div><div class="stat-value" style="font-size:15px;color:${kasData.kasTersedia >= 0 ? 'var(--green)' : 'var(--red)'}">
+            ${formatIDR(kasData.kasTersedia)}
+          </div></div>
+        </div>`;
+      if (!d.rows.length) {
+        document.getElementById('div-content').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text2)">Belum ada riwayat penarikan dividen</div>';
+        return;
+      }
+      document.getElementById('div-content').innerHTML = `
+        <div class="tbl-header" style="display:grid;grid-template-columns:100px 1fr 120px 110px 40px;padding:8px 14px">
+          Tanggal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Keterangan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Metode &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Nominal &nbsp;&nbsp; Hapus
+        </div>
+        ${d.rows.map(r => `
+          <div class="tbl-row" style="grid-template-columns:100px 1fr 120px 110px 40px">
+            <span style="font-size:12px">${formatDate(r.date)}</span>
+            <span>${r.description || '<span style="color:var(--text2)">—</span>'}</span>
+            <span style="font-size:12px;color:var(--text2)">${r.method}</span>
+            <span style="font-weight:700;color:#f59e0b;text-align:right">💸 ${formatIDR(r.amount)}</span>
+            <button onclick="deleteDividen(${r.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px" title="Hapus">🗑️</button>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:flex-end;padding:12px 16px;font-weight:700;border-top:2px solid var(--border);font-size:15px">
+          Total: <span style="color:#f59e0b;margin-left:12px">${formatIDR(d.totalTarik)}</span>
+        </div>`;
+    }
+
+    // ── DIVIDEN ACTIONS ──────────────────────────────────────────
+    function validateDividenInput() {
+      const amount = parseInt(document.getElementById('div-amount').value) || 0;
+      const maxDiv = kasData.maxDividen || 0;
+      const errEl = document.getElementById('div-amount-error');
+      const btn = document.getElementById('btn-tarik-dividen');
+
+      if (amount > maxDiv) {
+        errEl.style.display = '';
+        errEl.textContent = `⚠️ Melebihi batas! Maks. ${formatIDR(maxDiv)} (Kas − Min. Operasional)`;
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+      } else {
+        errEl.style.display = 'none';
+        btn.disabled = false;
+        btn.style.opacity = '';
+      }
+    }
+
+    async function tarikDividen() {
+      const amount = parseInt(document.getElementById('div-amount').value);
+      const date = document.getElementById('div-date').value;
+      const desc = document.getElementById('div-desc').value;
+      const method = document.getElementById('div-method').value;
+      if (!amount || !date) return alert('Nominal dan tanggal wajib diisi');
+      try {
+        const res = await API.post('/api/dividends', { amount, date, description: desc, method });
+        alert(`✅ Dividen ${formatIDR(amount)} berhasil dicatat.\nKas tersedia setelah penarikan: ${formatIDR(res.kasTersediaSetelah)}`);
+        closeModal('modal-dividen');
+        await loadKas();
+        loadDividen();
+      } catch (e) {
+        alert('❌ ' + e.message);
+      }
+    }
+
+    async function deleteDividen(id) {
+      if (!confirm('Hapus entri dividen ini? Kas tersedia akan dikembalikan.')) return;
+      await API.del('/api/dividends/' + id);
+      await loadKas();
+      loadDividen();
+    }
+  </script>
+</body>
+</html>
