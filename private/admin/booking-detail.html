@@ -443,6 +443,17 @@
       }
     });
 
+    function renderTemplate(tpl, vars) {
+      if (!tpl) return '';
+      let result = tpl;
+      result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+        if (!vars[key]) return '';
+        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
+      });
+      result = result.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m);
+      return result;
+    }
+
 
 
     // === INVOICE BUTTONS ===
@@ -692,25 +703,36 @@ Terima kasih atas kerjasamanya! 🙏`;
 
       bdetUpdateWaPreview();
 
-      // Button: Hanya Kirim WA (validasi — no DB write)
       document.getElementById('bdet-wa-only').onclick = () => {
         const method = selectEl.value;
-        const validationMsg = `━━━━━━━━━━━━━━━━━━
-📱 *VALIDASI TAGIHAN FREELANCE*
-━━━━━━━━━━━━━━━━━━
+        
+        let bankProvider = 'Transfer';
+        let bankNum = '';
+        let bankHolder = '';
+        if (f.bank_account) {
+          try {
+            const accs = JSON.parse(f.bank_account);
+            if (accs.length > 0) {
+              bankProvider = accs[0].provider || 'Transfer';
+              bankNum = accs[0].number || '';
+              bankHolder = accs[0].holder || '';
+            }
+          } catch(e) {
+            bankNum = f.bank_account;
+          }
+        }
 
-Halo ${f.name},
+        const defaultValMsg = `Halo {{freelancer_name}} 👋\n\nSistem {{vendor_name}} telah mencatat total pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}*.\n\nMohon periksa & konfirmasi kembali nomor rekening Anda:\n🏦 *{{bank_name}}*\n💳 *{{bank_account}}* (a.n. {{bank_holder}})\n\nJika sudah benar, balas pesan ini agar admin segera mencairkan dana. Terima kasih! 🙏`;
+        const validationMsg = renderTemplate(templates.wa_freelance_validation || defaultValMsg, {
+          freelancer_name: f.name,
+          vendor_name: 'Sorehari Photography',
+          client_name: bookingData ? bookingData.client_name : 'Client Project',
+          total_fee: formatIDR(total),
+          bank_name: bankProvider,
+          bank_account: bankNum,
+          bank_holder: bankHolder
+        });
 
-Mohon dicek & divalidasi untuk rincian job berikut:
-
-${jobsText}
-
-━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
-💳 Pembayaran: ${method}
-━━━━━━━━━━━━━━━━━━
-
-Jika data sudah benar, silakan kabari agar dana bisa segera dirilis. Terima kasih! 🙏`;
         if (f.phone) {
           window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
         }
@@ -727,26 +749,15 @@ Jika data sudah benar, silakan kabari agar dana bisa segera dirilis. Terima kasi
             method
           });
           const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
-          const paidMsg = `━━━━━━━━━━━━━━━━━━
-💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
-━━━━━━━━━━━━━━━━━━
+          
+          const defaultPaidMsg = `Halo {{freelancer_name}} ✨\n\nHalo, pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}* telah ditransfer ke rekening Anda.\n\nBukti transfer dapat diunduh di tautan berikut:\n{{receipt_url}}\n\nTerima kasih atas kerja kerasnya di lapangan! Semoga sukses selalu 🙏`;
+          const paidMsg = renderTemplate(templates.wa_freelance_paid || defaultPaidMsg, {
+            freelancer_name: f.name,
+            client_name: bookingData ? bookingData.client_name : 'Client Project',
+            total_fee: formatIDR(total),
+            receipt_url: receiptLink
+          });
 
-Halo ${f.name},
-
-Sorehari TELAH mentransfer fee untuk job berikut:
-
-${jobsText}
-
-━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
-📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
-💳 Pembayaran: ${method}
-━━━━━━━━━━━━━━━━━━
-
-Resi / Kuitansi Pembayaran Resmi:
-${receiptLink}
-
-Terima kasih atas kerjasamanya! 🙏`;
           if (f.phone) {
             window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
           }
@@ -1274,15 +1285,17 @@ Terima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, 
       if (phone) {
         const invUrl = `${window.location.origin}/invoice.html?id=${b.booking_id}&type=lunas`;
         const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
-        const msg = encodeURIComponent(
-          `Halo ${b.client_name} 👋\n\n` +
-          `Pembayaran untuk acara *${formatDate(b.event_date)}* telah *LUNAS* ✅\n\n` +
-          `📋 Paket: ${b.package_name || '-'}\n` +
-          `💰 Total: ${formatIDR(b.package_price)}\n\n` +
-          `Invoice lengkap:\n${invUrl}\n\n` +
-          `Terima kasih atas kepercayaannya! Kami akan mempersiapkan acara terbaik untuk Anda 🙏📸`
-        );
-        window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+        
+        const defaultConfirmMsg = `Halo {{client_name}} 👋\n\nPembayaran untuk acara *{{event_date}}* telah *LUNAS* ✅\n\n📋 Paket: {{package_name}}\n💰 Total: {{package_price}}\n\nInvoice lengkap:\n{{invoice_url}}\n\nTerima kasih atas kepercayaannya! Kami akan mempersiapkan acara terbaik untuk Anda 🙏📸`;
+        const msg = renderTemplate(templates.wa_pelunasan_confirmed || defaultConfirmMsg, {
+          client_name: b.client_name,
+          event_date: formatDate(b.event_date),
+          package_name: b.package_name || '-',
+          package_price: formatIDR(b.package_price),
+          invoice_url: invUrl
+        });
+        
+        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
       }
 
       await load();

@@ -173,6 +173,34 @@
                   <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_pelunasan')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
                 </td>
               </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Konfirmasi Lunas Client</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan otomatis konfirmasi pelunasan pembayaran berhasil diterima.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_pelunasan_confirmed')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Tagihan Pelunasan H-x</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan followup pengingat pelunasan yang mendekati hari H.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_tagih_h_x')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Validasi Rekening Freelance</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan pengiriman rincian honor untuk divalidasi oleh crew freelance.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_freelance_validation')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 8px"><strong>Template WA — Pembayaran Honor Freelance</strong></td>
+                <td style="padding:14px 8px; color:var(--text2)">Pesan konfirmasi pembayaran fee freelance beserta bukti transfer.</td>
+                <td style="text-align:center; padding:14px 8px">
+                  <button class="btn btn-sm btn-secondary" onclick="window.openEditTemplate('wa_freelance_paid')" style="padding:6px 12px; font-size:12px">✏️ Edit</button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -184,6 +212,10 @@
         <textarea id="s-wa_dp_confirmed" style="display:none"></textarea>
         <textarea id="s-wa_invoice" style="display:none"></textarea>
         <textarea id="s-wa_pelunasan" style="display:none"></textarea>
+        <textarea id="s-wa_pelunasan_confirmed" style="display:none"></textarea>
+        <textarea id="s-wa_tagih_h_x" style="display:none"></textarea>
+        <textarea id="s-wa_freelance_validation" style="display:none"></textarea>
+        <textarea id="s-wa_freelance_paid" style="display:none"></textarea>
       </div>
     </div>
 
@@ -294,7 +326,8 @@
       'vendor_name','vendor_tagline','vendor_email','vendor_phone','vendor_address','vendor_website',
       'currency','tax_rate','followup_h_days',
       'inquiry_event_types','inquiry_needs',
-      'wa_welcome','wa_booking_proposal','wa_dp_verified','wa_dp_confirmed','wa_invoice','wa_pelunasan'
+      'wa_welcome','wa_booking_proposal','wa_dp_verified','wa_dp_confirmed','wa_invoice','wa_pelunasan',
+      'wa_pelunasan_confirmed','wa_tagih_h_x','wa_freelance_validation','wa_freelance_paid'
     ];
 
     let logoBase64 = null;
@@ -491,11 +524,33 @@ DP: {{dp_amount}}
 \nSemoga Kakak & pasangan selalu sehat dan dilancarkan segala persiapannya menjelang hari bahagia ya Kak. 😊
 \nMengingat tanggal pernikahan Kakak semakin dekat pada *{{event_date}}*, kami dari tim Sorehari Photography ingin menginfokan terkait kelengkapan administrasi sisa pembayaran (pelunasan).
 \nRincian sisa pelunasan Kakak:
-💵 Sisa Pembayaran: *{{remaining}}*
+\n💵 Sisa Pembayaran: *{{remaining}}*
 \nKakak dapat melakukan pelunasan dan mengunggah bukti transfer secara aman melalui tautan resmi di bawah ini:
-🔗 {{pelunasan_url}}
+\n🔗 {{pelunasan_url}}
 \nJika ada hal yang ingin dikoordinasikan atau ditanyakan terkait detail acara, silakan kabari kami ya Kak. Kami tidak sabar mengabadikan momen spesial Kakak nanti!
 \nTerima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, Sorehari Team. 📸`,
+      wa_pelunasan_confirmed: `Halo {{client_name}} 👋
+\nPembayaran untuk acara *{{event_date}}* telah *LUNAS* ✅
+\n📋 Paket: {{package_name}}
+\n💰 Total: {{package_price}}
+\nInvoice lengkap:
+\n{{invoice_url}}
+\nTerima kasih atas kepercayaannya! Kami akan mempersiapkan acara terbaik untuk Anda 🙏📸`,
+      wa_tagih_h_x: `Halo Kak {{client_name}}! 👋
+\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.
+\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`,
+      wa_freelance_validation: `Halo {{freelancer_name}} 👋
+\nSistem {{vendor_name}} telah mencatat total pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}*.
+\nMohon periksa & konfirmasi kembali nomor rekening Anda:
+\n🏦 *{{bank_name}}*
+\n💳 *{{bank_account}}*
+\n👤 *a.n. {{bank_holder}}*
+\nJika sudah benar, balas pesan ini agar admin segera mencairkan dana. Terima kasih! 🙏`,
+      wa_freelance_paid: `Halo {{freelancer_name}} ✨
+\nHalo, pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}* telah ditransfer ke rekening Anda.
+\nBukti transfer dapat diunduh di tautan berikut:
+\n{{receipt_url}}
+\nTerima kasih atas kerja kerasnya di lapangan! Semoga sukses selalu 🙏`
     };
 
     async function resetDefaults() {

@@ -249,6 +249,7 @@
 
   <script src="/admin/js/app.js"></script>
   <script>
+    let templates = {};
     let currentTab = 'persiapan';
 
     window.changeTab = function(tab) {
@@ -263,15 +264,28 @@
       window.loadClients();
     });
 
+    function renderTemplate(tpl, vars) {
+      if (!tpl) return '';
+      let result = tpl;
+      result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
+        if (!vars[key]) return '';
+        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
+      });
+      result = result.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m);
+      return result;
+    }
+
     window.loadClients = async function() {
         const search = document.getElementById('search').value;
         
-        // Fetch clients and settings in parallel
-        const [clientsRaw, settings] = await Promise.all([
+        // Fetch clients, settings, and templates in parallel
+        const [clientsRaw, settings, templatesRaw] = await Promise.all([
           API.get('/api/clients/confirmed'),
-          API.get('/api/settings')
+          API.get('/api/settings'),
+          API.get('/api/templates')
         ]);
         let clients = clientsRaw;
+        templates = templatesRaw;
         const followupDays = parseInt(settings.followup_h_days) || 10;
 
         // Apply Tab Filter
@@ -371,7 +385,14 @@
             
             const isFollowupAlert = !isLunas && diffDays >= 0 && diffDays <= followupDays;
             
-            const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} di ${c.venue || '-'} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
+            const defaultMsg = `Halo Kak {{client_name}}! 👋\n\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
+            const waMsg = renderTemplate(templates.wa_tagih_h_x || defaultMsg, {
+              client_name: c.name,
+              vendor_name: settings.vendor_name || 'Sorehari Photography',
+              event_date: formatDate(c.event_date),
+              venue: c.venue || '-',
+              remaining: formatIDR(remaining)
+            });
             const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
 
             let cardClass = "client-card";
@@ -456,8 +477,14 @@
                 const dayNum = dt.getDate();
                 const dayName = dt.toLocaleDateString('id-ID', { weekday: 'short' });
 
-                const phone = (c.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
-                const waMsg = `Halo Kak ${c.name}! 👋\n\nKami dari *Sorehari Photography* ingin mengingatkan bahwa pembayaran untuk acara ${formatDate(c.event_date)} masih ada sisa pelunasan sebesar *${formatIDR(remaining)}*.\n\nTerima kasih! 🙏`;
+                const defaultMsg = `Halo Kak {{client_name}}! 👋\n\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.\n\nTerima kasih! 🙏`;
+                const waMsg = renderTemplate(templates.wa_tagih_h_x || defaultMsg, {
+                  client_name: c.name,
+                  vendor_name: settings.vendor_name || 'Sorehari Photography',
+                  event_date: formatDate(c.event_date),
+                  venue: c.venue || '-',
+                  remaining: formatIDR(remaining)
+                });
                 const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}` : '#';
 
                 return `
@@ -572,22 +599,34 @@ Terima kasih atas kerjasamanya! 🙏`;
 
       document.getElementById('bdet-wa-only').onclick = () => {
         const method = selectEl.value;
-        const validationMsg = `━━━━━━━━━━━━━━━━━━
-📱 *VALIDASI TAGIHAN FREELANCE*
-━━━━━━━━━━━━━━━━━━
+        
+        let bankProvider = 'Transfer';
+        let bankNum = '';
+        let bankHolder = '';
+        if (f.bank_account) {
+          try {
+            const accs = JSON.parse(f.bank_account);
+            if (accs.length > 0) {
+              bankProvider = accs[0].provider || 'Transfer';
+              bankNum = accs[0].number || '';
+              bankHolder = accs[0].holder || '';
+            }
+          } catch(e) {
+            bankNum = f.bank_account;
+          }
+        }
+        
+        const defaultValMsg = `Halo {{freelancer_name}} 👋\n\nSistem {{vendor_name}} telah mencatat total pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}*.\n\nMohon periksa & konfirmasi kembali nomor rekening Anda:\n🏦 *{{bank_name}}*\n💳 *{{bank_account}}* (a.n. {{bank_holder}})\n\nJika sudah benar, balas pesan ini agar admin segera mencairkan dana. Terima kasih! 🙏`;
+        const validationMsg = renderTemplate(templates.wa_freelance_validation || defaultValMsg, {
+          freelancer_name: f.name,
+          vendor_name: 'Sorehari Photography',
+          client_name: 'Client Projects',
+          total_fee: formatIDR(total),
+          bank_name: bankProvider,
+          bank_account: bankNum,
+          bank_holder: bankHolder
+        });
 
-Halo ${f.name},
-
-Mohon dicek & divalidasi untuk rincian job berikut:
-
-${jobsText}
-
-━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
-💳 Pembayaran: ${method}
-━━━━━━━━━━━━━━━━━━
-
-Jika data sudah benar, silakan kabari agar dana bisa segera dirilis. Terima kasih! 🙏`;
         if (f.phone) {
           window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(validationMsg)}`, '_blank');
         }
@@ -603,26 +642,15 @@ Jika data sudah benar, silakan kabari agar dana bisa segera dirilis. Terima kasi
             method
           });
           const receiptLink = `${window.location.protocol}//${window.location.host}/receipt/freelance/${result.payment_token}`;
-          const paidMsg = `━━━━━━━━━━━━━━━━━━
-💰 *PEMBAYARAN FEE FREELANCE (LUNAS)*
-━━━━━━━━━━━━━━━━━━
+          
+          const defaultPaidMsg = `Halo {{freelancer_name}} ✨\n\nHalo, pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}* telah ditransfer ke rekening Anda.\n\nBukti transfer dapat diunduh di tautan berikut:\n{{receipt_url}}\n\nTerima kasih atas kerja kerasnya di lapangan! Semoga sukses selalu 🙏`;
+          const paidMsg = renderTemplate(templates.wa_freelance_paid || defaultPaidMsg, {
+            freelancer_name: f.name,
+            client_name: 'Client Projects',
+            total_fee: formatIDR(total),
+            receipt_url: receiptLink
+          });
 
-Halo ${f.name},
-
-Sorehari TELAH mentransfer fee untuk job berikut:
-
-${jobsText}
-
-━━━━━━━━━━━━━━━━━━
-💵 *Total: ${formatIDR(total)}*
-📅 Tanggal: ${new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
-💳 Pembayaran: ${method}
-━━━━━━━━━━━━━━━━━━
-
-Resi / Kuitansi Pembayaran Resmi:
-${receiptLink}
-
-Terima kasih atas kerjasamanya! 🙏`;
           if (f.phone) {
             window.open(`https://wa.me/${f.phone.replace(/^0/, '62')}?text=${encodeURIComponent(paidMsg)}`, '_blank');
           }
