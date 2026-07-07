@@ -8,6 +8,7 @@ const path = require('path');
 router.get('/public/packages/all', (req, res) => {
   const packages = db.prepare(`
     SELECT p.id, p.name, p.description, p.price,
+           GROUP_CONCAT(s.id) AS session_ids,
            GROUP_CONCAT(s.name) AS session_names
     FROM packages p
     LEFT JOIN package_sessions ps ON ps.package_id = p.id
@@ -259,7 +260,7 @@ router.post('/public/:token/upload-receipt', (req, res) => {
   const booking = db.prepare('SELECT * FROM bookings WHERE booking_token = ?').get(req.params.token);
   if (!booking) return res.status(404).json({ error: 'Booking not found' });
 
-  const { package_id, dp_amount, receipt_base64, receipt_filename } = req.body;
+  const { package_id, dp_amount, receipt_base64, receipt_filename, session_locations } = req.body;
   if (!receipt_base64 || !dp_amount) return res.status(400).json({ error: 'dp_amount and receipt required' });
 
   // If client also selected package, save it
@@ -274,8 +275,13 @@ router.post('/public/:token/upload-receipt', (req, res) => {
       // Auto-populate sessions
       db.prepare('DELETE FROM booking_sessions WHERE booking_id = ?').run(booking.id);
       const pkgSessions = db.prepare('SELECT session_id FROM package_sessions WHERE package_id = ?').all(pkg.id);
-      const ins = db.prepare('INSERT INTO booking_sessions (booking_id, session_id) VALUES (?, ?)');
-      for (const ps of pkgSessions) ins.run(booking.id, ps.session_id);
+      const ins = db.prepare('INSERT INTO booking_sessions (booking_id, session_id, location) VALUES (?, ?, ?)');
+      
+      const locs = session_locations || {};
+      for (const ps of pkgSessions) {
+        const loc = locs[ps.session_id] || '';
+        ins.run(booking.id, ps.session_id, loc);
+      }
     }
   }
 

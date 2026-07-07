@@ -129,6 +129,12 @@
 
                     <div class="dp-summary" id="dp-summary"></div>
 
+                    <!-- Dynamic Session Locations Form -->
+                    <div id="session-locations-container" style="display:none; margin-bottom:24px; background:#fff; border:1px solid #e8e6e2; border-radius:16px; padding:20px;">
+                        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#475569; margin-bottom:14px; border-bottom:1px solid #f0eeea; padding-bottom:8px">📍 Lokasi Sesi Acara</h4>
+                        <div id="session-locations-inputs" style="display:flex; flex-direction:column; gap:12px"></div>
+                    </div>
+
                     <div style="background:#fdfcf7;border:1px solid #fef3c7;border-radius:16px;padding:16px 20px;margin-bottom:20px">
                         <p style="font-size:13px;font-weight:600;color:#92400e;margin-bottom:8px">🏦 Transfer ke:</p>
                         <p style="font-size:12px;color:#78716c">Bank BCA · 3420-1111-99 · a.n. Sorehari Photography</p>
@@ -301,6 +307,28 @@
             document.getElementById('dp-min').textContent = `Rp ${dp.toLocaleString('id-ID')}`;
             document.getElementById('dp-amount').value = dp;
 
+            // Render Dynamic Session Locations Input
+            const inputsContainer = document.getElementById('session-locations-inputs');
+            inputsContainer.innerHTML = '';
+            
+            const ids = pkg.session_ids ? pkg.session_ids.split(',').map(Number) : [];
+            const names = pkg.session_names ? pkg.session_names.split(',').map(s => s.trim()) : [];
+            
+            if (ids.length > 0) {
+                document.getElementById('session-locations-container').style.display = 'block';
+                ids.forEach((id, idx) => {
+                    const name = names[idx] || `Sesi ${idx + 1}`;
+                    inputsContainer.innerHTML += `
+                        <div>
+                            <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:6px">Lokasi untuk: ${name}</label>
+                            <input type="text" class="session-location-input" data-session-id="${id}" placeholder="Contoh: Gedung A / Masjid B / Rumah" style="width:100%;height:44px;padding:0 14px;border:1.5px solid #e8e6e2;border-radius:12px;font-size:14px;font-weight:500;background:#f9f8f6">
+                        </div>
+                    `;
+                });
+            } else {
+                document.getElementById('session-locations-container').style.display = 'none';
+            }
+
             const step = document.getElementById('step-dp');
             step.style.display = 'block';
             setTimeout(() => step.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
@@ -347,6 +375,13 @@
             if (!dp || dp <= 0) return alert('Isi nominal DP');
             if (!file) return alert('Upload bukti transfer');
 
+            // Collect session locations
+            const sessionLocations = {};
+            document.querySelectorAll('.session-location-input').forEach(input => {
+                const sessionId = input.getAttribute('data-session-id');
+                sessionLocations[sessionId] = input.value.trim();
+            });
+
             const btn = document.getElementById('btn-submit');
             btn.textContent = 'Mengkompresi gambar...';
             btn.disabled = true;
@@ -361,6 +396,7 @@
                   dp_amount: dp,
                   receipt_base64: compressed.dataUrl,
                   receipt_filename: file.name,
+                  session_locations: sessionLocations
                 })
               }).then(async (res) => {
                 const data = await res.json();
