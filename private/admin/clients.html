@@ -293,7 +293,7 @@
         if (!phone) return alert('No handphone client tidak ada');
 
         const num = phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
-        const msg = `Halo ${bk.client_name}! 👋\n\nDP Anda untuk acara *${formatDate(bk.event_date)}* telah terverifikasi ✅\n\nSilakan lunasi sisa pembayaran sebesar *${formatIDR(remaining)}* melalui link secure upload berikut:\n${pelunasanUrl}\n\nUpload bukti transfer langsung melalui link di atas agar terverifikasi otomatis. Terima kasih! 🙏📸`;
+        const msg = `Halo Kak ${bk.client_name} ✨\n\nSemoga Kakak & pasangan selalu sehat dan dilancarkan segala persiapannya menjelang hari bahagia ya Kak. 😊\n\nMengingat tanggal pernikahan Kakak semakin dekat pada *${formatDate(bk.event_date)}*, kami dari tim Sorehari Photography ingin menginfokan terkait kelengkapan administrasi sisa pembayaran (pelunasan).\n\nRincian sisa pelunasan Kakak:\n💵 Sisa Pembayaran: *${formatIDR(remaining)}*\n\nKakak dapat melakukan pelunasan dan mengunggah bukti transfer secara aman melalui tautan resmi di bawah ini:\n🔗 ${pelunasanUrl}\n\nJika ada hal yang ingin dikoordinasikan atau ditanyakan terkait detail acara, silakan kabari kami ya Kak. Kami tidak sabar mengabadikan momen spesial Kakak nanti!\n\nTerima kasih banyak atas kepercayaan Kakak bersama Sorehari. 🙏 Warm regards, Sorehari Team. 📸`;
         window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
       } catch (e) {
         alert('Gagal membuat link pelunasan: ' + e.message);
