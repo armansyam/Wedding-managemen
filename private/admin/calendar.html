@@ -5,6 +5,34 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Kalender — Vendor Management</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .calendar-day {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .calendar-day:not(.empty):hover {
+      background: var(--surface2) !important;
+    }
+    .calendar-event {
+      cursor: pointer;
+    }
+    
+    /* Day detail rows in modal */
+    .day-event-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+    .day-event-item:hover {
+      border-color: var(--accent);
+    }
+  </style>
 </head>
 <body>
   <div class="sidebar" id="sidebar"></div>
@@ -18,6 +46,17 @@
       </div>
     </div>
     <div class="calendar-grid" id="calendar"></div>
+  </div>
+
+  <!-- Modal: Detail Jadwal Harian -->
+  <div class="modal-overlay" id="modal-day-events">
+    <div class="modal" style="max-width:540px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 id="modal-day-title" style="font-size:16px;margin:0">📅 Detail Jadwal Tanggal</h2>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('modal-day-events')">✕</button>
+      </div>
+      <div id="modal-day-content" style="max-height:400px;overflow-y:auto"></div>
+    </div>
   </div>
 
   <script src="/admin/js/app.js"></script>
@@ -53,18 +92,94 @@
     for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day empty"></div>';
 
     for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
-    const dayEvents = events.filter(e => e.event_date === dateStr);
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+      const dayEvents = events.filter(e => e.event_date === dateStr);
 
-    html += `<div class="calendar-day ${isToday ? 'today' : ''}">
-    <div class="day-num">${d}</div>
-    ${dayEvents.map(e => `<div class="calendar-event ${e.status}" title="${e.client_name} — ${e.event_name || ''}">${e.client_name}</div>`).join('')}
-    </div>`;
+      const hasEvents = dayEvents.length > 0;
+      html += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}" onclick="window.showDayEvents('${dateStr}')">
+      <div class="day-num" style="${hasEvents ? 'font-weight:700;color:var(--accent)' : ''}">${d}</div>
+      ${dayEvents.map(e => `<div class="calendar-event ${e.status}" title="${e.client_name} — ${e.event_name || ''}">${e.client_name}</div>`).join('')}
+      </div>`;
     }
 
     document.getElementById('calendar').innerHTML = html;
     }
+    
+    // Day format helper
+    function formatFullDate(d) {
+      if (!d) return '-';
+      return new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    window.showDayEvents = function(dateStr) {
+      const dayEvents = events.filter(e => e.event_date === dateStr);
+      
+      const titleEl = document.getElementById('modal-day-title');
+      const contentEl = document.getElementById('modal-day-content');
+      
+      titleEl.textContent = `📅 Jadwal Tanggal: ${formatFullDate(dateStr)}`;
+      
+      if (dayEvents.length === 0) {
+        contentEl.innerHTML = `
+          <div style="text-align:center;padding:30px 20px;color:var(--text2)">
+            <div style="font-size:36px;margin-bottom:8px">🍃</div>
+            <div style="font-size:13px">Tidak ada jadwal pekerjaan pada tanggal ini.</div>
+          </div>`;
+        openModal('modal-day-events');
+        return;
+      }
+      
+      const statusColors = {
+        confirmed: 'var(--blue)',
+        in_progress: 'var(--accent,#C9A96E)',
+        event_day: '#7c3aed',
+        editing: '#0891b2',
+        delivery: '#059669',
+        completed: 'var(--green)',
+        archived: 'var(--text2)',
+        cancelled: 'var(--red)'
+      };
+      const statusLabels = {
+        confirmed: 'Confirmed',
+        in_progress: 'Persiapan',
+        event_day: '📸 Hari H',
+        editing: '🎞️ Pengeditan',
+        delivery: '📦 Penyerahan',
+        completed: '✅ Selesai',
+        archived: 'Arsip',
+        cancelled: 'Batal'
+      };
+
+      contentEl.innerHTML = dayEvents.map(e => {
+        const partner = e.partner_name ? ` & ${e.partner_name}` : '';
+        const badgeColor = statusColors[e.status] || 'var(--text2)';
+        const badgeLabel = statusLabels[e.status] || e.status;
+        
+        return `
+          <div class="day-event-item">
+            <div style="flex:1;min-width:0;padding-right:12px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <strong style="font-size:14px;color:var(--text)">${e.client_name}${partner}</strong>
+                <span class="badge" style="background:${badgeColor};color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">${badgeLabel}</span>
+              </div>
+              <div style="font-size:11px;color:var(--text2);margin-top:4px">
+                📍 Lokasi: <strong>${e.venue || '-'}</strong>
+              </div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">
+                🏷️ Paket/Acara: <strong>${e.event_name || '-'}</strong>
+              </div>
+            </div>
+            <div>
+              <a href="/admin/booking-detail?id=${e.booking_id}&from=calendar" class="btn btn-sm btn-primary" style="font-size:11px;padding:6px 12px;text-decoration:none;white-space:nowrap">Lihat Detail →</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      openModal('modal-day-events');
+    };
+
     function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); load(); }
     function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); load(); }
 
