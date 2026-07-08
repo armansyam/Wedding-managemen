@@ -144,8 +144,19 @@
     renderSidebar('bookings');
 
     (async () => {
-      allFreelancers = await API.get('/api/freelancers?active=1');
-      templates = await API.get('/api/templates');
+      try {
+        allFreelancers = await API.get('/api/freelancers?active=1');
+        const [tpls, settings] = await Promise.all([
+          API.get('/api/templates'),
+          API.get('/api/settings')
+        ]);
+        templates = tpls;
+        if (settings && settings.vendor_name) {
+          templates.vendor_name = settings.vendor_name;
+        }
+      } catch(e) {
+        console.error(e);
+      }
       load();
     })();
     });
@@ -215,11 +226,12 @@ DP untuk booking {{client_name}} & {{partner_name}} telah **DIVERIFIKASI** ✅
 Booking status sekarang: **Confirmed**
 
 Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`;
+    const vars = { ...updated, vendor_name: templates.vendor_name || 'Wedding-Management' };
     tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
-      if (!updated[key]) return '';
-      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => updated[k] !== undefined ? String(updated[k]) : m2);
+      if (!vars[key]) return '';
+      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
     });
-    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => updated[k] !== undefined ? String(updated[k]) : m));
+    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
     window.open(`https://wa.me/${updated.client_phone.replace(/^0/, '62')}?text=${msg}`, '_blank');
     }
 
@@ -271,11 +283,12 @@ Booking status sekarang: *Confirmed*
 🔍 Pantau progress pekerjaan di: ${trackUrl}
 
 Tim kami akan segera merencanakan detail sesi foto/videonya. Tunggu kabar selanjutnya ya, Kak! 🙏📸`;
+    const vars = { ...booking, vendor_name: templates.vendor_name || 'Wedding-Management' };
     tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
-      if (!booking[key]) return '';
-      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => booking[k] !== undefined ? String(booking[k]) : m2);
+      if (!vars[key]) return '';
+      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
     });
-    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => booking[k] !== undefined ? String(booking[k]) : m));
+    const msg = encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
     window.open(`https://wa.me/${booking.client_phone.replace(/^0/, '62')}?text=${msg}`, '_blank');
     }
     

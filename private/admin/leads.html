@@ -272,7 +272,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderSidebar('leads');
       (async () => {
-        templates = await API.get('/api/templates');
+        try {
+          const [tpls, settings] = await Promise.all([
+            API.get('/api/templates'),
+            API.get('/api/settings')
+          ]);
+          templates = tpls;
+          if (settings && settings.vendor_name) {
+            templates.vendor_name = settings.vendor_name;
+          }
+        } catch(e) {
+          console.error(e);
+        }
         load();
         connectSSE(); // Start realtime stream
       })();
@@ -292,19 +303,20 @@
     const waMsg = (() => {
       let tpl = templates.wa_welcome || `Halo Kak {{name}}! 👋
 
-Terima kasih sudah menghubungi *Wedding Vendor* ✨
+Terima kasih sudah menghubungi *{{vendor_name}}* ✨
 
 Senang sekali bisa membantu merencanakan momen spesial Kak {{name}}{{#partner}} dan {{partner_name}}{{/partner}} 🙏
 
 Saya Admin. Boleh kita diskusi lebih lanjut tentang kebutuhan foto/video untuk acara Kakak? Apa yang Kakak butuhkan dan budget yang dianggarkan?
 
 Mohon infonya ya, Kak! 😊📸`;
+      const vars = { ...l, vendor_name: templates.vendor_name || 'Wedding-Management' };
       // {{#partner}}...{{/partner}} block
       tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
-        if (!l[key]) return '';
-        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => l[k] !== undefined ? String(l[k]) : m2);
+        if (!vars[key]) return '';
+        return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
       });
-      return encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => l[k] !== undefined ? String(l[k]) : m));
+      return encodeURIComponent(tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m));
     })();
     const waLink = phone ? `https://wa.me/${phone}?text=${waMsg}` : '#';
     let convertBtn = '';
@@ -367,19 +379,20 @@ Mohon infonya ya, Kak! 😊📸`;
     const phone = l.phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
     let welcomeTpl = templates.wa_welcome || `Halo Kak {{name}}! 👋
 
-    Terima kasih sudah menghubungi *Wedding Vendor* ✨
+    Terima kasih sudah menghubungi *{{vendor_name}}* ✨
 
     Senang sekali bisa membantu merencanakan momen spesial Kak {{name}}{{#partner}} dan {{partner_name}}{{/partner}} 🙏
 
     Saya Admin. Boleh kita diskusi lebih lanjut tentang kebutuhan foto/video untuk acara Kakak? Apa yang Kakak butuhkan dan budget yang dianggarkan?
 
     Mohon infonya ya, Kak! 😊📸`;
+    const vars = { ...l, vendor_name: templates.vendor_name || 'Wedding-Management' };
     // {{#partner}}...{{/partner}} block
     welcomeTpl = welcomeTpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
-      if (!l[key]) return '';
-      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => l[k] !== undefined ? String(l[k]) : m2);
+      if (!vars[key]) return '';
+      return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
     });
-    const welcomeMsg = welcomeTpl.replace(/\{\{(\w+)\}\}/g, (m, k) => l[k] !== undefined ? String(l[k]) : m);
+    const welcomeMsg = welcomeTpl.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] !== undefined ? String(vars[k]) : m);
     const waWelcome = `https://wa.me/${phone}?text=${encodeURIComponent(welcomeMsg)}`;
 
     document.getElementById('detail-actions').innerHTML = `
