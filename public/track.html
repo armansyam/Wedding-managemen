@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Status Pekerjaan — Sorehari Photography</title>
-  <meta name="description" content="Pantau status pekerjaan foto & video Anda bersama Sorehari Photography menggunakan kode booking.">
+  <title>Status Pekerjaan — Wedding-Management</title>
+  <meta name="description" content="Pantau status pekerjaan foto & video Anda bersama Wedding-Management menggunakan kode booking.">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -420,8 +420,8 @@
 <header class="header">
   <img src="/logo.png" class="logo-img" onerror="this.style.display='none'">
   <div>
-    <div class="logo-text">Sorehari</div>
-    <div class="logo-sub">Photography & Videography</div>
+    <div class="logo-text">Wedding-Management</div>
+    <div class="logo-sub">Your Story, Beautifully Captured ✨</div>
   </div>
 </header>
 
@@ -438,9 +438,9 @@
         <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text2); letter-spacing: 0.5px">Kode Booking</label>
         <div class="input-group">
           <input type="text" id="input-code"
-                 placeholder="Contoh: SH-2026-0020"
+                 placeholder="Contoh: WM-2026-0001"
                  autocomplete="off"
-                 oninput="this.value = this.value.toUpperCase().replace(/[^SH0-9\-]/g,'')">
+                 oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
         </div>
       </div>
       <div style="display: flex; flex-direction: column; gap: 6px; text-align: left">
@@ -493,7 +493,7 @@
 </div>
 
 <footer>
-  <p>© 2026 <a href="/">Sorehari Photography</a> — Mengabadikan Setiap Momen Berharga</p>
+  <p>© 2026 <a href="/">Wedding-Management</a> — Mengabadikan Setiap Momen Berharga</p>
 </footer>
 
 <script>
@@ -507,12 +507,12 @@
   };
 
   const STATUS_MESSAGES = {
-    confirmed:   { icon: '✅', text: 'Booking Anda sudah dikonfirmasi! Tim Sorehari siap mengabadikan momen spesial Anda. Kami akan menghubungi untuk koordinasi lebih lanjut.' },
+    confirmed:   { icon: '✅', text: 'Booking Anda sudah dikonfirmasi! Tim kami siap mengabadikan momen spesial Anda. Kami akan menghubungi untuk koordinasi lebih lanjut.' },
     in_progress: { icon: '🔄', text: 'Tim kami sedang mempersiapkan segala kebutuhan untuk hari H Anda. Pastikan Anda sudah menerima briefing dari admin ya!' },
-    event_day:   { icon: '📸', text: 'Hari yang dinantikan telah tiba! Tim Sorehari siap di lokasi untuk mengabadikan setiap momen indah Anda hari ini.' },
+    event_day:   { icon: '📸', text: 'Hari yang dinantikan telah tiba! Tim kami siap di lokasi untuk mengabadikan setiap momen indah Anda hari ini.' },
     editing:     { icon: '🎞️', text: 'File Anda sedang dalam proses editing oleh tim kreatif kami. Kami berkomitmen memberikan hasil terbaik. Harap bersabar ya, Kak!' },
     delivery:    { icon: '📦', text: 'Pengeditan selesai! File Anda akan segera diserahkan. Tim admin akan menghubungi Anda untuk proses pengiriman file.' },
-    completed:   { icon: '🎉', text: 'Pekerjaan telah selesai dengan sempurna! Terima kasih sudah mempercayakan momen spesial Anda kepada Sorehari Photography. Semoga hasilnya memuaskan!' },
+    completed:   { icon: '🎉', text: 'Pekerjaan telah selesai dengan sempurna! Terima kasih sudah mempercayakan momen spesial Anda kepada kami. Semoga hasilnya memuaskan!' },
   };
 
   (async () => {

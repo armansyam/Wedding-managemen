@@ -5,7 +5,7 @@
   <link rel="icon" type="image/png" href="/logo.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Invoice — Sorehari</title>
+  <title>Invoice — Wedding-Management</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap"
     rel="stylesheet">
@@ -291,8 +291,8 @@
   <div class="invoice" id="invoice">
     <div class="inv-header">
       <div class="inv-brand">
-        <h1>Sorehari</h1>
-        <p>Photography & Videography</p>
+        <h1 id="brand-title">Wedding-Management</h1>
+        <p id="brand-tagline">Your Story, Beautifully Captured ✨</p>
       </div>
       <div class="inv-badge">
         <div class="inv-label">Invoice</div>
@@ -359,9 +359,9 @@
     </div>
 
     <div class="inv-footer">
-      <div class="inv-stamp">S</div>
-      <p>Terima kasih telah memilih Sorehari Photography ✨</p>
-      <p style="margin-top:4px">www.sorehari.com</p>
+      <div class="inv-stamp" id="brand-stamp">W</div>
+      <p id="footer-thanks">Terima kasih telah memilih Wedding-Management ✨</p>
+      <p id="footer-website" style="margin-top:4px">www.wedding-management.com</p>
     </div>
   </div>
 
@@ -377,13 +377,18 @@
         settings = await settingsRes.json();
         if (settings.vendor_name) {
           document.title = `Invoice — ${settings.vendor_name}`;
-          const headH1 = document.querySelector('.inv-header h1');
+          const headH1 = document.getElementById('brand-title');
           if (headH1) headH1.textContent = settings.vendor_name;
+          const headTagline = document.getElementById('brand-tagline');
+          if (headTagline && settings.vendor_tagline) headTagline.textContent = settings.vendor_tagline;
 
-          const footerP = document.querySelector('.inv-footer p');
-          if (footerP) footerP.textContent = `Terima kasih telah memilih *${settings.vendor_name}* ✨`;
+          const stamp = document.getElementById('brand-stamp');
+          if (stamp) stamp.textContent = settings.vendor_name.charAt(0).toUpperCase();
 
-          const footerWeb = document.querySelector('.inv-footer p[style]');
+          const footerP = document.getElementById('footer-thanks');
+          if (footerP) footerP.textContent = `Terima kasih telah memilih ${settings.vendor_name} ✨`;
+
+          const footerWeb = document.getElementById('footer-website');
           if (footerWeb && settings.vendor_website) footerWeb.textContent = settings.vendor_website;
         }
       } catch (err) {

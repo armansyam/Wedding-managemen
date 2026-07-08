@@ -3,7 +3,7 @@
 <head>
   <link rel="icon" type="image/png" href="/logo.png">
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Pelunasan — Sorehari</title>
+  <title>Pelunasan — Wedding-Management</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -61,8 +61,8 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>Sorehari</h1>
-      <p>Photography & Videography</p>
+      <h1 id="brand-title">Wedding-Management</h1>
+      <p id="brand-tagline">Your Story, Beautifully Captured ✨</p>
     </div>
 
     <div id="form-section">
@@ -112,7 +112,7 @@
       </div>
     </div>
 
-    <div class="footer">© 2026 Sorehari Photography</div>
+    <div class="footer" id="footer-copyright">© 2026 Wedding-Management</div>
   </div>
 
   <script>
@@ -274,6 +274,29 @@
         btn.textContent = 'Kirim Bukti Pelunasan';
       }
     }
+
+    // Dynamic settings loader
+    window.addEventListener('load', async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const settings = await res.json();
+          if (settings.vendor_name) {
+            document.title = `Pelunasan — ${settings.vendor_name}`;
+            const titleEl = document.getElementById('brand-title');
+            if (titleEl) titleEl.textContent = settings.vendor_name;
+            const footerEl = document.getElementById('footer-copyright');
+            if (footerEl) footerEl.textContent = `© 2026 ${settings.vendor_name}`;
+          }
+          if (settings.vendor_tagline) {
+            const taglineEl = document.getElementById('brand-tagline');
+            if (taglineEl) taglineEl.textContent = settings.vendor_tagline;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load settings in pelunasan:', err);
+      }
+    });
   </script>
 </body>
 </html>

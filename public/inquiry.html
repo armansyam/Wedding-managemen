@@ -5,7 +5,7 @@
   <link rel="icon" type="image/png" href="/logo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sorehari — Inquiry</title>
+    <title>Wedding-Management — Inquiry</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
     <script>
@@ -132,9 +132,9 @@
         <div class="mx-auto flex max-w-lg items-center justify-between px-5 py-3">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center">
-                    <span class="text-white text-xs font-semibold serif-title">S</span>
+                    <span id="logo-badge" class="text-white text-xs font-semibold serif-title">W</span>
                 </div>
-                <span class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Sorehari</span>
+                <span id="logo-text" class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Wedding-Management</span>
             </div>
         </div>
     </header>
@@ -243,10 +243,10 @@
                     class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 placeholder-slate-300 transition resize-none"></textarea>
             </div>
 
-            <!-- Dari mana mengetahui Sorehari -->
+            <!-- Dari mana mengetahui kami -->
             <div class="animate-slide-up delay-5">
-                <label class="block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-2">
-                    Dari mana kamu mengetahui Sorehari?
+                <label id="source-label" class="block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-2">
+                    Dari mana kamu mengetahui kami?
                 </label>
                 <select id="source"
                     class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 transition appearance-none"
@@ -358,7 +358,7 @@
                     // 2. Show success + open wa.me to admin
                     document.getElementById('success-overlay').classList.remove('hidden');
                     // Auto redirect to admin WA after 2s
-                    const adminPhone = '__VENDOR_PHONE__';
+                    const adminPhone = window.vendorPhone || '6281234567890';
                     const dateStr = tanggal ? new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Belum ditentukan';
                     const msg = encodeURIComponent(
 `Halo Kak, saya ${nama} 👋
@@ -393,6 +393,30 @@ Mohon info selengkapnya ya, Kak. Terima kasih 🙏`);
             document.getElementById('submit-text').textContent = 'Kirim Inquiry';
             document.getElementById('submit-icon').style.display = 'inline';
         }
+
+        // Fetch settings dynamically for branding
+        window.addEventListener('load', async () => {
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    const settings = await res.json();
+                    if (settings.vendor_name) {
+                        document.title = `${settings.vendor_name} — Inquiry`;
+                        const logoText = document.getElementById('logo-text');
+                        if (logoText) logoText.textContent = settings.vendor_name;
+                        const badge = document.getElementById('logo-badge');
+                        if (badge) badge.textContent = settings.vendor_name.charAt(0).toUpperCase();
+                        const sourceLabel = document.getElementById('source-label');
+                        if (sourceLabel) sourceLabel.textContent = `Dari mana kamu mengetahui ${settings.vendor_name}?`;
+                    }
+                    if (settings.vendor_phone) {
+                        window.vendorPhone = settings.vendor_phone.replace(/^0/, '62').replace(/[^0-9]/g, '');
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load settings in inquiry form:', e);
+            }
+        });
     </script>
 
 </body>

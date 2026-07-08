@@ -4,7 +4,7 @@
   <link rel="icon" type="image/png" href="/logo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking — Sorehari</title>
+    <title>Booking — Wedding-Management</title>
     <link rel="icon" type="image/png" href="/image/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
@@ -83,7 +83,7 @@
     <header style="border-bottom:1px solid #e8e6e2;background:rgba(247,246,244,0.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:30">
         <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:16px 24px">
             <a href="/" style="font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;text-decoration:none">← KEMBALI</a>
-            <h1 class="serif" style="font-size:18px;font-weight:600;color:#0f172a">Sorehari</h1>
+            <h1 class="serif" id="brand-title" style="font-size:18px;font-weight:600;color:#0f172a">Wedding-Management</h1>
             <a href="/portfolio.html" style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#94a3b8;text-decoration:none">PORTFOLIO</a>
         </div>
     </header>
@@ -137,7 +137,7 @@
 
                     <div style="background:#fdfcf7;border:1px solid #fef3c7;border-radius:16px;padding:16px 20px;margin-bottom:20px">
                         <p style="font-size:13px;font-weight:600;color:#92400e;margin-bottom:8px">🏦 Transfer ke:</p>
-                        <p style="font-size:12px;color:#78716c">Bank BCA · 3420-1111-99 · a.n. Sorehari Photography</p>
+                        <p style="font-size:12px;color:#78716c" id="bank-info-text">Bank BCA · 3420-1111-99 · a.n. Wedding-Management</p>
                         <p style="font-size:11px;color:#a8a29e;margin-top:4px">Minimal DP: <strong id="dp-min" style="color:#92400e">Rp 0</strong></p>
                     </div>
 
@@ -175,8 +175,8 @@
         </div>
     </main>
 
-    <footer style="border-top:1px solid #e8e6e2;padding:32px 0;text-align:center;font-size:11px;color:#94a3b8">
-        © 2026 Sorehari. All rights reserved.
+    <footer style="border-top:1px solid #e8e6e2;padding:32px 0;text-align:center;font-size:11px;color:#94a3b8" id="footer-copyright">
+        © 2026 Wedding-Management. All rights reserved.
     </footer>
 
     <script>
@@ -190,15 +190,15 @@
                     settings = await settingsRes.json();
                     if (settings.vendor_name) {
                         document.title = `Booking — ${settings.vendor_name}`;
-                        const headerH1 = document.querySelector('header h1');
+                        const headerH1 = document.getElementById('brand-title');
                         if (headerH1) headerH1.textContent = settings.vendor_name;
 
-                        const bankText = document.querySelector('p[style*="Bank BCA"]');
+                        const bankText = document.getElementById('bank-info-text');
                         if (bankText) {
                             bankText.textContent = `Bank BCA · 3420-1111-99 · a.n. ${settings.vendor_name}`;
                         }
 
-                        const footerText = document.querySelector('footer');
+                        const footerText = document.getElementById('footer-copyright');
                         if (footerText) {
                             footerText.textContent = `© 2026 ${settings.vendor_name}. All rights reserved.`;
                         }
