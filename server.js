@@ -55,6 +55,7 @@ app.use((req, res, next) => {
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
@@ -114,7 +115,7 @@ app.get('/api/check-session', (req, res) => {
 });
 
 app.get('/api/templates', (req, res) => {
-  const rows = db.prepare('SELECT * FROM settings WHERE key LIKE "wa_%"').all();
+  const rows = db.prepare("SELECT * FROM settings WHERE key LIKE 'wa_%'").all();
   const templates = {};
   for (const row of rows) templates[row.key] = row.value;
   

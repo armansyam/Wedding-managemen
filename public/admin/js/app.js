@@ -8,7 +8,14 @@
 const API = {
   async get(url) {
     try {
-      const res = await fetch(url);
+      const separator = url.includes('?') ? '&' : '?';
+      const finalUrl = url.startsWith('/api/') ? `${url}${separator}_=${Date.now()}` : url;
+      const res = await fetch(finalUrl, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!res.ok) {
         if (res.status === 401) {
           window.location.href = '/login';
