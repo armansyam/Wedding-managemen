@@ -391,7 +391,7 @@
             const defaultMsg = `Halo Kak {{client_name}}! 👋\n\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
             const waMsg = renderTemplate(templates.wa_tagih_h_x || defaultMsg, {
               client_name: c.name,
-              vendor_name: settings.vendor_name || 'Wedding-Management',
+              vendor_name: settings.vendor_name || templates.vendor_name || 'Wedding-Management',
               event_date: formatDate(c.event_date),
               venue: c.venue || '-',
               remaining: formatIDR(remaining)
@@ -483,7 +483,7 @@
                 const defaultMsg = `Halo Kak {{client_name}}! 👋\n\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.\n\nTerima kasih! 🙏`;
                 const waMsg = renderTemplate(templates.wa_tagih_h_x || defaultMsg, {
                   client_name: c.name,
-                  vendor_name: settings.vendor_name || 'Wedding-Management',
+                  vendor_name: settings.vendor_name || templates.vendor_name || 'Wedding-Management',
                   event_date: formatDate(c.event_date),
                   venue: c.venue || '-',
                   remaining: formatIDR(remaining)
