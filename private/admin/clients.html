@@ -388,7 +388,7 @@
             const defaultMsg = `Halo Kak {{client_name}}! 👋\n\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.\n\nMohon bisa diselesaikan maksimal 7 hari sebelum acara ya, Kak. Terima kasih! 🙏`;
             const waMsg = renderTemplate(templates.wa_tagih_h_x || defaultMsg, {
               client_name: c.name,
-              vendor_name: settings.vendor_name || 'Sorehari Photography',
+              vendor_name: settings.vendor_name || 'Wedding-Management',
               event_date: formatDate(c.event_date),
               venue: c.venue || '-',
               remaining: formatIDR(remaining)
@@ -480,7 +480,7 @@
                 const defaultMsg = `Halo Kak {{client_name}}! 👋\n\nKami dari *{{vendor_name}}* ingin mengingatkan bahwa pembayaran untuk acara {{event_date}} di {{venue}} masih ada sisa pelunasan sebesar *{{remaining}}*.\n\nTerima kasih! 🙏`;
                 const waMsg = renderTemplate(templates.wa_tagih_h_x || defaultMsg, {
                   client_name: c.name,
-                  vendor_name: settings.vendor_name || 'Sorehari Photography',
+                  vendor_name: settings.vendor_name || 'Wedding-Management',
                   event_date: formatDate(c.event_date),
                   venue: c.venue || '-',
                   remaining: formatIDR(remaining)
@@ -574,6 +574,14 @@ Terima kasih atas kerjasamanya! 🙏`;
       const jobsText = jobLines.map(j => `• ${j.session_name} (${formatIDR(j.fee_amount)})`).join('\n');
       _waPayState = { freelancerId, f, crewIds, jobsText, total, afterPayCallback };
 
+      // Load settings for dynamic vendor name
+      let vendorName = 'Wedding-Management';
+      try {
+        const s = await API.get('/api/settings');
+        if (s && s.vendor_name) vendorName = s.vendor_name;
+      } catch(e) {}
+
+
       const selectEl = document.getElementById('bdet-wa-payment-method');
       selectEl.innerHTML = '';
       let hasAccount = false;
@@ -619,7 +627,7 @@ Terima kasih atas kerjasamanya! 🙏`;
         const defaultValMsg = `Halo {{freelancer_name}} 👋\n\nSistem {{vendor_name}} telah mencatat total pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}*.\n\nMohon periksa & konfirmasi kembali nomor rekening Anda:\n🏦 *{{bank_name}}*\n💳 *{{bank_account}}* (a.n. {{bank_holder}})\n\nJika sudah benar, balas pesan ini agar admin segera mencairkan dana. Terima kasih! 🙏`;
         const validationMsg = renderTemplate(templates.wa_freelance_validation || defaultValMsg, {
           freelancer_name: f.name,
-          vendor_name: 'Sorehari Photography',
+          vendor_name: vendorName,
           client_name: 'Client Projects',
           total_fee: formatIDR(total),
           bank_name: bankProvider,

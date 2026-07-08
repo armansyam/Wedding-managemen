@@ -679,6 +679,13 @@ Terima kasih atas kerjasamanya! 🙏`;
       const jobsText = jobLines.map(j => `• ${j.session_name} (${formatIDR(j.fee_amount)})`).join('\n');
       _waPayState = { freelancerId, f, crewIds, jobsText, total, afterPayCallback };
 
+      // Load settings for dynamic vendor name
+      let vendorName = 'Wedding-Management';
+      try {
+        const s = await API.get('/api/settings');
+        if (s && s.vendor_name) vendorName = s.vendor_name;
+      } catch(e) {}
+
       // Populate payment method dropdown from freelancer bank accounts
       const selectEl = document.getElementById('bdet-wa-payment-method');
       selectEl.innerHTML = '';
@@ -725,7 +732,7 @@ Terima kasih atas kerjasamanya! 🙏`;
         const defaultValMsg = `Halo {{freelancer_name}} 👋\n\nSistem {{vendor_name}} telah mencatat total pembayaran honor/fee Anda untuk project *{{client_name}}* sebesar *{{total_fee}}*.\n\nMohon periksa & konfirmasi kembali nomor rekening Anda:\n🏦 *{{bank_name}}*\n💳 *{{bank_account}}* (a.n. {{bank_holder}})\n\nJika sudah benar, balas pesan ini agar admin segera mencairkan dana. Terima kasih! 🙏`;
         const validationMsg = renderTemplate(templates.wa_freelance_validation || defaultValMsg, {
           freelancer_name: f.name,
-          vendor_name: 'Sorehari Photography',
+          vendor_name: vendorName,
           client_name: bookingData ? bookingData.client_name : 'Client Project',
           total_fee: formatIDR(total),
           bank_name: bankProvider,
