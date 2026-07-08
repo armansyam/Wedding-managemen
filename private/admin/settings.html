@@ -405,7 +405,23 @@
       },
       wa_pelunasan: {
         title: 'Template WA — Pelunasan',
-        desc: 'Pesan penagihan sisa pembayaran beserta link pelunasan. Variabel: {{client_name}}, {{event_date}}, {{pelunasan_url}}, {{remaining}}'
+        desc: 'Pesan penagihan sisa pembayaran beserta link pelunasan. Variabel: {{client_name}}, {{vendor_name}}, {{event_date}}, {{pelunasan_url}}, {{remaining}}'
+      },
+      wa_pelunasan_confirmed: {
+        title: 'Template WA — Konfirmasi Lunas Client',
+        desc: 'Pesan konfirmasi bahwa pembayaran client telah lunas sepenuhnya. Variabel: {{client_name}}, {{event_date}}, {{package_name}}, {{package_price}}, {{invoice_url}}'
+      },
+      wa_tagih_h_x: {
+        title: 'Template WA — Tagih Pelunasan (H-X)',
+        desc: 'Pesan pengingat otomatis sisa pelunasan mendekati hari acara. Variabel: {{client_name}}, {{vendor_name}}, {{event_date}}, {{venue}}, {{remaining}}'
+      },
+      wa_freelance_validation: {
+        title: 'Template WA — Validasi Rekening Freelance',
+        desc: 'Pesan konfirmasi rekening freelance sebelum pencairan honor. Variabel: {{freelancer_name}}, {{vendor_name}}, {{client_name}}, {{total_fee}}, {{bank_name}}, {{bank_account}}, {{bank_holder}}'
+      },
+      wa_freelance_paid: {
+        title: 'Template WA — Notifikasi Bayar Freelance',
+        desc: 'Pesan pemberitahuan bahwa honor freelance telah ditransfer. Variabel: {{freelancer_name}}, {{client_name}}, {{total_fee}}, {{receipt_url}}'
       }
     };
 

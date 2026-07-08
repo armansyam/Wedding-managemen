@@ -211,17 +211,20 @@ function renderSidebar(activePage) {
   });
 
   html += `
+    </div>
+    <div class="sidebar-bottom">
       <div class="nav-tab-divider"></div>
       <button class="nav-tab-btn" id="theme-toggle-btn" style="width:100%; text-align:left; background:none; border:none; cursor:pointer;">
         <span class="tab-icon"></span>
         <span id="theme-toggle-text">${themeLabel}</span>
       </button>
-      <button class="nav-tab-btn" id="logout-btn" style="color:var(--red); width:100%; text-align:left; background:none; border:none; cursor:pointer;">
+      <button class="nav-tab-btn" id="logout-btn" style="color:var(--red,#ef4444); width:100%; text-align:left; background:none; border:none; cursor:pointer;">
         <span class="tab-icon"></span>
         🚪 Logout
       </button>
     </div>
   `;
+
 
   sidebarEl.innerHTML = html;
 

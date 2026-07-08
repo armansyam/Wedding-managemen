@@ -72,7 +72,7 @@ body {
   height: 100vh;
   position: sticky;
   top: 0;
-  overflow-y: auto;
+  overflow: hidden;
   z-index: 100;
 }
 
@@ -91,6 +91,18 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  /* hide scrollbar but allow scroll */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.sidebar-bottom {
+  flex-shrink: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
 }
 
 .nav-tab-btn {

@@ -1,59 +1,287 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <link rel="icon" type="image/png" href="/logo.png">
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Invoice — Sorehari</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap"
+    rel="stylesheet">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Montserrat',sans-serif; background:#f4f1eb; color:#2d2d2d; }
-    .invoice { max-width:700px; margin:30px auto; background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); overflow:hidden; }
-    .inv-header { background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%); color:#fff; padding:32px 40px; display:flex; justify-content:space-between; align-items:start; }
-    .inv-brand h1 { font-family:'Playfair Display',serif; font-size:24px; margin-bottom:4px; }
-    .inv-brand p { font-size:12px; opacity:.7; }
-    .inv-badge { text-align:right; }
-    .inv-badge .inv-label { font-size:11px; opacity:.6; text-transform:uppercase; letter-spacing:1px; }
-    .inv-badge .inv-num { font-size:18px; font-weight:700; margin-top:2px; }
-    .inv-badge .inv-date { font-size:12px; opacity:.8; margin-top:2px; }
-    .inv-body { padding:32px 40px; }
-    .inv-section { margin-bottom:24px; }
-    .inv-section-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:10px; font-weight:600; }
-    .inv-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; font-size:13px; }
-    .inv-grid .label { color:#888; }
-    .inv-grid .value { font-weight:600; }
-    .inv-table { width:100%; border-collapse:collapse; font-size:13px; }
-    .inv-table thead th { text-align:left; padding:10px 0; border-bottom:2px solid #e5e5e5; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:#888; font-weight:600; }
-    .inv-table thead th:last-child { text-align:right; }
-    .inv-table tbody td { padding:10px 0; border-bottom:1px solid #f0f0f0; }
-    .inv-table tbody td:last-child { text-align:right; font-weight:600; }
-    .inv-table .subtotal { border-top:2px solid #2d2d2d; font-weight:700; }
-    .inv-table .subtotal td { padding-top:12px; border-bottom:none; }
-    .inv-divider { height:1px; background:#e5e5e5; margin:20px 0; }
-    .inv-payment { background:#faf8f5; border-radius:12px; padding:20px; }
-    .inv-payment h3 { font-size:13px; margin-bottom:10px; }
-    .inv-payment .bank-line { font-size:13px; margin-bottom:4px; }
-    .inv-payment .bank-line strong { color:#c9785e; }
-    .inv-footer { text-align:center; padding:20px 40px; font-size:11px; color:#aaa; border-top:1px solid #f0f0f0; }
-    .inv-stamp { display:inline-block; border:2px solid #c9785e; border-radius:50%; width:80px; height:80px; line-height:80px; color:#c9785e; font-family:'Playfair Display',serif; font-size:14px; font-weight:700; margin:16px 0 8px; }
-    .inv-status { display:inline-block; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:600; }
-    .status-dp { background:#fef3c7; color:#92400e; }
-    .status-lunas { background:#d1fae5; color:#065f46; }
-    .inv-sections { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-    .inv-sessions { font-size:12px; }
-    .inv-sessions li { padding:4px 0; border-bottom:1px solid #f5f5f5; list-style:none; }
-    .inv-sessions li::before { content:'•'; color:#c9785e; margin-right:6px; }
-    @media print {
-      body { background:#fff; }
-      .invoice { box-shadow:none; margin:0; border-radius:0; }
-      .no-print { display:none; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .no-print { position:fixed; top:16px; right:16px; display:flex; gap:8px; z-index:99; }
-    .no-print button { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:12px; font-weight:600; }
-    .btn-print { background:#1a1a2e; color:#fff; }
-    .btn-wa { background:#25d366; color:#fff; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f4f1eb;
+      color: #2d2d2d;
+    }
+
+    .invoice {
+      max-width: 700px;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+      overflow: hidden;
+    }
+
+    .inv-header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+    }
+
+    .inv-brand h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .inv-brand p {
+      font-size: 12px;
+      opacity: .7;
+    }
+
+    .inv-badge {
+      text-align: right;
+    }
+
+    .inv-badge .inv-label {
+      font-size: 11px;
+      opacity: .6;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .inv-badge .inv-num {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .inv-badge .inv-date {
+      font-size: 12px;
+      opacity: .8;
+      margin-top: 2px;
+    }
+
+    .inv-body {
+      padding: 32px 40px;
+    }
+
+    .inv-section {
+      margin-bottom: 24px;
+    }
+
+    .inv-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .inv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+      font-size: 13px;
+    }
+
+    .inv-grid .label {
+      color: #888;
+    }
+
+    .inv-grid .value {
+      font-weight: 600;
+    }
+
+    .inv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .inv-table thead th {
+      text-align: left;
+      padding: 10px 0;
+      border-bottom: 2px solid #e5e5e5;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #888;
+      font-weight: 600;
+    }
+
+    .inv-table thead th:last-child {
+      text-align: right;
+    }
+
+    .inv-table tbody td {
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .inv-table tbody td:last-child {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .inv-table .subtotal {
+      border-top: 2px solid #2d2d2d;
+      font-weight: 700;
+    }
+
+    .inv-table .subtotal td {
+      padding-top: 12px;
+      border-bottom: none;
+    }
+
+    .inv-divider {
+      height: 1px;
+      background: #e5e5e5;
+      margin: 20px 0;
+    }
+
+    .inv-payment {
+      background: #faf8f5;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .inv-payment h3 {
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .inv-payment .bank-line {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .inv-payment .bank-line strong {
+      color: #c9785e;
+    }
+
+    .inv-footer {
+      text-align: center;
+      padding: 20px 40px;
+      font-size: 11px;
+      color: #aaa;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .inv-stamp {
+      display: inline-block;
+      border: 2px solid #c9785e;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      line-height: 80px;
+      color: #c9785e;
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 16px 0 8px;
+    }
+
+    .inv-status {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-dp {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-lunas {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .inv-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .inv-sessions {
+      font-size: 12px;
+    }
+
+    .inv-sessions li {
+      padding: 4px 0;
+      border-bottom: 1px solid #f5f5f5;
+      list-style: none;
+    }
+
+    .inv-sessions li::before {
+      content: '•';
+      color: #c9785e;
+      margin-right: 6px;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .invoice {
+        box-shadow: none;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      .no-print {
+        display: none;
+      }
+    }
+
+    .no-print {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 99;
+    }
+
+    .no-print button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .btn-print {
+      background: #1a1a2e;
+      color: #fff;
+    }
+
+    .btn-wa {
+      background: #25d366;
+      color: #fff;
+    }
   </style>
 </head>
+
 <body>
   <div class="no-print">
     <button class="btn-print" onclick="window.print()">🖨️ Cetak</button>
@@ -107,7 +335,12 @@
       <div class="inv-section">
         <div class="inv-section-title">Rincian Pembayaran</div>
         <table class="inv-table">
-          <thead><tr><th>Deskripsi</th><th>Jumlah</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Deskripsi</th>
+              <th>Jumlah</th>
+            </tr>
+          </thead>
           <tbody id="i-table-body"></tbody>
         </table>
       </div>
@@ -120,7 +353,8 @@
         <div class="bank-line">Bank: <strong id="i-bank">-</strong></div>
         <div class="bank-line">No. Rekening: <strong id="i-rek">-</strong></div>
         <div class="bank-line">Atas Nama: <strong id="i-an">-</strong></div>
-        <div class="bank-line" style="margin-top:8px;font-size:12px;color:#888">Silakan transfer sesuai nominal di atas, lalu kirim bukti transfer.</div>
+        <div class="bank-line" style="margin-top:8px;font-size:12px;color:#888">Silakan transfer sesuai nominal di atas,
+          lalu kirim bukti transfer.</div>
       </div>
     </div>
 
@@ -145,10 +379,10 @@
           document.title = `Invoice — ${settings.vendor_name}`;
           const headH1 = document.querySelector('.inv-header h1');
           if (headH1) headH1.textContent = settings.vendor_name;
-          
+
           const footerP = document.querySelector('.inv-footer p');
           if (footerP) footerP.textContent = `Terima kasih telah memilih *${settings.vendor_name}* ✨`;
-          
+
           const footerWeb = document.querySelector('.inv-footer p[style]');
           if (footerWeb && settings.vendor_website) footerWeb.textContent = settings.vendor_website;
         }
@@ -165,7 +399,7 @@
       document.getElementById('inv-date').textContent = b.invoice_date;
 
       // Status — check if DP/Pelunasan already paid based on verified payments
-      const dpPaid = b.total_paid >= b.dp_amount || ['confirmed','in_progress','event_day','editing','delivery','completed'].includes(b.status);
+      const dpPaid = b.total_paid >= b.dp_amount || ['confirmed', 'in_progress', 'event_day', 'editing', 'delivery', 'completed'].includes(b.status);
       const fullyPaid = b.total_paid >= (b.package_price + b.additional_income);
       const stEl = document.getElementById('inv-status');
 
@@ -236,7 +470,7 @@
       document.getElementById('btn-wa').onclick = () => {
         const vName = settings.vendor_name || 'Wedding-Management';
         const msg = `Halo ${b.client_name} 👋\n\nInvoice ${invType === 'dp' ? 'DP' : 'Pelunasan'} dari ${vName}:\n📋 ${b.invoice_number}\n💰 ${invType === 'dp' ? formatIDR(b.dp_amount) : formatIDR(b.remaining_payment)}\n\nSilakan buka link invoice:\n${window.location.href}\n\nTerima kasih! 🙏`;
-        window.open(`https://wa.me/${(b.phone||'').replace(/^0/,'62').replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`https://wa.me/${(b.phone || '').replace(/^0/, '62').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
       };
     })();
 
@@ -246,4 +480,5 @@
     }
   </script>
 </body>
+
 </html>
