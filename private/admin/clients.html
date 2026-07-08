@@ -286,6 +286,9 @@
         ]);
         let clients = clientsRaw;
         templates = templatesRaw;
+        if (settings && settings.vendor_name) {
+          templates.vendor_name = settings.vendor_name;
+        }
         const followupDays = parseInt(settings.followup_h_days) || 10;
 
         // Apply Tab Filter

@@ -434,7 +434,18 @@
         backLink.textContent = '← Kembali ke Clients';
       }
       (async () => {
-        templates = await API.get('/api/templates');
+        try {
+          const [tpls, settings] = await Promise.all([
+            API.get('/api/templates'),
+            API.get('/api/settings')
+          ]);
+          templates = tpls;
+          if (settings && settings.vendor_name) {
+            templates.vendor_name = settings.vendor_name;
+          }
+        } catch (e) {
+          console.error('Failed to load templates or settings', e);
+        }
       })();
       if (!bookingId) {
         document.getElementById('loading').textContent = 'No booking ID';
