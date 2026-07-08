@@ -89,7 +89,7 @@
     <div class="page-header">
       <div>
         <h1 style="margin-bottom:4px">📊 Dashboard</h1>
-        <div style="font-size:12px;color:var(--text2)">Ringkasan data operasional & keuangan Wedding-Management</div>
+        <div id="dashboard-subtitle" style="font-size:12px;color:var(--text2)">Ringkasan data operasional & keuangan Wedding-Management</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px">
         <div class="header-kas-widget" onclick="window.location.href='/admin/reports'" title="Lihat Laporan Keuangan">
@@ -179,11 +179,20 @@
       const pipelineEl = document.getElementById('pipeline-meters');
 
       try {
-        const d = await API.get('/api/dashboard/summary');
-        const kas = await API.get('/api/reports/kas');
+        const [d, kas, settings] = await Promise.all([
+          API.get('/api/dashboard/summary'),
+          API.get('/api/reports/kas'),
+          API.get('/api/settings')
+        ]);
 
         const now = new Date();
         document.getElementById('current-month').textContent = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+        // Update dashboard subtitle dynamic brand
+        const subTitleEl = document.getElementById('dashboard-subtitle');
+        if (subTitleEl && settings.vendor_name) {
+          subTitleEl.textContent = `Ringkasan data operasional & keuangan ${settings.vendor_name}`;
+        }
 
         // Update header kas widget
         const headerKasAmountEl = document.getElementById('header-kas-amount');

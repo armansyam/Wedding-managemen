@@ -234,12 +234,22 @@ function renderSidebar(activePage) {
     .then(settings => {
       const textTitleEl = document.getElementById('sidebar-text-title');
       if (textTitleEl) {
-        textTitleEl.textContent = (settings.vendor_name || 'Wedding Vendor') + ' 📸';
+        textTitleEl.textContent = (settings.vendor_name || 'Wedding-Management') + ' 📸';
+      }
+      // Dynamic page title matching setting name
+      if (settings.vendor_name) {
+        const currentTitle = document.title;
+        if (currentTitle.includes('—')) {
+          const pagePart = currentTitle.split('—')[0].trim();
+          document.title = `${pagePart} — ${settings.vendor_name}`;
+        } else {
+          document.title = `${currentTitle} — ${settings.vendor_name}`;
+        }
       }
     })
     .catch(err => {
       const textTitleEl = document.getElementById('sidebar-text-title');
-      if (textTitleEl) textTitleEl.textContent = 'Wedding Vendor 📸';
+      if (textTitleEl) textTitleEl.textContent = 'Wedding-Management 📸';
     });
 
   const themeToggleBtn = sidebarEl.querySelector('#theme-toggle-btn');
