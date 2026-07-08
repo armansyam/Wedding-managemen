@@ -60,4 +60,26 @@ if (!tableExists) {
   }
 }
 
+// Migration: Replace old hardcoded names with dynamic placeholders in settings table
+try {
+  const templatesInDb = db.prepare("SELECT * FROM settings WHERE key LIKE 'wa_%'").all();
+  const cleanStmt = db.prepare("UPDATE settings SET value = ? WHERE key = ?");
+  for (const row of templatesInDb) {
+    let val = row.value;
+    if (val) {
+      const newVal = val
+        .replace(/Sorehari Photography/g, '{{vendor_name}}')
+        .replace(/Sorehari Team/g, 'Tim {{vendor_name}}')
+        .replace(/Sorehari/g, '{{vendor_name}}')
+        .replace(/Wedding-Management/g, '{{vendor_name}}');
+      if (newVal !== val) {
+        cleanStmt.run(newVal, row.key);
+        console.log(`Migrated template ${row.key} to use dynamic {{vendor_name}}`);
+      }
+    }
+  }
+} catch (err) {
+  console.error('Failed to run database templates migration:', err);
+}
+
 module.exports = db;

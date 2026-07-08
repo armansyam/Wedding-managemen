@@ -1233,7 +1233,7 @@ Terima kasih 🙏`;
 
 Semoga Kakak & pasangan selalu sehat dan dilancarkan segala persiapannya menjelang hari bahagia ya Kak. 😊
 
-Mengingat tanggal pernikahan Kakak semakin dekat pada *{{event_date}}*, kami dari tim Wedding-Management ingin menginfokan terkait kelengkapan administrasi sisa pembayaran (pelunasan).
+Mengingat tanggal pernikahan Kakak semakin dekat pada *{{event_date}}*, kami dari tim *{{vendor_name}}* ingin menginfokan terkait kelengkapan administrasi sisa pembayaran (pelunasan).
 
 Rincian sisa pelunasan Kakak:
 💵 Sisa Pembayaran: *{{remaining}}*
@@ -1243,8 +1243,8 @@ Kakak dapat melakukan pelunasan dan mengunggah bukti transfer secara aman melalu
 
 Jika ada hal yang ingin dikoordinasikan atau ditanyakan terkait detail acara, silakan kabari kami ya Kak. Kami tidak sabar mengabadikan momen spesial Kakak nanti!
 
-Terima kasih banyak atas kepercayaan Kakak bersama kami. 🙏 Warm regards, Admin Team. 📸`;
-      const vars = { client_name: b.client_name, event_date: formatDate(b.event_date), pelunasan_url: pelunasanUrl, remaining: formatIDR(remaining) };
+Terima kasih banyak atas kepercayaan Kakak bersama *{{vendor_name}}*. 🙏 Warm regards, Tim {{vendor_name}}. 📸`;
+      const vars = { client_name: b.client_name, vendor_name: templates.vendor_name || 'Wedding-Management', event_date: formatDate(b.event_date), pelunasan_url: pelunasanUrl, remaining: formatIDR(remaining) };
       tpl = tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, key, content) => {
         if (!vars[key]) return '';
         return content.replace(/\{\{(\w+)\}\}/g, (m2, k) => vars[k] !== undefined ? String(vars[k]) : m2);
