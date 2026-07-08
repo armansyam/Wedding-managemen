@@ -69,7 +69,7 @@ app.use('/api/freelancers', requireAuth, require('./routes/freelancers'));
 app.use('/api/packages', requireAuth, require('./routes/packages'));
 app.use('/api/sessions', requireAuth, require('./routes/sessions'));
 app.use('/api/products', requireAuth, require('./routes/products'));
-app.use('/api/settings', requireAuth, require('./routes/settings'));
+app.use('/api/settings', require('./routes/settings'));
 app.use('/api/dashboard', requireAuth, require('./routes/dashboard'));
 app.use('/api/archive', requireAuth, require('./routes/archive'));
 app.use('/api/track', require('./routes/track'));

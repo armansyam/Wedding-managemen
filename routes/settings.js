@@ -13,8 +13,10 @@ router.get('/', (req, res) => {
   res.json(settings);
 });
 
-// PUT update settings (batch)
-router.put('/', (req, res) => {
+const { requireAuth } = require('../middleware/auth');
+
+// PUT update settings (batch) - SECURED WITH AUTH
+router.put('/', requireAuth, (req, res) => {
   const updates = req.body;
   if (!updates || typeof updates !== 'object') return res.status(400).json({ error: 'Invalid data' });
 

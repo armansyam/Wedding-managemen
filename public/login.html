@@ -137,8 +137,27 @@
             }
         }
 
-        // Check if already logged in
+        // Check if already logged in and load branding settings
         window.addEventListener('load', async () => {
+            // Load public settings for branding
+            try {
+                const settingsRes = await fetch('/api/settings');
+                if (settingsRes.ok) {
+                    const settings = await settingsRes.json();
+                    if (settings.vendor_name) {
+                        document.title = `Login - ${settings.vendor_name} Admin`;
+                        // Update card header text
+                        const brandHeader = document.querySelector('.serif-title');
+                        if (brandHeader) brandHeader.textContent = settings.vendor_name;
+                        // Update info box text
+                        const infoBoxP = document.querySelector('.opacity-80');
+                        if (infoBoxP) infoBoxP.textContent = `Platform ${settings.vendor_name}`;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load public branding settings:', err);
+            }
+
             // Show error from URL query (server-side redirect fallback)
             const urlParams = new URLSearchParams(window.location.search);
             const errorParam = urlParams.get('error');
